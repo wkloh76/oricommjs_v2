@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `str_replacelast` method into `utils`. Completed on 2025-04-22
 - webbunjs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-29
+- Add a feature to allow deskelectronjs engine to change page base on internel GUI url. Completed on 2025-04-29
 
 ### Changed
 
