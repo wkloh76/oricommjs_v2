@@ -1,15 +1,14 @@
 # OriCommJS-V2
 
 ![Static Badge](https://img.shields.io/badge/License-Mulan_PSL_v2-_)
-![Static Badge](https://img.shields.io/badge/NodeJS-V20_.18_.3-_)
-![Static Badge](https://img.shields.io/badge/BunJS-V1_.2_.2-_)
+![Static Badge](https://img.shields.io/badge/NodeJS-V20_.19_.1-_)
+![Static Badge](https://img.shields.io/badge/BunJS-V1_.2_.10-_)
 ![Static Badge](https://img.shields.io/badge/ElectronJS-V34_.2_.0-_)
 ![Static Badge](https://img.shields.io/badge/OS-Ubuntu_24-_?style=flat)
 ![Static Badge](https://img.shields.io/badge/OS-Windows_10-_?style=flat)
 ![GitHub Release](https://img.shields.io/github/v/release/wkloh76/oricommjs_v2)
 
 The program is fork from oricommjs v1.1.9 and the objective is implement new concept design.
-
 
 A JavaScript project framework that provides an engine to handle desktop, web, and non-GUI application development. Node JS, bun JS and Electron JS are the backbone engines of this framework. The idea behind the framework is to develop a code model that can switch engines and build desktop, web, and non-GUI applications without changing the design. Due to some module issues, the framework design still retains the CommonJS design method. You can build your reusable modules or class and plugin into atomic folder. If you want the modules or class can be cross entire project than plugin into the enigne folder.
 
@@ -85,6 +84,8 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 
 ## Debug: vscodelaunch.json setting
 
+### nodejs, bun, electronjs
+
 ```
 {
   // Use IntelliSense to learn about possible attributes.
@@ -100,6 +101,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}/app.js",
+      "cwd": "${workspaceFolder}",
       "args": [
         "--mode=debug",
         "--engine=webnodejs"
@@ -197,10 +199,43 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 }
 ```
 
+## nodejs debug with python in virtual environment
+
+```
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Nodejs Program",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/app.js",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        // "PYTHONPATH": "${workspaceFolder}/.venv/lib/python3.12/site-packages",
+        // "PYTHON_EXECUTABLE": "${workspaceFolder}/.venv/bin/python3",
+        "PYTHONPATH": "/home/{USER}/pyyvenv/lib/python3.12/site-packages",
+        "PYTHON_EXECUTABLE": "/home/{USER}/pyvenv/bin/python3",
+      },
+      "args": [
+        "--mode=debug",
+        "--engine=webnodejs"
+      ]
+    }
+  ]
+}
+```
+
 ## Launch: Linux console or Window CMD
 
 - NodeJS: node app.js --mode=debug --engine=webnodejs
-- BunJS: Bun app.js --mode=debug --engine=webnodejs
+- BunJS: bun app.js --mode=debug --engine=webnodejs
 - ElectronJS: electron app.js --mode=debug --engine=deskelectronjs
 
 ## Handle package.json dependencies and devdependencies
