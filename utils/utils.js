@@ -950,8 +950,8 @@ module.exports = async (...args) => {
       /**
        * Merge or concat base object or array data type
        * @alias module:utils.concatobj
-       * @param {...Object} args - 2 parameters
-       * @param {Object||Array} args[0] - type is an object or array type which for referenc to check continue argument data type
+       * @param {...Object} args - 3 parameters
+       * @param {Object|Array} args[0] - type is an object or array type which for referenc to check continue argument data type
        * @param {Object|Array} args[1] - param1 is an object or array type which ready for merge or concat.
        * @param {Boolean|Array} args[2] - param2 is an object or array type which ready for merge or concat.
        * @returns {Object} - Return as Object|Array|undefined
@@ -995,8 +995,8 @@ module.exports = async (...args) => {
        * The main purpose is to prevent users from improperly using async/await and promise
        * methods to trigger unpredictable errors and cause the entire system to shut down.
        * When server receive the request from client, will proceed
-       * @alias module:reaction.sanbox
-       * @param {...Object} args - 1 parameters
+       * @alias module:utils.sanbox
+       * @param {...Object} args - 2 parameters
        * @param {Object} args[0] - fn is mehtod/fuction for execution
        * @param {Array} args[1] - params is in array type which contant with request and response variable
        * @returns {Object} - Either return object or return data from execution function
@@ -1004,7 +1004,7 @@ module.exports = async (...args) => {
       const sanbox = async (...args) => {
         let [fn, params] = args;
         try {
-          let result = fn.apply(null, params);
+          let result = fn(...params);
           if (result instanceof Promise) {
             result = await result;
             if (result instanceof ReferenceError) throw result;
@@ -1013,6 +1013,26 @@ module.exports = async (...args) => {
         } catch (error) {
           return errhandler(error);
         }
+      };
+
+      /**
+       * The main purpose is to replace last occur string and replace to new string
+       * @alias module:utils.str_replacelast
+       * @param {...Object} args - 3 parameters
+       * @param {String} args[0] - Original string
+       * @param {String} args[1] - Pattern of string to search last occur
+       * @param {String} args[2] - New string replacement for search and replace
+       * @returns {String} - Either return original string or replacement string
+       */
+      const str_replacelast = (...args) => {
+        let [str, find, replace] = args;
+        let index = str.lastIndexOf(find);
+        if (index === -1) {
+          return str;
+        }
+        return (
+          str.substring(0, index) + replace + str.substring(index + find.length)
+        );
       };
 
       let lib = {
@@ -1043,6 +1063,7 @@ module.exports = async (...args) => {
         datatype,
         mergeDeep,
         sanbox,
+        str_replacelast,
       };
       resolve(lib);
     } catch (error) {

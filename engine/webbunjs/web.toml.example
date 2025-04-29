@@ -1,0 +1,12 @@
+[webbunjs]
+[webbunjs.parser]
+maxSize= 10240000 # 10MB
+
+[webbunjs.session]
+encryptionKey = "string_at_least_32_characters_long"
+expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  86400 is 1 day
+#// Recommended for basic CSRF protection in modern browsers
+#// Required for this library to work properly
+#// Recommended to avoid XSS attacks
+cookieOptions= {sameSite= 'Lax', path= '/', httpOnly= true}
+savestore = true

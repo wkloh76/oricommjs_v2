@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024   Loh Wah Kiang
+ * Copyright (c) 2025   Loh Wah Kiang
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -23,9 +23,15 @@ module.exports = async (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const sqlite3 = require("libsql");
+
     const { fs, path, logger } = sys;
     const { datatype, handler, errhandler } = library.utils;
+    let sqlite3;
+    if (cosetting.args.engine == "webbunjs") {
+      const { Database } = require("bun:sqlite");
+      sqlite3 = Database;
+    } else sqlite3 = require("libsql");
+
     try {
       let conn = {};
       let lib = {};
