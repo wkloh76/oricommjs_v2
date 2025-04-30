@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Summary
 
 - New design for workflow engine which work close with serialize method in both frontend and backend.
-- Establish webbunjs engine base on honoJS framework.
+- Establish webbunjs engine base on honoJS framework and run with bun interpreter.
+- Establish webnodehonojs engine base on honoJS framework and run in nodejs interpreter.
 
 ### Added
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - webbunjs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-29
 - Add a feature to allow deskelectronjs engine to change page base on internel GUI url. Completed on 2025-04-29
 - Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30
+- webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
 
 ### Changed
 

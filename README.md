@@ -16,6 +16,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 
 - The `webnodejs` engine is a web server designed based on the expressjs framework. It can runs on bith NodeJS and BunJS
 - The `webbunjs` engine is a web server designed based on the bunrest framework. It can runs BunJS
+- The `webnodehonojs` engine is a web server designed based on the bunrest framework. It can runs NodeJS
 - The `deskelectronjs` engine is a desktop application designed to be executed only through ElectronJS.
 - The `appservicejs` engine is non-GUI application desgined which can directlly run in pc background service or executed from Linux console or Windows CMD. It can runs on bith NodeJS and BunJS
 - Reusable or reappliable modules are one of the design features of the framework to avoid duplicating code everywhere and wasting resources.
@@ -235,7 +236,8 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 ## Launch: Linux console or Window CMD
 
 - NodeJS: node app.js --mode=debug --engine=webnodejs
-- BunJS: bun app.js --mode=debug --engine=webnodejs
+- NodeJS: node app.js --mode=debug --engine=webnodehonojs
+- BunJS: bun app.js --mode=debug --engine=webbunjs
 - ElectronJS: electron app.js --mode=debug --engine=deskelectronjs
 
 ## Handle package.json dependencies and devdependencies
