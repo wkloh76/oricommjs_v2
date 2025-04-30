@@ -36,6 +36,7 @@ const { sessionMiddleware } = require("hono-sessions");
 const { BunSqliteStore } = require("hono-sessions/bun-sqlite-store");
 const pino = require("pino");
 const { rotate } = require("pino-rotate");
+const mimes = require("./data/mimes.json");
 
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -175,18 +176,7 @@ module.exports = async (...args) => {
 
       // Helper function to determine the content type
       const getContentType = (path) => {
-        const ext = path.split(".").pop();
-        switch (ext) {
-          // case "css":
-          //   return "text/css";
-          case "woff":
-            return "font/woff";
-          case "woff2":
-            return "font/woff2";
-          // Add other content types as needed
-          default:
-            return;
-        }
+        return mimes[path.split(".").pop()];
       };
 
       /**
@@ -215,20 +205,25 @@ module.exports = async (...args) => {
                     let filePath = str_replacelast(path, key, "");
                     // Check if the file exists
                     if (fs.existsSync(filePath)) {
-                      // Get the file size
-                      const stats = fs.statSync(filePath);
-                      const fileSizeInBytes = stats.size;
+                      // Get the mimes type
                       const mimes = getContentType(filePath);
 
                       // Serve the file with the correct content-length header
                       if (!mimes) return readFileSync(filePath, "utf-8");
                       else {
-                        c.res = new Response(readFileSync(filePath), {
+                        const cssContent = readFileSync(filePath);
+                        const options = {
                           headers: {
                             "Content-Type": mimes,
-                            "Content-Length": fileSizeInBytes.toString(),
+                            "Content-Length":
+                              Buffer.byteLength(cssContent).toString(),
                           },
-                        });
+                        };
+                        if (mimes == "font/woff" || mimes == "font/woff2") {
+                          c.res = new Response(cssContent, options);
+                        } else {
+                          return c.body(cssContent, options);
+                        }
                       }
                     } else {
                       // File not found
@@ -267,20 +262,25 @@ module.exports = async (...args) => {
                       let filePath = `/${path.replace(`${key}`, "")}`;
                       // Check if the file exists
                       if (fs.existsSync(filePath)) {
-                        // Get the file size
-                        const stats = fs.statSync(filePath);
-                        const fileSizeInBytes = stats.size;
+                        // Get the mimes type
                         const mimes = getContentType(filePath);
 
                         // Serve the file with the correct content-length header
                         if (!mimes) return readFileSync(filePath, "utf-8");
                         else {
-                          c.res = new Response(readFileSync(filePath), {
+                          const cssContent = readFileSync(filePath);
+                          const options = {
                             headers: {
                               "Content-Type": mimes,
-                              "Content-Length": fileSizeInBytes.toString(),
+                              "Content-Length":
+                                Buffer.byteLength(cssContent).toString(),
                             },
-                          });
+                          };
+                          if (mimes == "font/woff" || mimes == "font/woff2") {
+                            c.res = new Response(cssContent, options);
+                          } else {
+                            return c.body(cssContent, options);
+                          }
                         }
                       } else {
                         // File not found
