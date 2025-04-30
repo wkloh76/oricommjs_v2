@@ -74,11 +74,9 @@ module.exports = async (...args) => {
           let { savestore, store, verbose, ...setsession } = session;
 
           //set up our express application
-          // app.use(cors());
-          // // app.use(secureHeaders());
-          // Setup server log
-          // app.use(sys.loghttp);
-
+          app.use(cors());
+          app.use(secureHeaders());
+          
           // Compress all route
           // app.use(compress());
           if (savestore) {
@@ -96,6 +94,7 @@ module.exports = async (...args) => {
             setsession.store = new SqliteStore(store.client);
           }
 
+          // Setup server log
           // 创建 Pino 日志记录器并配置轮转
           const logger = pino({
             level: "info",

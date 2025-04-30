@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a feature to allow deskelectronjs engine to change page base on internel GUI url. Completed on 2025-04-29
 - Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30
 - webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
+- Apply cors and secureHeaders to both webbunjs and webnodehonojs engine. Completed on 2025-04-30
 
 ### Changed
 

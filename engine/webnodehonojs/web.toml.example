@@ -1,8 +1,8 @@
-[webnodejs]
-[webnodejs.parser]
+[webnodehonojs]
+[webnodehonojs.parser]
 maxSize= 10240000 # 10MB
 
-[webnodejs.session]
+[webnodehonojs.session]
 encryptionKey = "string_at_least_32_characters_long"
 expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  86400 is 1 day
 #// Recommended for basic CSRF protection in modern browsers
