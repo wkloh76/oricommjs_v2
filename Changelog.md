@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix session bypass checking the static file request in `webserver.js` at webnodejs, webbunjs and webnodehonojs engine. Completed on 2025-05-02
+- Fix extract data from setting object in establish method at webbunjs and webnodehonojs engine. Completed on 2025-05-02
+
 ### Security
 
 [1.0.0]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.0.0

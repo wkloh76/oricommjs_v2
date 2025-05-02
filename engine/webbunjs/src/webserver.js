@@ -47,7 +47,6 @@ module.exports = async (...args) => {
     const { dayjs, fs, path } = sys;
     const { existsSync, readFileSync } = fs;
     const { join } = path;
-    const { logpath } = cosetting;
 
     try {
       const cnttype = {
@@ -56,6 +55,7 @@ module.exports = async (...args) => {
       let lib = {};
       // let app = new OpenAPIHono();
       let app = new Hono();
+      let sessionval;
 
       /**
        * Web server establish and session log
@@ -67,12 +67,9 @@ module.exports = async (...args) => {
       const establish = (...args) => {
         let [setting] = args;
         try {
-          let {
-            logpath,
-            webnodejs: { parser, session, helmet },
-            general,
-          } = setting;
-          let { savestore, store, verbose, ...setsession } = session;
+          let { logpath, general } = setting;
+          let { savestore, store, verbose, ...setsession } =
+            setting[setting.args.engine].session;
 
           //set up our express application
           app.use(cors());
@@ -115,8 +112,7 @@ module.exports = async (...args) => {
             },
           });
 
-          // Session in the middleware
-          app.use("*", sessionMiddleware(setsession));
+          sessionval = setsession;
 
           // 添加 Pino HTTP 中间件
           app.use("*", async (...args) => {
@@ -316,6 +312,9 @@ module.exports = async (...args) => {
               app,
             }),
           ]);
+
+          // Session in the middleware
+          app.use("*", sessionMiddleware(sessionval));
           app.use(
             bodyLimit({
               maxSize: setting.webbunjs.parser.maxSize,
