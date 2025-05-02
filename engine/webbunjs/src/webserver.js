@@ -33,6 +33,7 @@ const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
 const pino = require("pino");
 const { rotate } = require("pino-rotate");
+const { minify } = require("html-minifier-terser");
 
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -242,7 +243,39 @@ module.exports = async (...args) => {
           if (pubkey.indexOf(`${enginetype}_`) > -1) {
             for (let [key, val] of Object.entries(pubval)) {
               if (datatype(val) == "object")
-                obj.app.use(key, obj.reaction[val.fn]);
+                obj.app.use(
+                  `${key}/*`,
+                  serveStatic({
+                    root: `${val.filepath}`,
+                    getContent: async (path, c) => {
+                      let filePath = `${path.replace(`${key}`, "")}`;
+
+                      // Check if the file exists
+                      if (fs.existsSync(filePath)) {
+                        // Get the mimes type
+                        const mimes = getContentType(filePath);
+
+                        // Serve the file with the correct content-length header
+                        if (mimes) {
+                          const cssContent = await minify(
+                            val.content.concat(" ", readFileSync(filePath)),
+                            {
+                              collapseWhitespace: true,
+                            }
+                          );
+                          const options = {
+                            headers: {
+                              "Content-Type": mimes,
+                              "Content-Length":
+                                Buffer.byteLength(cssContent).toString(),
+                            },
+                          };
+                          return c.body(cssContent, options);
+                        }
+                      }
+                    },
+                  })
+                );
               else {
                 obj.app.use(
                   `${key}/*`,
@@ -299,6 +332,7 @@ module.exports = async (...args) => {
               app,
             }),
           ]);
+          
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));
           app.use(

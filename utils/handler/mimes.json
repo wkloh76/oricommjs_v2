@@ -20,6 +20,7 @@
   "js": "text/javascript",
   "json": "application/json",
   "jsonld": "application/ld+json",
+  "less": "text/less",
   "map": "application/json",
   "mid": "audio/x-midi",
   "midi": "audio/x-midi",

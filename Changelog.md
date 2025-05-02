@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
 - Apply cors and secureHeaders to both webbunjs and webnodehonojs engine. Completed on 2025-04-30
 - Create `sqlitesession.js` at utils to manage all engine relate with http session. Completed on 2025-05-02
+- Redefine `less.js` file routing method into `load_pubshare` function at both webbunjs and webnodehonojs engine. Completed on 2025-05-02
 
 ### Changed
 
@@ -40,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Remove SqliteStore.js from webnodehonojs engine. Completed on 2025-05-02
+- Remove onless,castless and mergecss method from both webbunjs and webnodehonojs engine. Completed on 2025-05-02
 
 ### Fixed
 

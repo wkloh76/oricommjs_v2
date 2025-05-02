@@ -408,46 +408,6 @@ module.exports = async (...args) => {
       };
 
       /**
-       * Merge multi css file to be sinlge string and render to frontend
-       * @alias module:reaction.mergecss
-       * @param {...Object} args - 1 parameters
-       * @param {Object} args[0] - res the object for render to frontend
-       * @param {Object} args[1] - files array of css file name
-       */
-      const mergecss = async (...args) => {
-        let [res, files] = args;
-        let css = "";
-        for (let file of files) {
-          css = css.concat(" ", fs.readFileSync(file, "utf8"));
-        }
-        css = await minify(css, {
-          collapseWhitespace: true,
-        });
-        res.writeHead(200, { "Content-Type": "text/css" });
-        res.status(200).write(`${css}`);
-        res.end();
-      };
-
-      /**
-       * Cast the variables to master less.js file
-       * @alias module:reaction.castless
-       * @param {...Object} args - 1 parameters
-       * @param {Object} args[0] - res the object for render to frontend
-       * @param {Object} args[1] - head content which will merge to the less file
-       * @param {Object} args[1] - file is less file name
-       */
-      const castless = async (...args) => {
-        let [res, head, file] = args;
-        let css = head;
-        css = css.concat(" ", fs.readFileSync(file, "utf8"));
-        css = await minify(css, {
-          collapseWhitespace: true,
-        });
-        res.writeHead(200, { "Content-Type": "text/less" });
-        res.status(200).write(`${css}`);
-      };
-
-      /**
        * The final process which is sending resutl to frontend
        * @alias module:reaction.processEnd
        * @param {...Object} args - 1 parameters
@@ -974,24 +934,6 @@ module.exports = async (...args) => {
         }
       };
 
-      const onless = async (...args) => {
-        let [orireq, orires] = args;
-        let fn;
-        try {
-          let { defaulturl, ...component } = components;
-          for (let [, compval] of Object.entries(component)) {
-            let { less } = compval;
-            let baseUrl = orireq.baseUrl;
-            fn = getNestedObject(less, baseUrl);
-            if (fn) {
-              let file = path.join(fn.path, orireq.url);
-              if (fs.existsSync(file)) await castless(orires, fn.config, file);
-              break;
-            }
-          }
-        } catch (error) {}
-      };
-
       /**
        * The main objective is register api,gui modules into the cache memory
        * @alias module:reaction.register
@@ -1014,7 +956,6 @@ module.exports = async (...args) => {
       resolve({
         ...lib,
         onrequest,
-        onless,
         register,
         get guiapi() {
           return components;
