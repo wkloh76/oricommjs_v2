@@ -78,9 +78,15 @@ module.exports = async (...args) => {
             let dbfile;
             if (store.path == "") dbfile = join(logpath, "./sessions.db3");
             else dbfile = join(store.path, "./sessions.db3");
-            store.client = new sqlite3(dbfile);
+            // const turso = createClient({
+            //   url: `file:${dbfile}`,
+            // });
+
+            store.client = new sqlite3({
+              url: `file:${dbfile}`,
+            });
             console.log("Session db run silently!");
-            setsession.store = new BunSqliteStore(store.client);
+            setsession.store = new SqliteStore(store.client);
           }
 
           // Setup server log
