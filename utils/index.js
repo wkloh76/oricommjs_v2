@@ -29,6 +29,7 @@ module.exports = (...args) => {
       lib["handler"] = await require("./handler")(params, obj);
       lib["powershell"] = await require("./powershell")(params, obj);
       lib["intercomm"] = await require("./intercomm")(params, obj);
+      lib["sqlitesession"] = require("./sqlitesession");
 
       resolve(lib);
     } catch (error) {

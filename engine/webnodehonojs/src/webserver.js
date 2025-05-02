@@ -28,21 +28,20 @@ const { Hono } = require("hono");
 const { bodyLimit } = require("hono/body-limit");
 const { getConnInfo } = require("@hono/node-server/conninfo");
 const { cors } = require("hono/cors");
-const { compress } = require("hono/compress");
 const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
-const { SqliteStore } = require("./SqliteStore");
 const pino = require("pino");
 const { rotate } = require("pino-rotate");
-const mimes = require("./data/mimes.json");
 
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { datatype, dir_module, str_replacelast } = library.utils;
+    const { datatype, dir_module, sqlitesession, str_replacelast } =
+      library.utils;
+    const { SqliteStore } = sqlitesession;
     const { mimes } = library.utils.handler;
     const { dayjs, fs, path } = sys;
     const { existsSync, readFileSync } = fs;

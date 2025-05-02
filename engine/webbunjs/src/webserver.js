@@ -20,7 +20,7 @@
  */
 
 const { serve } = require("bun");
-const { Database: sqlite3 } = require("bun:sqlite");
+const { createClient: sqlite3 } = require("@libsql/client");
 const { swaggerUI } = require("@hono/swagger-ui");
 const { OpenAPIHono, createRoute, z } = require("@hono/zod-openapi");
 const { Hono } = require("hono");
@@ -31,7 +31,6 @@ const { cors } = require("hono/cors");
 const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
-const { BunSqliteStore } = require("hono-sessions/bun-sqlite-store");
 const pino = require("pino");
 const { rotate } = require("pino-rotate");
 
@@ -40,7 +39,9 @@ module.exports = async (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { datatype, dir_module, str_replacelast } = library.utils;
+    const { datatype, dir_module, sqlitesession, str_replacelast } =
+      library.utils;
+    const { SqliteStore } = sqlitesession;
     const { mimes } = library.utils.handler;
     const { dayjs, fs, path } = sys;
     const { existsSync, readFileSync } = fs;

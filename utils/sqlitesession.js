@@ -1,8 +1,8 @@
 "use strict";
 /**
  * Submodule handles http/https session storage
- * in sqlite format work with libsql module
- * @module src_SqliteStore
+ * in sqlite format work with @libsql/client module
+ * @module utils_sqlitesession
  */
 module.exports = {
   SqliteStore: class {

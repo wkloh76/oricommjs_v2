@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ~~Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30~~
 - webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
 - Apply cors and secureHeaders to both webbunjs and webnodehonojs engine. Completed on 2025-04-30
+- Create `sqlitesession.js` at utils to manage all engine relate with http session. Completed on 2025-05-02
 
 ### Changed
 
@@ -32,11 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change the import sqlite module method in `sqlmanager` base on engine name because bun.js has it own built in sqlite. Completed on 2025-04-22
 - ~~Improve webbunjs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-04-30~~
 - Move both `html-tage.json` and `mimes.json` to utils handler to handle data. Both webbunjs and webnodehonojs engine will be afftected. Completed on 2025-05-02
-  -Improve both webbunjs and webnodehonojs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-05-02
+- Improve both webbunjs and webnodehonojs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-05-02
 
 ### Deprecated
 
 ### Removed
+
+- Remove SqliteStore.js from webnodehonojs engine. Completed on 2025-05-02
 
 ### Fixed
 
