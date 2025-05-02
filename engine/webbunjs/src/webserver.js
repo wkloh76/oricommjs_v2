@@ -28,15 +28,12 @@ const { Hono } = require("hono");
 const { bodyLimit } = require("hono/body-limit");
 const { getConnInfo } = require("hono/bun");
 const { cors } = require("hono/cors");
-const { compress } = require("hono/compress");
 const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
-// const { serveStatic } = require("./serverStatic/index.js");
 const { sessionMiddleware } = require("hono-sessions");
 const { BunSqliteStore } = require("hono-sessions/bun-sqlite-store");
 const pino = require("pino");
 const { rotate } = require("pino-rotate");
-const mimes = require("./data/mimes.json");
 
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -44,6 +41,7 @@ module.exports = async (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { datatype, dir_module, str_replacelast } = library.utils;
+    const { mimes } = library.utils.handler;
     const { dayjs, fs, path } = sys;
     const { existsSync, readFileSync } = fs;
     const { join } = path;
@@ -75,8 +73,6 @@ module.exports = async (...args) => {
           app.use(cors());
           app.use(secureHeaders());
 
-          // Compress all route
-          // app.use(compress());
           if (savestore) {
             let dbfile;
             if (store.path == "") dbfile = join(logpath, "./sessions.db3");
@@ -204,8 +200,7 @@ module.exports = async (...args) => {
                       const mimes = getContentType(filePath);
 
                       // Serve the file with the correct content-length header
-                      if (!mimes) return readFileSync(filePath, "utf-8");
-                      else {
+                      if (mimes) {
                         const cssContent = readFileSync(filePath);
                         const options = {
                           headers: {
@@ -214,15 +209,8 @@ module.exports = async (...args) => {
                               Buffer.byteLength(cssContent).toString(),
                           },
                         };
-                        if (mimes == "font/woff" || mimes == "font/woff2") {
-                          c.res = new Response(cssContent, options);
-                        } else {
-                          return c.body(cssContent, options);
-                        }
+                        return c.body(cssContent, options);
                       }
-                    } else {
-                      // File not found
-                      c.res = new Response("File not found", { status: 404 });
                     }
                   },
                 })
@@ -254,15 +242,14 @@ module.exports = async (...args) => {
                   serveStatic({
                     root: `${val}`,
                     getContent: (path, c) => {
-                      let filePath = `/${path.replace(`${key}`, "")}`;
+                      let filePath = `${path.replace(`${key}`, "")}`;
                       // Check if the file exists
                       if (fs.existsSync(filePath)) {
                         // Get the mimes type
                         const mimes = getContentType(filePath);
 
                         // Serve the file with the correct content-length header
-                        if (!mimes) return readFileSync(filePath, "utf-8");
-                        else {
+                        if (mimes) {
                           const cssContent = readFileSync(filePath);
                           const options = {
                             headers: {
@@ -271,15 +258,8 @@ module.exports = async (...args) => {
                                 Buffer.byteLength(cssContent).toString(),
                             },
                           };
-                          if (mimes == "font/woff" || mimes == "font/woff2") {
-                            c.res = new Response(cssContent, options);
-                          } else {
-                            return c.body(cssContent, options);
-                          }
+                          return c.body(cssContent, options);
                         }
-                      } else {
-                        // File not found
-                        c.res = new Response("File not found", { status: 404 });
                       }
                     },
                   })
@@ -312,7 +292,6 @@ module.exports = async (...args) => {
               app,
             }),
           ]);
-
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));
           app.use(

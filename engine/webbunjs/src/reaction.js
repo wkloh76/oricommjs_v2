@@ -17,7 +17,6 @@
 
 const { minify } = require("html-minifier-terser");
 const jsdom = require("jsdom");
-const htmlTags = require("./data/html-tags.json");
 
 /**
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
@@ -29,6 +28,7 @@ module.exports = async (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
+    const { htmlTags } = library.utils.handler;
     const { jptr, fs, logger, path } = sys;
 
     try {

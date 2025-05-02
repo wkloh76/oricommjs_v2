@@ -21,7 +21,7 @@ const { promises } = require("dns");
  * The submodule utils module
  * @module utils_utils
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

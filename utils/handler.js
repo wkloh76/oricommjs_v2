@@ -18,7 +18,7 @@
  * The submodule of utils
  * @module utils_handler
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     try {
@@ -251,6 +251,9 @@ module.exports = async (...args) => {
           return error;
         }
       };
+
+      lib.mimes = require("./handler/mimes.json");
+      lib.htmlTags = require("./handler/html-tags.json");
       resolve(lib);
     } catch (error) {
       reject(error);

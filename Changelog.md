@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `str_replacelast` method into `utils`. Completed on 2025-04-22
 - webbunjs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-29
 - Add a feature to allow deskelectronjs engine to change page base on internel GUI url. Completed on 2025-04-29
-- Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30
+- ~~Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30~~
 - webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
 - Apply cors and secureHeaders to both webbunjs and webnodehonojs engine. Completed on 2025-04-30
 
@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `kernel.Utils` object import twice to make sure all parameters updated to apply anywhere at `app.js`. Completed on 2025-04-05
 - Update workspaces in `package.json` and `package.json.example`. Completed on 2025-04-06
 - Change the import sqlite module method in `sqlmanager` base on engine name because bun.js has it own built in sqlite. Completed on 2025-04-22
-- Improve webbunjs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-04-30
+- ~~Improve webbunjs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-04-30~~
+- Move both `html-tage.json` and `mimes.json` to utils handler to handle data. Both webbunjs and webnodehonojs engine will be afftected. Completed on 2025-05-02
+  -Improve both webbunjs and webnodehonojs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-05-02
 
 ### Deprecated
 

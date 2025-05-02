@@ -29,6 +29,7 @@ module.exports = async (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
+    const { htmlTags } = library.utils.handler;
     const { jptr, fs, logger, path } = sys;
 
     try {

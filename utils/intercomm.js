@@ -18,7 +18,7 @@
  * The submodule of utils
  * @module utils_intercomm
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const event = require("events");

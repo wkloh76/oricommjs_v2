@@ -209,8 +209,7 @@ module.exports = async (...args) => {
                       const mimes = getContentType(filePath);
 
                       // Serve the file with the correct content-length header
-                      if (!mimes) return readFileSync(filePath, "utf-8");
-                      else {
+                      if (mimes) {
                         const cssContent = readFileSync(filePath);
                         const options = {
                           headers: {
@@ -219,15 +218,8 @@ module.exports = async (...args) => {
                               Buffer.byteLength(cssContent).toString(),
                           },
                         };
-                        if (mimes == "font/woff" || mimes == "font/woff2") {
-                          c.res = new Response(cssContent, options);
-                        } else {
-                          return c.body(cssContent, options);
-                        }
+                        return c.body(cssContent, options);
                       }
-                    } else {
-                      // File not found
-                      c.res = new Response("File not found", { status: 404 });
                     }
                   },
                 })
@@ -259,15 +251,14 @@ module.exports = async (...args) => {
                   serveStatic({
                     root: `${val}`,
                     getContent: (path, c) => {
-                      let filePath = `/${path.replace(`${key}`, "")}`;
+                      let filePath = `${path.replace(`${key}`, "")}`;
                       // Check if the file exists
                       if (fs.existsSync(filePath)) {
                         // Get the mimes type
                         const mimes = getContentType(filePath);
 
                         // Serve the file with the correct content-length header
-                        if (!mimes) return readFileSync(filePath, "utf-8");
-                        else {
+                        if (mimes) {
                           const cssContent = readFileSync(filePath);
                           const options = {
                             headers: {
@@ -276,15 +267,8 @@ module.exports = async (...args) => {
                                 Buffer.byteLength(cssContent).toString(),
                             },
                           };
-                          if (mimes == "font/woff" || mimes == "font/woff2") {
-                            c.res = new Response(cssContent, options);
-                          } else {
-                            return c.body(cssContent, options);
-                          }
+                          return c.body(cssContent, options);
                         }
-                      } else {
-                        // File not found
-                        c.res = new Response("File not found", { status: 404 });
                       }
                     },
                   })
