@@ -43,6 +43,7 @@ module.exports = async (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { datatype, dir_module, str_replacelast } = library.utils;
+    const { mimes } = library.utils.handler;
     const { dayjs, fs, path } = sys;
     const { existsSync, readFileSync } = fs;
     const { join } = path;
@@ -74,8 +75,6 @@ module.exports = async (...args) => {
           app.use(cors());
           app.use(secureHeaders());
 
-          // Compress all route
-          // app.use(compress());
           if (savestore) {
             let dbfile;
             if (store.path == "") dbfile = join(logpath, "./sessions.db3");

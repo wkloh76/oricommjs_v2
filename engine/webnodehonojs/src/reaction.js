@@ -17,7 +17,6 @@
 
 const { minify } = require("html-minifier-terser");
 const jsdom = require("jsdom");
-const htmlTags = require("./data/html-tags.json");
 
 /**
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
