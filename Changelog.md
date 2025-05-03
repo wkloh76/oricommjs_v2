@@ -21,8 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ~~Create `mimes.json` for webbundjs server to get headers "Content-Type" value. Completed on 2025-04-30~~
 - webnodehonojs engine design majority done and can work work oricommjs_component project. Completed on 2025-04-30
 - Apply cors and secureHeaders to both webbunjs and webnodehonojs engine. Completed on 2025-04-30
-- Create `sqlitesession.js` at utils to manage all engine relate with http session. Completed on 2025-05-02
+- ~~Create `sqlitesession.js` at utils to manage all engine relate with http session. Completed on 2025-05-02~~
 - Redefine `less.js` file routing method into `load_pubshare` function at both webbunjs and webnodehonojs engine. Completed on 2025-05-02
+- Redesign `sqlitesession.js` at utils to manage all engine relate with http session (include webnodejs express-session format). Completed on 2025-05-03
 
 ### Changed
 
