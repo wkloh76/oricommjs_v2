@@ -18,7 +18,7 @@
  * A module which handle all transaction wih mariadb/mysql database
  * @module src_mariadb
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

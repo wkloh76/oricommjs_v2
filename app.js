@@ -407,8 +407,10 @@
             let { startup, start } = components;
             if (startup) {
               for (let module of startup) {
-                let rtn = await module(params.ongoing);
-                if (rtn) throw rtn;
+                if (module) {
+                  let rtn = await module(params.ongoing);
+                  if (rtn) throw rtn;
+                }
               }
             }
             if (start) {

@@ -19,7 +19,7 @@
  * The submodule of init_electron
  * @module src_desktop
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

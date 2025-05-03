@@ -18,7 +18,7 @@
  * The submodule of auto update execute program
  * @module src_updater
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

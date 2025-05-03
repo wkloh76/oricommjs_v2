@@ -18,7 +18,7 @@
  * A module which will base on template to produce sql statement for sqlite or mysql/mariadb
  * @module src_sqltemplate
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

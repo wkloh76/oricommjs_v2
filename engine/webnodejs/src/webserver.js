@@ -18,7 +18,7 @@
  * Submodule handles the http server, which uses expressJS to manage http requests and responses
  * @module src_webserver
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

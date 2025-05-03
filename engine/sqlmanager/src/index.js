@@ -18,7 +18,7 @@
  * The asistant of main module which is handle the submodule in each sub folder.
  * @module src_index
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

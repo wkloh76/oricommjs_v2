@@ -18,7 +18,7 @@
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
  * @module src_reaction_moleculde
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

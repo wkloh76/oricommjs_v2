@@ -35,7 +35,7 @@ const pino = require("pino");
 const { rotate } = require("pino-rotate");
 const { minify } = require("html-minifier-terser");
 
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

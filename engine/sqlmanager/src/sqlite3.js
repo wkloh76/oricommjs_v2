@@ -18,7 +18,7 @@
  * A module which handle all transaction wih sqlite3 database
  * @module src_sqlite3
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;

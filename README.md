@@ -14,9 +14,9 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 
 ## Idea
 
-- The `webnodejs` engine is a web server designed based on the expressjs framework. It can runs on bith NodeJS and BunJS
-- The `webbunjs` engine is a web server designed based on the bunrest framework. It can runs BunJS
-- The `webnodehonojs` engine is a web server designed based on the bunrest framework. It can runs NodeJS
+- The `webnodejs` engine is a web server designed based on the expressjs framework. It can runs on with NodeJS and BunJS
+- The `webbunjs` engine is a web server designed based on the honojs framework. It can runs BunJS
+- The `webnodehonojs` engine is a web server designed based on the honojs framework. It can runs NodeJS
 - The `deskelectronjs` engine is a desktop application designed to be executed only through ElectronJS.
 - The `appservicejs` engine is non-GUI application desgined which can directlly run in pc background service or executed from Linux console or Windows CMD. It can runs on bith NodeJS and BunJS
 - Reusable or reappliable modules are one of the design features of the framework to avoid duplicating code everywhere and wasting resources.
@@ -40,10 +40,13 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 - It is the main core engine of the entire project and determines whether the project is a console, web or desktop application.
 
 - Framework comes with functions:
-  - utils {handler and powersehll}
+  - utils {handler, intercomm, powersehll and sqlitesession}
 - Choose one engine:
   - appservicejs(NodeJS,Bunjs)
   - webbunjs (bunJS)
+    - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
+  - webnodehonojs (NodeJS)
+    - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
   - webnodejs (NodeJS,bunJS)
     - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
   - deskeletronjs (ElectronJS)
@@ -85,7 +88,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 
 ## Debug: vscodelaunch.json setting
 
-### nodejs, bun, electronjs
+### nodejs
 
 ```
 {
@@ -115,18 +118,68 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
       "address": "192.180.1.111",
       "port": 9229,
       "localRoot": "${workspaceFolder}",
-      "remoteRoot": "/usr/share/prj/project",
+      "remoteRoot": "/remote/machine/project",
       "protocol": "inspector"
     },
+  ]
+}
+```
+
+### nodejs + honojs
+
+```
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Nodejs Hono Program",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/app.js",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--mode=debug",
+        "--engine=webnodehonojs"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach Nojdejs Hono remotely",
+      "address": "192.180.1.111",
+      "port": 9229,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/remote/machine/project",
+      "protocol": "inspector"
+    },
+  ]
+}
+```
+
+### bun + honojs
+
+```
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
     {
       "type": "bun",
       "request": "launch",
-      "name": "Debug Bun File",
+      "name": "Debug Bun hono File",
       "program": "app.js",
       "cwd": "${workspaceFolder}",
       "args": [
         "--mode=debug",
-        "--engine=webnodejs"
+        "--engine=webbunjs"
       ],
       "stopOnEntry": false,
       "watchMode": false,
@@ -135,12 +188,12 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
     {
       "type": "bun",
       "request": "launch",
-      "name": "Run Bun File",
+      "name": "Run Bun hono File",
       "program": "app.js",
       "cwd": "${workspaceFolder}",
       "args": [
         "--mode=debug",
-        "--engine=webnodejs"
+        "--engine=webbunjs"
       ],
       "noDebug": true,
       "watchMode": false,
@@ -154,24 +207,70 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
       "stopOnEntry": false,
       "internalConsoleOptions": "neverOpen"
     },
+  ]
+}
+```
+
+### electronjs + Linux
+
+```
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
     {
       "name": "Electron: Main",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/electron/./electron",
-      "windows": {
-        "runtimeExecutable": "D:\\electron\\electron.exe",
-        "runtimeArgs": [
-        "${workspaceRoot}\\app.js",
+      "runtimeArgs": [
+        "${workspaceRoot}/app.js",
         "--remote-debugging-port=9223",
         "--mode=debug",
         "--engine=deskelectronjs",
         "--disable-gpu",
         "--no-sandbox"
       ],
-      },
+    },
+    {
+      "name": "Electron: Renderer",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9223,
+      "webRoot": "${workspaceFolder}",
+      "timeout": 30000
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Electron: All",
+      "configurations": [
+        "Electron: Main",
+        "Electron: Renderer"
+      ]
+    }
+  ]
+}
+```
+
+### electronjs + Windows
+
+```
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Electron: Main",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "D:\\electron\\electron.exe",
       "runtimeArgs": [
-        "${workspaceRoot}/app.js",
+        "${workspaceRoot}\\app.js",
         "--remote-debugging-port=9223",
         "--mode=debug",
         "--engine=deskelectronjs",

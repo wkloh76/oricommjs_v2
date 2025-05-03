@@ -22,14 +22,14 @@ const jsdom = require("jsdom");
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
  * @module utils_reaction
  */
-module.exports = async (...args) => {
+module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
     const { htmlTags } = library.utils.handler;
-    const { jptr, fs, logger, path } = sys;
+    const { fs, logger, path } = sys;
 
     try {
       const basic =
