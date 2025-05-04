@@ -31,7 +31,6 @@ const { cors } = require("hono/cors");
 const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
-const pino = require("pino");
 const { rotate } = require("pino-rotate");
 const { minify } = require("html-minifier-terser");
 
@@ -44,7 +43,7 @@ module.exports = (...args) => {
       library.utils;
     const { SqliteStore } = sqlitesession;
     const { mimes } = library.utils.handler;
-    const { dayjs, fs, path } = sys;
+    const { dayjs, fs, path, pino } = sys;
     const { existsSync, readFileSync } = fs;
     const { join } = path;
 
@@ -56,6 +55,7 @@ module.exports = (...args) => {
       // let app = new OpenAPIHono();
       let app = new Hono();
       let sessionval;
+      let logger;
 
       /**
        * Web server establish and session log
@@ -92,7 +92,7 @@ module.exports = (...args) => {
 
           // Setup server log
           // 创建 Pino 日志记录器并配置轮转
-          const logger = pino({
+          logger = pino({
             level: "info",
             transport: {
               target: "pino-rotate",
@@ -117,34 +117,6 @@ module.exports = (...args) => {
           });
 
           sessionval = setsession;
-
-          // 添加 Pino HTTP 中间件
-          app.use("*", async (...args) => {
-            const [cnt, next] = args;
-            const { req, res } = cnt;
-            const start = Date.now();
-            await next();
-            let ms = Date.now() - start;
-
-            let parsebody = {};
-            let ctype = req.header("Content-Type");
-            if (ctype) parsebody = await req[cnttype[ctype]]();
-
-            logger.info(
-              {
-                method: req.method,
-                url: req.path,
-                userAgent: req.header("User-Agent"),
-                status: res.status,
-                responseTime: `${ms}ms`,
-                ip: getConnInfo(cnt).remote.address,
-                query: JSON.stringify(req.query()),
-                body: JSON.stringify(parsebody),
-                params: JSON.stringify(req.param()),
-              },
-              "request completed"
-            );
-          });
 
           const webservice = () => {
             let output;
@@ -342,6 +314,33 @@ module.exports = (...args) => {
                 return cnt.text("overflow :(", 413);
               },
             }),
+            // 添加 Pino HTTP 中间件
+            async (...args) => {
+              const [cnt, next] = args;
+              const { req, res } = cnt;
+              const start = Date.now();
+              await next();
+              let ms = Date.now() - start;
+
+              let parsebody = {};
+              let ctype = req.header("Content-Type");
+              if (ctype) parsebody = await req[cnttype[ctype]]();
+
+              logger.info(
+                {
+                  method: req.method,
+                  url: req.path,
+                  userAgent: req.header("User-Agent"),
+                  status: res.status,
+                  responseTime: `${ms}ms`,
+                  ip: getConnInfo(cnt).remote.address,
+                  query: JSON.stringify(req.query()),
+                  body: JSON.stringify(parsebody),
+                  params: JSON.stringify(req.param()),
+                },
+                "request completed"
+              );
+            },
             reaction["onrequest"]
           );
 

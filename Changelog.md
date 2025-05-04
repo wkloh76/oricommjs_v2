@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move both `html-tage.json` and `mimes.json` to utils handler to handle data. Both webbunjs and webnodehonojs engine will be afftected. Completed on 2025-05-02
 - Improve both webbunjs and webnodehonojs engine which handle static-server process in load_pubshare and load_atomic at `server.js`. Completed on 2025-05-02
 - Update README. Completed on 2025-05-03
+- Direct apply pino from sysmodule intead direct import pino module from webbunjs and webnodehonojs engine. Completed on 2025-05-04
+- Change all success.log from all engine which will only accept by project own api and gui request. Completed on 2025-05-04
 
 ### Deprecated
 
@@ -48,11 +50,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove onless,castless and mergecss method from both webbunjs and webnodehonojs engine. Completed on 2025-05-02
 - Remove unused variable and async defination in all engine. Completed on 2025-05-03
 - Romve loghttp from `app.js`. Completed on 2025-05-04
+- Remove pino module from webbunjs and webnodehonojs engine `package.json`. Completed on 2025-05-04
 
 ### Fixed
 
 - Fix session bypass checking the static file request in `webserver.js` at webnodejs, webbunjs and webnodehonojs engine. Completed on 2025-05-02
 - Fix extract data from setting object in establish method at webbunjs and webnodehonojs engine. Completed on 2025-05-02
+- Fix null value unable insert and update in `sqlitesession.js` at utils. Completes on 2025-05-0
 
 ### Security
 

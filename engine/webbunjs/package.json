@@ -1,13 +1,12 @@
 {
-    "name": "webbun",
-    "dependencies": {
-        "@hono/swagger-editor": "1.0.0",
-        "@hono/swagger-ui": "0.5.1",
-        "@hono/zod-openapi": "0.19.2",
-        "bun": "1.2.10",
-        "hono": "4.7.8",
-        "hono-sessions": "0.7.2",
-        "pino": "9.6.0",
-        "pino-rotate": "0.3.0"
-    }
+  "name": "webbunjs",
+  "dependencies": {
+    "@hono/swagger-editor": "1.0.0",
+    "@hono/swagger-ui": "0.5.1",
+    "@hono/zod-openapi": "0.19.2",
+    "bun": "1.2.10",
+    "hono": "4.7.8",
+    "hono-sessions": "0.7.2",
+    "pino": "9.6.0"
+  }
 }

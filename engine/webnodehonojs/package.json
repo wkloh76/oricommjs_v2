@@ -1,5 +1,5 @@
 {
-  "name": "webnodehono",
+  "name": "webnodehonojs",
   "dependencies": {
     "@hono/node-server": "1.14.1",
     "@hono/swagger-editor": "1.0.0",
@@ -7,8 +7,6 @@
     "@hono/zod-openapi": "0.19.2",
     "@libsql/client": "0.15.4",
     "hono": "4.7.8",
-    "hono-sessions": "0.7.2",
-    "pino": "9.6.0",
-    "pino-rotate": "0.3.0"
+    "hono-sessions": "0.7.2"
   }
 }

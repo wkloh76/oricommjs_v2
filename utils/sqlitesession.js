@@ -83,7 +83,7 @@ module.exports = {
         sess.cookie.expires = initialData["_expire"];
         await this.db.execute({
           sql: `INSERT INTO ${this.tableName} (sid, sess, expire) VALUES (?, ?, ?)`,
-          args: [sessionId, JSON.stringify(sess), initialData["_expire"]],
+          args: [sessionId, JSON.stringify(sess), initialData["_expire"] || ""],
         });
       } catch (error) {
         console.error("Error setting session:", error);
@@ -105,11 +105,7 @@ module.exports = {
         sess.cookie.expires = sessionData["_expire"];
         await this.db.execute({
           sql: `UPDATE ${this.tableName} SET sess = ?, expire = ? WHERE sid = ?`,
-          args: [
-            JSON.stringify(sess),
-            sessionData["_expire"],
-            sessionId,
-          ],
+          args: [JSON.stringify(sess), sessionData["_expire"] || "", sessionId],
         });
       } catch (error) {
         console.error("Error destroying session table:", error);
