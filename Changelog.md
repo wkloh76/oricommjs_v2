@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ~~Create `sqlitesession.js` at utils to manage all engine relate with http session. Completed on 2025-05-02~~
 - Redefine `less.js` file routing method into `load_pubshare` function at both webbunjs and webnodehonojs engine. Completed on 2025-05-02
 - Redesign `sqlitesession.js` at utils to manage all engine relate with http session (include webnodejs express-session format). Completed on 2025-05-03
+- Apply pino as logger manager to manage webnodejs engine http access log. Completed on 2025-05-04
+- Add pino module to `package.json`. Completed on 2025-05-04
 
 ### Changed
 
@@ -45,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove SqliteStore.js from webnodehonojs engine. Completed on 2025-05-02
 - Remove onless,castless and mergecss method from both webbunjs and webnodehonojs engine. Completed on 2025-05-02
 - Remove unused variable and async defination in all engine. Completed on 2025-05-03
+- Romve loghttp from `app.js`. Completed on 2025-05-04
 
 ### Fixed
 

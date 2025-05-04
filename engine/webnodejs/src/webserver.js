@@ -24,8 +24,9 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { datatype, dir_module } = library.utils;
-    const { existsSync } = sys.fs;
-    const { join } = sys.path;
+    const { dayjs, fs, path, pino } = sys;
+    const { existsSync } = fs;
+    const { join } = path;
 
     const express = require("express");
     const sqlite3 = require("libsql");
@@ -40,6 +41,7 @@ module.exports = (...args) => {
       let lib = {};
       let app = require("express")();
       let sessionval;
+      let logger;
       /**
        * Normalize the port
        * @alias module:webserver.normalizePort
@@ -94,13 +96,14 @@ module.exports = (...args) => {
        * @param {Object} args[0] - setting is coresetting object value
        * @returns {Object} - Return null | error object
        */
-      const establish = (...args) => {
+      const establish = async (...args) => {
         let [setting] = args;
         try {
           let {
             logpath,
             webnodejs: { parser, session, helmet },
             general,
+            args: { engine },
           } = setting;
           let { savestore, store, verbose, ...setsession } = session;
 
@@ -108,7 +111,49 @@ module.exports = (...args) => {
           app.use(require("cors")());
           // app.use(require("helmet")(helmet));
           // Setup server log
-          app.use(sys.loghttp);
+          logger = pino({
+            level: "info",
+            transport: {
+              target: "pino-rotate",
+              options: {
+                file: join(logpath, curdir, "success.log"), // 主日志文件路径
+                size: cosetting.log.success.maxLogSize, // 每个日志文件最大10MB
+                rotate: cosetting.log.success.numBackups, // 保留5个轮转文件
+                interval: "1d", // 每天检查轮转
+                compress: true, // 压缩旧日志
+                mkdir: true,
+              },
+            },
+            // 添加时间戳
+            timestamp: () =>
+              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+            // 自定义日志格式
+            formatters: {
+              level: (label) => {
+                return { level: label };
+              },
+            },
+          });
+
+          // 添加 Pino HTTP 中间件
+          // app.use("*", async (...args) => {
+          //   const [req, res, next] = args;
+          //   logger.info(
+          //     {
+          //       method: req.method,
+          //       url: req.baseUrl,
+          //       userAgent: req.headers["user-agent"],
+          //       status: res.statusCode,
+          //       ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+          //       query: JSON.stringify(req.query),
+          //       body: JSON.stringify(req.body) || JSON.stringify({}),
+          //       params: JSON.stringify(req.params),
+          //     },
+          //     "request completed"
+          //   );
+          //   next();
+          // });
+
           // parse various different custom JSON types as JSON
           app.use(bodyParser.json(parser.json));
 
@@ -214,7 +259,7 @@ module.exports = (...args) => {
       lib["start"] = async (...args) => {
         let [setting, reaction] = args;
         try {
-          let rtnestablish = establish(setting);
+          let rtnestablish = await establish(setting);
           if (rtnestablish) throw rtnestablish;
           await Promise.all([
             load_atomic(setting.share.atomic, setting.genernalexcludefile, {
@@ -227,7 +272,30 @@ module.exports = (...args) => {
           ]);
           // Session in the middleware
           app.use(expsession(sessionval));
-          app.use(router.use(reaction["onrequest"]));
+          app.use(
+            router.use([
+              async (...args) => {
+                const [req, res, next] = args;
+                logger.info(
+                  {
+                    method: req.method,
+                    url: req.originalUrl,
+                    userAgent: req.headers["user-agent"],
+                    status: res.statusCode,
+                    ip:
+                      req.headers["x-forwarded-for"] ||
+                      req.socket.remoteAddress,
+                    query: JSON.stringify(req.query),
+                    body: JSON.stringify(req.body) || JSON.stringify({}),
+                    params: JSON.stringify(req.params),
+                  },
+                  "request completed"
+                );
+                next();
+              },
+              reaction["onrequest"],
+            ])
+          );
           return;
         } catch (error) {
           return error;

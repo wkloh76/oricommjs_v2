@@ -39,6 +39,8 @@
       path: require("path"),
       toml: require("@ltd/j-toml"),
       yaml: require("yaml"),
+      log4js: (await import("log4js")).default,
+      pino: require("pino"),
     };
 
     global.kernel = {
@@ -259,22 +261,18 @@
     const configlog = (...args) => {
       return new Promise(async (resolve, reject) => {
         const [cosetting, path] = args;
-        const {
-          log,
-          logpath,
-          args: { engine },
-        } = cosetting;
+        const { log, logpath } = cosetting;
         let output = {
           code: 0,
           msg: "app.js configlog done!",
           data: null,
         };
         try {
-          const { default: log4js } = await import("log4js");
+          const { log4js } = sysmodule;
           let config = {
             appenders: {
               access: {
-                filename: path.join(logpath, engine, "success.log"),
+                filename: path.join(logpath, "success.log"),
                 ...log.success,
               },
               error: {
@@ -292,18 +290,6 @@
           output.data = {
             logger: {
               logger: log4js.getLogger("info"),
-              logelectron: log4js.getLogger("access"),
-              loghttp: log4js.connectLogger(log4js.getLogger("access"), {
-                level: log4js.levels.INFO,
-                format: (req, res, cb) =>
-                  cb(
-                    `:remote-addr - ":method :url HTTP/:http-version" :status :content-length ":referrer" ":user-agent"\ndata - query: ${JSON.stringify(
-                      req.query
-                    )} body: ${JSON.stringify(
-                      req.body
-                    )} params: ${JSON.stringify(req.params)}`
-                  ),
-              }),
             },
             config: config,
           };
