@@ -24,7 +24,7 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject } = library.utils;
-    const { fs, path, logger } = sys;
+    const { fs, path, logerr } = sys;
     const { minify } = require("html-minifier-terser");
     const jsdom = require("jsdom");
 
@@ -338,7 +338,7 @@ module.exports = (...args) => {
        */
       const logerr = (...args) => {
         let [message] = args;
-        logger.error(message);
+        logerr.error(message);
       };
 
       /**

@@ -39,7 +39,6 @@
       path: require("path"),
       toml: require("@ltd/j-toml"),
       yaml: require("yaml"),
-      log4js: (await import("log4js")).default,
       pino: require("pino"),
     };
 
@@ -215,11 +214,14 @@
             // To check if given directory exists or not
             if (notexist) {
               // If current directory does not exist then create it
-              fs.mkdir(logpath, { recursive: true }, (err) => {
+              fs.mkdir(logpath, { recursive: true }, async (err) => {
                 if (err) {
                   output.code = -2;
                   output.msg = err.message;
                 } else {
+                  const util = require("util");
+                  const mkdir = util.promisify(fs.mkdir);
+                  await mkdir(`${logpath}/error`, { recursive: true });
                   output.msg = "New Directory created successfully !!";
                 }
                 resolve(output);
@@ -268,31 +270,29 @@
           data: null,
         };
         try {
-          const { log4js } = sysmodule;
-          let config = {
-            appenders: {
-              access: {
-                filename: path.join(logpath, "success.log"),
-                ...log.success,
+          const { dayjs, pino } = sysmodule;
+
+          let logerror = pino({
+            level: "error",
+            transport: {
+              target: "pino-roll",
+              options: {
+                file: path.join(logpath, "error", "error.log"),
+                ...cosetting.log.error,
               },
-              error: {
-                filename: path.join(logpath, "error", "error.log"),
-                ...log.error,
+            },
+            // 添加时间戳
+            timestamp: () =>
+              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+            // 自定义日志格式
+            formatters: {
+              level: (label) => {
+                return { level: label };
               },
             },
-            categories: {
-              access: { appenders: ["access"], level: "INFO" },
-              default: { appenders: ["access"], level: "ALL" },
-              info: { appenders: ["error"], level: "ALL" },
-            },
-          };
-          await log4js.configure(config);
-          output.data = {
-            logger: {
-              logger: log4js.getLogger("info"),
-            },
-            config: config,
-          };
+          });
+
+          output.data = { logerr: logerror };
           resolve(output);
         } catch (error) {
           if (error.errno)
@@ -580,10 +580,7 @@
     if (rtnmklog.code != 0) throw rtnmklog;
     let rtnconflog = await configlog(coresetting, sysmodule.path);
     if (rtnconflog.code != 0) throw rtnconflog;
-    else {
-      sysmodule = { ...sysmodule, ...rtnconflog.data.logger };
-      coresetting["log4jsconf"] = rtnconflog.data.config;
-    }
+    else sysmodule = { ...sysmodule, ...rtnconflog.data };
 
     kernel.utils = {
       ...(await require(sysmodule.path.join(kernel.dir, "utils"))(
@@ -597,7 +594,7 @@
       `done app (${sysmodule.dayjs().format("DD-MM-YYYY HH:mm:ss")})`
     );
   } catch (error) {
-    sysmodule.logger.error(error.stack);
+    sysmodule.logerr.error(error.stack);
     console.log(error.stack);
   }
 })();

@@ -29,7 +29,7 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
     const { htmlTags } = library.utils.handler;
-    const { fs, logger, path } = sys;
+    const { fs, logerr, path } = sys;
 
     try {
       const basic =
@@ -667,7 +667,7 @@ module.exports = (...args) => {
        */
       const logerr = (...args) => {
         let [message] = args;
-        logger.error(message);
+        logerr.error(message);
       };
 
       /**

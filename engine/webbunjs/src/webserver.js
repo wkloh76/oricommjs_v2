@@ -94,14 +94,10 @@ module.exports = (...args) => {
           logger = pino({
             level: "info",
             transport: {
-              target: "pino-rotate",
+              target: "pino-roll",
               options: {
-                file: join(logpath, curdir, "success.log"), // 主日志文件路径
-                size: cosetting.log.success.maxLogSize, // 每个日志文件最大10MB
-                rotate: cosetting.log.success.numBackups, // 保留5个轮转文件
-                interval: "1d", // 每天检查轮转
-                compress: true, // 压缩旧日志
-                mkdir: true,
+                file: join(logpath, curdir, "success.log"),
+                ...cosetting.log.success,
               },
             },
             // 添加时间戳

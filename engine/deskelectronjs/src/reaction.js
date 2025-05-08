@@ -25,7 +25,7 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { minify } = require("html-minifier-terser");
     const jsdom = require("jsdom");
-    const { fs, path, logger } = sys;
+    const { fs, path, logerr } = sys;
     const { handler, getNestedObject } = library.utils;
     try {
       const molecule = await require("./reaction/molecule")(params, obj);
@@ -337,7 +337,7 @@ module.exports = (...args) => {
        */
       const logerr = (...args) => {
         let [message] = args;
-        logger.error(message);
+        logerr.error(message);
       };
 
       /**

@@ -26,7 +26,7 @@ module.exports = async (...args) => {
     const { minify } = require("html-minifier-terser");
     const jsdom = require("jsdom");
     const { ipcRenderer } = require("electron");
-    const { fs, path, logger, logelectron } = sys;
+    const { fs, path, logerr } = sys;
     const {
       utils: { handler, getNestedObject },
     } = library;
@@ -321,7 +321,7 @@ module.exports = async (...args) => {
        */
       const logerr = (...args) => {
         let [message] = args;
-        logger.error(message);
+        logerr.error(message);
       };
 
       /**

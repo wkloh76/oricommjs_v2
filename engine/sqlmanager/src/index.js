@@ -27,8 +27,9 @@ module.exports = (...args) => {
     const csv = require("csv-parser");
     const jandas = require("jandas");
     const sqlfmt = require("sql-fmt");
-    const { path, logger } = sys;
-    const { handler, errhandler } = library.utils;
+
+    const { dayjs, fs, logerr, path, pino } = sys;
+    const { handler, errhandler, powershell } = library.utils;
     try {
       let lib = {
         sqlite3: await require("./sqlite3")(params, obj),
@@ -53,7 +54,7 @@ module.exports = (...args) => {
         else message += "Message:" + err.message + "\r\n";
         if (err.stack && !message) message = "Stack:" + err.stack;
         else message += "Message:" + err.stack;
-        logger.error(message);
+        logerr.error(message);
       };
 
       /**
@@ -67,33 +68,35 @@ module.exports = (...args) => {
        */
       const setuplog = async (...args) => {
         const [log, db, dbname] = args;
-        const { default: log4js } = await import("log4js");
         try {
           let output = handler.dataformat;
           let logpath = db.path;
-          if (db.path == "")
-            logpath = path.join(cosetting.logpath, db.engine, `${dbname}.log`);
-          else logpath = path.join(db.path, db.engine, `${dbname}.log`);
-          cosetting.log4jsconf.appenders = {
-            ...cosetting.log4jsconf.appenders,
-            ...{
-              [dbname]: {
-                filename: logpath,
+          if (db.path == "") logpath = path.join(cosetting.logpath, db.engine);
+          else logpath = path.join(db.path, db.engine);
+
+          await powershell.shell(`mkdir -p ${logpath}`);
+
+          // 创建 Pino 日志记录器并配置轮转
+          output.data = pino({
+            level: "info",
+            transport: {
+              target: "pino-roll",
+              options: {
+                file: path.join(logpath, `${dbname}.log`),
                 ...log,
               },
             },
-          };
-          cosetting.log4jsconf.categories = {
-            ...cosetting.log4jsconf.categories,
-            ...{
-              [dbname]: {
-                appenders: [dbname],
-                level: "ALL",
+            // 添加时间戳
+            timestamp: () =>
+              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+            // 自定义日志格式
+            formatters: {
+              level: (label) => {
+                return { level: label };
               },
             },
-          };
-          await log4js.configure(cosetting.log4jsconf);
-          output.data = log4js.getLogger(dbname);
+          });
+
           return output;
         } catch (error) {
           return errhandler(error);

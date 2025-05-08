@@ -1,7 +1,6 @@
 {
   "name": "webnodejs",
   "dependencies": {
-    "libsql": "0.5.4",
     "better-sqlite3-session-store": "0.1.0",
     "connect-flash": "0.1.1",
     "cookie-parser": "1.4.7",
@@ -12,6 +11,9 @@
     "helmet": "8.1.0",
     "html-minifier-terser": "7.2.0",
     "html-tags": "4.0.0",
-    "jsdom": "26.0.0"
+    "jsdom": "26.0.0",
+    "libsql": "0.5.4",
+    "pino": "9.6.0",
+    "pino-roll": "3.1.0"
   }
 }
