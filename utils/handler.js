@@ -103,6 +103,12 @@ module.exports = (...args) => {
             {
               options: {
                 css: { atomic: [], locally: [], other: [], remotely: [] },
+                download: {
+                  content: "",
+                  ctype: "",
+                  filename: "",
+                  save: false,
+                },
                 html: "",
                 injectioncss: {},
                 injectionjs: { variables: {}, modules: {} },

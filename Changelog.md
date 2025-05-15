@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Apply pino-roll instead log4js to handler all log file size and rotate the backup log files process. Completed on 2025-05-08
 - Add downlod flag to `atomic/atom/smfetch/src/browser/smfetch/atom.js` for return data as blob data type. Completed on 2025-05-15
+- Add download function to webnodejs engine. Completed on 2025-05-15
 
 ### Changed
 

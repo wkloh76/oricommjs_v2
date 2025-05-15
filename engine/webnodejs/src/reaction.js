@@ -24,6 +24,7 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject } = library.utils;
+    const { mimes } = handler;
     const { fs, path, logerr } = sys;
     const { minify } = require("html-minifier-terser");
     const jsdom = require("jsdom");
@@ -33,6 +34,47 @@ module.exports = (...args) => {
 
       let lib = {};
       let components = { defaulturl: "" };
+
+      /**
+       * Download file base on buffer or physical file
+       * @alias module:reaction.downloadproc
+       * @param {...Object} args - 1 parameters
+       * @param {Object} args[0] - res the object for render to frontend
+       * @param {Object} args[1] - file the object for file content and information
+       */
+      const downloadproc = async (...args) => {
+        let [res, file] = args;
+        let { content, ctype, filename, save } = file;
+
+        let disposition,
+          fname = "",
+          content_type = {};
+        if (filename != "") fname = `; filename="${filename}"`;
+
+        if (Object.keys(mimes).includes(ctype))
+          content_type = { "Content-Type": mimes[ctype] };
+
+        if (save) disposition = `attachment ${fname}`;
+        else disposition = "inline";
+
+        let headers = {
+          "Cache-Control": "no-cache",
+          "Content-Disposition": disposition,
+          ...content_type,
+        };
+
+        if (Buffer.isBuffer(content)) {
+          res.set({
+            ...headers,
+            "Content-Length": Buffer.byteLength(content).toString(),
+          });
+          res.status(200).send(content);
+        } else {
+          res.set(headers);
+          if (fs.existsSync(content)) res.status(200).sendFile(content);
+          else res.status(404).send("File not found");
+        }
+      };
 
       /**
        * Merge multi css file to be sinlge string and render to frontend
@@ -88,6 +130,7 @@ module.exports = (...args) => {
             let {
               options: {
                 css,
+                download,
                 html,
                 injectionjs,
                 js,
@@ -107,6 +150,10 @@ module.exports = (...args) => {
             let isredirect = handler.check_empty(redirect);
             let isjson = handler.check_empty(json);
             let ishtml = handler.check_empty(html);
+            if (!handler.check_empty(download.content)) {
+              downloadproc(res, download);
+              resolve(rtn);
+            }
             // let iscss = handler.check_empty(options.css);
 
             if (!isredirect) {
@@ -251,7 +298,7 @@ module.exports = (...args) => {
         if (!handler.check_empty(options.redirect)) return false;
         if (!handler.check_empty(options.json)) return false;
         if (!handler.check_empty(options.html)) return false;
-
+        if (!handler.check_empty(options.download.content)) return false;
         return true;
       };
 
@@ -328,17 +375,6 @@ module.exports = (...args) => {
             reject(error);
           }
         });
-      };
-
-      /**
-       * The main objective is write the error statement to error.log
-       * @alias module:reaction.logerr
-       * @param {...Object} args - 1 parameters
-       * @param {String} args[0] - message is error statement in text
-       */
-      const logerr = (...args) => {
-        let [message] = args;
-        logerr.error(message);
       };
 
       /**
@@ -587,7 +623,7 @@ module.exports = (...args) => {
           let errmsg = `"${orireq.method} ${orireq.originalUrl} HTTP/1.1" ${errcode} Error:`;
           if (typeof errmessage == "string") errmsg += errmessage;
           else errmsg += JSON.stringify(errmessage);
-          logerr(errmsg);
+          logerr.error(errmsg);
 
           let result_catch = await processEnd(orires);
           if (result_catch.code != 0) {
@@ -595,7 +631,7 @@ module.exports = (...args) => {
             if (result_catch.stack) msg += result_catch.stack;
             else msg += result_catch.message;
             console.log(msg);
-            logerr(msg);
+            logerr.error(msg);
           }
           orires.end();
         }
