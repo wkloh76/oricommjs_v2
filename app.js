@@ -263,54 +263,53 @@
     const configlog = (...args) => {
       return new Promise(async (resolve, reject) => {
         const [cosetting, path] = args;
-        const { log, logpath } = cosetting;
+        const { logpath } = cosetting;
+        const { dayjs, fs, pino } = sysmodule;
         let output = {
           code: 0,
           msg: "app.js configlog done!",
           data: null,
         };
         try {
-          const { dayjs, pino } = sysmodule;
-
-          let logerror = pino({
-            level: "error",
-            transport: {
-              target: "pino-roll",
-              options: {
-                file: path.join(logpath, "error", "error.log"),
-                ...cosetting.log.error,
+          let stream = fs.createWriteStream(
+            path.join(logpath, "error", "error.log"),
+            { flags: "a" }
+          );
+          // 配置 Pino 日志
+          let logerror = pino(
+            {
+              level: "error",
+              timestamp: () =>
+                `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+              formatters: {
+                level: (label) => {
+                  return { level: label };
+                },
               },
             },
-            // 添加时间戳
-            timestamp: () =>
-              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
-            // 自定义日志格式
-            formatters: {
-              level: (label) => {
-                return { level: label };
-              },
-            },
-          });
+            stream
+          );
 
           output.data = { logerr: logerror };
-          resolve(output);
         } catch (error) {
           if (error.errno)
-            resolve({
+            output = {
               code: error.errno,
               errno: error.errno,
               message: error.message,
               stack: error.stack,
               data: error,
-            });
+            };
           else
-            resolve({
+            output = {
               code: -1,
               errno: -1,
               message: error.message,
               stack: error.stack,
               data: error,
-            });
+            };
+        } finally {
+          resolve(output);
         }
       });
     };

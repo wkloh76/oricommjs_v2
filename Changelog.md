@@ -17,11 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update all dependencies to latest version. Completed on 2025-05-19
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fix `pino-roll` disturb vscode debugging with nodejs. Use streaming write method instead `pino-roll` module. Completed on 2025-05-19
 
 ### Security
 
