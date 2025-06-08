@@ -14,11 +14,6 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
-/**
- * Submodule handles the http server, which uses hono to manage http requests and responses
- * @module src_webserver
- */
-
 const { serve } = require("bun");
 const { createClient: sqlite3 } = require("@libsql/client");
 const { swaggerUI } = require("@hono/swagger-ui");
@@ -32,7 +27,12 @@ const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
 const { minify } = require("html-minifier-terser");
+const util = require("util");
 
+/**
+ * Submodule handles the http server, which uses hono to manage http requests and responses
+ * @module src_webserver
+ */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
@@ -63,7 +63,7 @@ module.exports = (...args) => {
        * @param {Object} args[0] - setting is coresetting object value
        * @returns {Object} - Return null | error object
        */
-      const establish = (...args) => {
+      const establish = async (...args) => {
         let [setting] = args;
         try {
           let { logpath, general } = setting;
@@ -88,6 +88,9 @@ module.exports = (...args) => {
             console.log("Session db run silently!");
             setsession.store = new SqliteStore(store.client);
           }
+
+          const mkdir = util.promisify(fs.mkdir);
+          await mkdir(join(logpath, curdir), { recursive: true });
 
           // Setup server log
           // 创建 Pino 日志记录器并配置轮转

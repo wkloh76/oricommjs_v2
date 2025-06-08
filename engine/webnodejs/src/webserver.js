@@ -28,6 +28,8 @@ module.exports = (...args) => {
     const { existsSync } = fs;
     const { join } = path;
 
+    const util = require("util");
+    const mkdir = util.promisify(fs.mkdir);
     const express = require("express");
     const sqlite3 = require("libsql");
     const router = express.Router();
@@ -106,6 +108,8 @@ module.exports = (...args) => {
             args: { engine },
           } = setting;
           let { savestore, store, verbose, ...setsession } = session;
+
+          await mkdir(join(logpath, curdir), { recursive: true });
 
           //set up our express application
           app.use(require("cors")());
