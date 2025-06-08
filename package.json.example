@@ -25,6 +25,7 @@
   "workspaces": [
     "engine/*",
     "atomic/atom/*",
+    "components/*",
     "utils/*"
   ]
 }

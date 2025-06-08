@@ -14,8 +14,8 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
-
-const { promises } = require("dns");
+const { Module } = require("module");
+const vm = require("vm");
 
 /**
  * The submodule utils module
@@ -1035,6 +1035,73 @@ module.exports = (...args) => {
         );
       };
 
+      const vmloader = (...args) => {
+        const [buffer, filename = ""] = args;
+        let output = handler.dataformat;
+        try {
+          const { name, base, ext, dir, root } = path.parse(filename);
+
+          const mod = new Module(base);
+          mod.filename = base;
+          const context = vm.createContext({
+            module: mod,
+            exports: mod.exports,
+            require: mod.require.bind(mod),
+            __dirname: dir,
+            __filename: base,
+          });
+          vm.runInContext(buffer.toString("utf8"), context, base);
+
+          // 返回模块导出
+          output.data = mod.exports;
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
+
+      const fmloader = (...args) => {
+        const [buffer, filename = "", debugdir = ".temp_debug"] = args;
+        let output = handler.dataformat;
+        try {
+          const { name, base, ext, dir, root } = path.parse(filename);
+
+          const tempDir = join(dir, debugdir);
+          if (!existsSync(tempDir)) mkdirSync(tempDir);
+          const OriginalCode = "" + buffer.toString();
+
+          // 创建临时文件用于调试
+          const tempFilename = path.join(tempDir, base);
+          writeFileSync(tempFilename, OriginalCode);
+
+          // 设置模块加载器
+          const Module = require("module");
+          const mod = new Module(tempFilename);
+
+          // 在沙箱中执行代码
+          const sandbox = {
+            module: mod,
+            require: Module.createRequire(tempFilename),
+            __filename: tempFilename,
+            __dirname: tempDir,
+            exports: mod.exports,
+          };
+
+          vm.runInNewContext(OriginalCode, sandbox, {
+            filename: tempFilename,
+            displayErrors: true,
+          });
+
+          // 返回模块导出
+          output.data = mod.exports;
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
+
       let lib = {
         dir_module,
         import_cjs,
@@ -1064,6 +1131,8 @@ module.exports = (...args) => {
         mergeDeep,
         sanbox,
         str_replacelast,
+        vmloader,
+        fmloader,
       };
       resolve(lib);
     } catch (error) {
