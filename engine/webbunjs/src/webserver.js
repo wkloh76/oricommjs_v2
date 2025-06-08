@@ -291,7 +291,7 @@ module.exports = (...args) => {
       lib["start"] = async (...args) => {
         let [setting, reaction] = args;
         try {
-          let rtnestablish = establish(setting);
+          let rtnestablish = await establish(setting);
           if (rtnestablish) throw rtnestablish;
           await Promise.all([
             load_atomic(setting.share.atomic, setting.genernalexcludefile, {
