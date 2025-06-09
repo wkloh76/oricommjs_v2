@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `pino-roll` disturb vscode debugging with nodejs. Use streaming write method instead `pino-roll` module. Completed on 2025-05-19
 - Fix mising checking reroute parameter in deskfetch method at `atomic/atom/smfetch/src/browser/atom.js` which will failure to automatically change the content of page. Completed on 2025-06-03
 - Fix all web engine unable create log file due to directoroy no exist. Completed on 2025-06-08
+- Fix bug in `compmgr` engine. Completed on 2025-06-09
 
 ### Security
 
