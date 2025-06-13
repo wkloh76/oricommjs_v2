@@ -72,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update README. Completed on 2025-05-03
 - Direct apply pino from sysmodule intead direct import pino module from webbunjs and webnodehonojs engine. Completed on 2025-05-04
 - Change all success.log from all engine which will only accept by project own api and gui request. Completed on 2025-05-04
+- Update `*.toml.example` at sqlmanager engine. Completed on 2025-06-13
+- Apply reroute flag and `window.location` base on redirect url in webfetch function at `smfetch/browser/atom.js`. Completed on 2025-06-13
 
 ### Deprecated
 

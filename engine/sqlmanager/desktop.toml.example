@@ -10,6 +10,7 @@ symlink = true
 dateFormat = "yyyy-MM-dd"
 
 [production.sqlite3.db]
+[production.sqlite3.db.group]
 workdb = { path = "", type = "memory" }
 filedb = { path = "", type = "file" }
 
@@ -39,6 +40,7 @@ limit = { count = 10 }
 dateFormat = "yyyy-MM-dd"
 
 [debug.sqlite3.db]
+[debug.sqlite3.db.group]
 workdb = { path = "", type = "memory", backup = "" }
 filedb = { path = "", type = "file", backup = "" }
 
