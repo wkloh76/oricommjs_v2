@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update all dependencies to latest version. Completed on 2025-05-19
+- Apply Check folder exist method into `compmgr` engine to prevent crash during load module. Completed on 2025-06-16
 
 ### Deprecated
 
