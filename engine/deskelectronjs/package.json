@@ -2,9 +2,9 @@
   "name": "deskelectronjs",
   "dependencies": {
     "electron-builder-squirrel-windows": "26.0.12",
-    "electron-log": "5.3.0",
+    "electron-log": "5.4.1",
     "html-minifier-terser": "7.2.0",
-    "jsdom": "26.0.0",
+    "jsdom": "26.1.0",
     "pino": "9.7.0",
     "pino-roll": "3.1.0"
   },

@@ -25,7 +25,6 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const bcrypt = require("bcrypt");
     const csv = require("csv-parser");
-    const jandas = require("jandas");
     const sqlfmt = require("sql-fmt");
 
     const { dayjs, fs, logerr, path, pino } = sys;
