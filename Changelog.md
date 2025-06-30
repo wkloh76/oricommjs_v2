@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesign `sqlitesession.js` at utils to manage all engine relate with http session (include webnodejs express-session format). Completed on 2025-05-03
 - Apply pino as logger manager to manage webnodejs engine http access log. Completed on 2025-05-04
 - Add pino module to `package.json`. Completed on 2025-05-04
+- Add giteapi molecule to atomic. Completed on 2025-06-30
 
 ### Changed
 
