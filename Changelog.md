@@ -90,7 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix session bypass checking the static file request in `webserver.js` at webnodejs, webbunjs and webnodehonojs engine. Completed on 2025-05-02
 - Fix extract data from setting object in establish method at webbunjs and webnodehonojs engine. Completed on 2025-05-02
-- Fix null value unable insert and update in `sqlitesession.js` at utils. Completes on 2025-05-0
+- Fix null value unable insert and update in `sqlitesession.js` at utils. Completes on 2025-05-02
+- Fix atomic failure inherited from lower level modules. Completes on 2025-06-30
 
 ### Security
 
