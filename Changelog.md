@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add check `winlist` is not empty array on `desktopcast` linstener in `engine/deskelectronjs/src/desktop.js`. Completed on 2025-07-01
+- Improve and simplify rules declare method in gui and api at engine/compmgr. Completed on 2025-07-03
+- Rule name defination change to prifix name `YS_` equalavent to yes strict and `NS_` equalavent to no strict engine/compmgr. Completed on 2025-07-03
 
 ### Changed
 

@@ -14,6 +14,9 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
+
+const { set } = require("@sagold/json-pointer");
+
 /**
  * The asistant of main module which is handle the submodule in each sub folder.
  * @module src_index
@@ -71,7 +74,8 @@ module.exports = (...args) => {
           const [pathname, curdir, compname] = params;
           const [library, sys, cosetting] = obj;
           const [setting] = args;
-          const { utils } = library;
+          const { components, utils } = library;
+          const { [compname]: owncomp } = components;
           const { dir_module, errhandler, handler, import_cjs, import_vcjs } =
             utils;
           const { fs, path } = sys;
@@ -86,10 +90,10 @@ module.exports = (...args) => {
               let location = join(pathname, val);
               if (existsSync(location)) {
                 let arr_modname = dir_module(location, excludefile);
-                lib[val] = await import_cjs(
+                lib[val] = await this.import_module(
                   [location, arr_modname, compname],
-                  utils,
-                  [library, sys, cosetting]
+                  obj,
+                  owncomp
                 );
               }
             }
@@ -104,7 +108,8 @@ module.exports = (...args) => {
           const [params, obj] = args;
           const [pathname, curdir, compname] = params;
           const [library, sys, cosetting] = obj;
-          const { utils } = library;
+          const { components, utils } = library;
+          const { [compname]: owncomp } = components;
           const { dir_module, errhandler, handler, import_cjs, import_vcjs } =
             utils;
           const { fs, path } = sys;
@@ -122,10 +127,10 @@ module.exports = (...args) => {
             if (existsSync(location)) {
               let rulespath = path.join(location, "rule.json");
               let arr_modname = dir_module(location, excludefile);
-              let modules = await import_cjs(
+              let modules = await this.import_module(
                 [location, arr_modname, compname],
-                utils,
-                [library, sys, cosetting]
+                obj,
+                owncomp
               );
 
               for (let [, val] of Object.entries(modules)) {
@@ -140,10 +145,14 @@ module.exports = (...args) => {
             };
 
             Object.keys(lib["rule"]).map((value) => {
-              lib["regulation"]["api"]["strict"][value] = {};
-              lib["regulation"]["gui"]["strict"][value] = {};
-              lib["regulation"]["api"]["nostrict"][value] = {};
-              lib["regulation"]["gui"]["nostrict"][value] = {};
+              let prifix = value.substring(0, 3);
+              if (prifix == "YS_") {
+                lib["regulation"]["api"]["strict"][value] = {};
+                lib["regulation"]["gui"]["strict"][value] = {};
+              } else if (prifix == "NS_") {
+                lib["regulation"]["api"]["nostrict"][value] = {};
+                lib["regulation"]["gui"]["nostrict"][value] = {};
+              }
             });
 
             output.data = { [curdir[0]]: lib };
@@ -158,81 +167,78 @@ module.exports = (...args) => {
           const [pathname, curdir, compname] = params;
           const [library, sys, cosetting] = obj;
           const { components, utils } = library;
-          const { dir_module, errhandler, handler, import_cjs, import_vcjs } =
+          const { [compname]: owncomp } = components;
+          const { dir_module, errhandler, handler, import_vcjs, objpick } =
             utils;
           const { fs, path } = sys;
-          const { existsSync } = fs;
+          const { existsSync, readdirSync } = fs;
           const { join } = path;
           const { excludefile } = cosetting.general;
           let output = handler.dataformat;
           try {
             let lib = {};
+            const create_rule = (...args) => {
+              const [rules] = args;
+              let output = {};
+              for (let [k, v] of Object.entries(
+                objpick(rules, "strict nostrict")
+              )) {
+                Object.keys(v).map((data) => {
+                  output[data] = [];
+                });
+              }
+              return output;
+            };
 
             for (let value of curdir) {
+              let reg = create_rule(owncomp.rules.regulation[value]);
               lib[value] = {};
               let location = join(pathname, value);
               if (existsSync(location)) {
                 let arr_modname = dir_module(location, excludefile);
-                let arr_modules = await this.import_module(
-                  [location, arr_modname, compname],
-                  obj
-                );
-                let { [value]: assets } = components[compname].rules.regulation;
-
-                for (let [modname, RESTAPI] of Object.entries(arr_modules)) {
-                  for (let [module_key, module_val] of Object.entries(
-                    RESTAPI
-                  )) {
-                    if (Object.keys(module_val).length > 0) {
-                      for (let [key, val] of Object.entries(module_val)) {
-                        let url, controller;
-                        let rtn = this.route;
-
-                        rtn["from"] = val;
-                        rtn["method"] = module_key;
-                        rtn["strict"] = false;
-
-                        if (
-                          assets.none[modname] &&
-                          assets.none[modname].includes(key)
-                        ) {
-                          rtn["name"] = key;
-                          url = key;
-                        } else {
-                          if (!rtn["rules"]) {
-                            Object.keys(assets.nostrict).map((value) => {
-                              if (assets.nostrict[value][modname])
-                                if (
-                                  assets.nostrict[value][modname].includes(key)
-                                ) {
-                                  rtn["name"] = key;
-                                  rtn["rules"] = value;
-                                  url = key;
-                                }
-                            });
-                          }
-
-                          if (!rtn["rules"]) {
-                            Object.keys(assets.strict).map((value) => {
-                              if (assets.strict[value][modname]) {
-                                if (
-                                  assets.strict[value][modname].includes(key)
-                                ) {
-                                  rtn["name"] = key;
-                                  rtn["rules"] = value;
-                                  rtn["strict"] = true;
-                                  url = key;
-                                }
+                for (let modname of arr_modname) {
+                  let modpath = join(location, modname);
+                  let jsfiles = readdirSync(join(modpath, "controller"));
+                  for (let jsfile of jsfiles) {
+                    let { module, regulation } = await require(join(
+                      modpath,
+                      "controller",
+                      jsfile
+                    ), "utf8")([modpath, modname, curdir], obj, [
+                      owncomp,
+                      structuredClone(reg),
+                    ]);
+                    if (module && regulation) {
+                      for (let [module_key, module_val] of Object.entries(
+                        module
+                      )) {
+                        if (Object.keys(module_val).length > 0) {
+                          for (let [key, val] of Object.entries(module_val)) {
+                            let controller;
+                            let url = key;
+                            let rtn = this.route;
+                            rtn["name"] = key;
+                            rtn["from"] = val;
+                            rtn["method"] = module_key;
+                            rtn["strict"] = false;
+                            for (let [elname, [element]] of Object.entries(
+                              regulation
+                            )) {
+                              let arr = element.split(" ");
+                              if (arr.includes(key)) {
+                                let prifix = elname.substring(0, 3);
+                                rtn["rules"] = elname;
+                                if (prifix == "YS_") rtn["strict"] = true;
+                                break;
                               }
-                            });
+                            }
+                            controller = val;
+                            rtn["url"] = `/${compname}/${modname}/${url}`;
+                            if (rtn["url"] && rtn["method"]) {
+                              rtn["controller"] = controller;
+                              lib[value][rtn["url"]] = rtn;
+                            }
                           }
-                        }
-
-                        controller = val;
-                        rtn["url"] = `/${compname}/${modname}/${url}`;
-                        if (rtn?.["url"] && rtn?.["method"]) {
-                          rtn["controller"] = controller;
-                          lib[value][rtn["url"]] = rtn;
                         }
                       }
                     }
@@ -250,13 +256,13 @@ module.exports = (...args) => {
 
         import_module = (...args) => {
           return new Promise(async (resolve, reject) => {
-            const [list, obj, optional] = args;
+            const [list, obj, owncomp] = args;
             const [pathname, arr_modname, curdir] = list;
             const [library, sys] = obj;
             const { utils } = library;
             const { errhandler, mergeDeep } = utils;
             const { fs, path } = sys;
-            const { existsSync, import_cjs, readdirSync } = fs;
+            const { existsSync, readdirSync } = fs;
             const { join } = path;
 
             try {
@@ -269,7 +275,8 @@ module.exports = (...args) => {
                 if (existsSync(join(modpath, "index.js"))) {
                   module = require(join(modpath, "index.js"), "utf8")(
                     [modpath, val, curdir],
-                    obj
+                    obj,
+                    owncomp
                   );
                   arr_name.push(val);
                   arr_process.push(module);
@@ -280,7 +287,7 @@ module.exports = (...args) => {
                       modpath,
                       "controller",
                       jsfile
-                    ), "utf8")([modpath, val, curdir], obj);
+                    ), "utf8")([modpath, val, curdir], obj, owncomp);
                     arr_name.push(val);
                     arr_process.push(module);
                   }
@@ -419,7 +426,7 @@ module.exports = (...args) => {
               let routedoc = {
                 api: { ...api },
                 gui: { ...gui },
-                rules: { ...rules },
+                rules: { ...rules.rule },
               };
 
               resolve(routedoc);
@@ -584,7 +591,6 @@ module.exports = (...args) => {
           }
         };
       }
-
       resolve({ cengine });
     } catch (error) {
       reject(errhandler(error));
