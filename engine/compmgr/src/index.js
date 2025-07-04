@@ -224,12 +224,14 @@ module.exports = (...args) => {
                             for (let [elname, [element]] of Object.entries(
                               regulation
                             )) {
-                              let arr = element.split(" ");
-                              if (arr.includes(key)) {
-                                let prifix = elname.substring(0, 3);
-                                rtn["rules"] = elname;
-                                if (prifix == "YS_") rtn["strict"] = true;
-                                break;
+                              if (element) {
+                                let arr = element.split(" ");
+                                if (arr.includes(key)) {
+                                  let prifix = elname.substring(0, 3);
+                                  rtn["rules"] = elname;
+                                  if (prifix == "YS_") rtn["strict"] = true;
+                                  break;
+                                }
                               }
                             }
                             controller = val;
