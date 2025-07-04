@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix `engine/compmgr` when missing rules folder in components will failure to load api,gui modules. Completed on 2025-07-01
 - Fix both webbunjs and webnodehonojs engine `reaction.js` logerr module unable write error message to error.log. Completed on 2025-07-04
+- Fix `list_org_repos` function at `atomic/molecule/giteapi`. Completed on 2025-07-04
 
 ### Security
 
