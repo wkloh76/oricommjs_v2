@@ -10,11 +10,10 @@
 
 The program is fork from oricommjs v1.1.9 and the objective is implement new concept design.
 
-A JavaScript project framework that provides an engine to handle desktop, web, and non-GUI application development. Node JS, bun JS and Electron JS are the backbone engines of this framework. The idea behind the framework is to develop a code model that can switch engines and build desktop, web, and non-GUI applications without changing the design. Due to some module issues, the framework design still retains the CommonJS design method. You can build your reusable modules or class and plugin into atomic folder. If you want the modules or class can be cross entire project than plugin into the enigne folder.
+A JavaScript project framework that provides an engine to handle desktop, web, and non-GUI application development. Node JS, bun JS and Electron JS are the backbone engines of this framework. The idea behind the framework is to develop a code model that can switch engines and build desktop, web, and non-GUI applications without changing the design. Due to some module issues, the framework design still retains the CommonJS design method. You can build your reusable modules or class and plugin into atomic folder. If you want the modules or class can be cross entire project than plugin into the engine folder.
 
 ## Idea
 
-- The `webnodejs` engine is a web server designed based on the expressjs framework. It can runs on with NodeJS and BunJS
 - The `webbunjs` engine is a web server designed based on the honojs framework. It can runs BunJS
 - The `webnodehonojs` engine is a web server designed based on the honojs framework. It can runs NodeJS
 - The `deskelectronjs` engine is a desktop application designed to be executed only through ElectronJS.
@@ -47,10 +46,10 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
     - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
   - webnodehonojs (NodeJS)
     - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
-  - webnodejs (NodeJS,bunJS)
-    - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
   - deskeletronjs (ElectronJS)
     - Implement workflow engine which will proper manage the frontend code instead write the code in one html/js file.
+- compulsory modules:
+  - compmgr
 - Optional modules:
   - sqlmanager
     - sqlite3
@@ -87,43 +86,6 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 - For startup, you can change the values from package.json suite to your design (name,productName,homepage,version,description,repository,author).
 
 ## Debug: vscodelaunch.json setting
-
-### nodejs
-
-```
-{
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Nodejs Program",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/app.js",
-      "cwd": "${workspaceFolder}",
-      "args": [
-        "--mode=debug",
-        "--engine=webnodejs"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "Attach Nojdejs remotely",
-      "address": "192.180.1.111",
-      "port": 9229,
-      "localRoot": "${workspaceFolder}",
-      "remoteRoot": "/remote/machine/project",
-      "protocol": "inspector"
-    },
-  ]
-}
-```
 
 ### nodejs + honojs
 
@@ -299,7 +261,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 }
 ```
 
-## nodejs debug with python in virtual environment
+## nodejs+Hono debug with python in virtual environment
 
 ```
 {
@@ -311,7 +273,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Nodejs Program",
+      "name": "Launch Nodejs Hono Program",
       "skipFiles": [
         "<node_internals>/**"
       ],
@@ -325,7 +287,7 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
       },
       "args": [
         "--mode=debug",
-        "--engine=webnodejs"
+        "--engine=webnodehonojs"
       ]
     }
   ]

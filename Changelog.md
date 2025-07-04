@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Summary
 
+- Fully implement the `compmgr` engine to manage component project code without relying on the old approach of needing to clone the main index.js to each component project. `compmgr` also simplify and shorten components module declare method, including gui,api,rules,startup and common.
+
+- Removed the webnodejs engine, which means the express.js framework is no longer supported
+
 ### Added
 
 - Add check `winlist` is not empty array on `desktopcast` linstener in `engine/deskelectronjs/src/desktop.js`. Completed on 2025-07-01
@@ -23,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change rules import modules third parameter in array type at `engine/compmgr`. Completed on 2025-07-04
 
 ### Deprecated
-
+- webnodejs engine no longer supported. Will continue to be maintained at [github oricommjs](https://github.com/wkloh76/oricommjs)
 ### Removed
 
 ### Fixed
