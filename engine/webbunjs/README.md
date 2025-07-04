@@ -14,12 +14,11 @@
      - HTTP Route
      - WebSocket server
 - Why use Hono framework:
-  1.  100% ExpressJS compatibility.
-  2.  Ultrafast 🚀 - The router RegExpRouter is really fast. Not using linear loops. Fast.
-  3.  Lightweight 🪶 - The hono/tiny preset is under 12kB. Hono has zero dependencies and uses only the Web Standard API.
-  4.  Multi-runtime 🌍 - Works on Cloudflare Workers, Fastly Compute, Deno, Bun, AWS Lambda, Lambda@Edge, or Node.js. The same code runs on all platforms.
-  5.  Batteries Included 🔋 - Hono has built-in middleware, custom middleware, and third-party middleware. Batteries included.
-  6.  Delightful DX 😃 - Super clean APIs. First-class TypeScript support. Now, we've got "Types".
+  1.  Ultrafast 🚀 - The router RegExpRouter is really fast. Not using linear loops. Fast.
+  2.  Lightweight 🪶 - The hono/tiny preset is under 12kB. Hono has zero dependencies and uses only the Web Standard API.
+  3.  Multi-runtime 🌍 - Works on Cloudflare Workers, Fastly Compute, Deno, Bun, AWS Lambda, Lambda@Edge, or Node.js. The same code runs on all platforms.
+  4.  Batteries Included 🔋 - Hono has built-in middleware, custom middleware, and third-party middleware. Batteries included.
+  5.  Delightful DX 😃 - Super clean APIs. First-class TypeScript support. Now, we've got "Types".
 
 ## Handle package.json dependencies and devdependencies
 
