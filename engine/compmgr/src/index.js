@@ -130,7 +130,7 @@ module.exports = (...args) => {
               let modules = await this.import_module(
                 [location, arr_modname, compname],
                 obj,
-                owncomp
+                [owncomp]
               );
 
               for (let [, val] of Object.entries(modules)) {

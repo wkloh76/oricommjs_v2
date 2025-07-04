@@ -469,11 +469,17 @@
                 routefile = JSON.parse(readFileSync(routefilename, "utf8"));
 
               if (!routefile)
-                writeFileSync(routefilename, JSON.stringify(params.routejson));
+                writeFileSync(
+                  routefilename,
+                  JSON.stringify(params.routejson, null, 2)
+                );
               else if (
                 JSON.stringify(params.routejson) !== JSON.stringify(routefile)
               )
-                writeFileSync(routefilename, JSON.stringify(params.routejson));
+                writeFileSync(
+                  routefilename,
+                  JSON.stringify(params.routejson, null, 2)
+                );
             }
             resolve(output);
           } catch (error) {
