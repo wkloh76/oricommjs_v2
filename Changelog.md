@@ -25,9 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support directly import module from api/gui controller folder when `index.js` not exist at `engine/compmgr`. Completed on 2025-07-01
 - Change route.json export in formatter method. Completed on 2025-07-04
 - Change rules import modules third parameter in array type at `engine/compmgr`. Completed on 2025-07-04
+- Swap the loading order of `startup` and `common.models` at `engine/compmgr`. Completed on 2025-07-04
 
 ### Deprecated
+
 - webnodejs engine no longer supported. Will continue to be maintained at [github oricommjs](https://github.com/wkloh76/oricommjs)
+
 ### Removed
 
 ### Fixed

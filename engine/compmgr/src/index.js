@@ -93,7 +93,7 @@ module.exports = (...args) => {
                 lib[val] = await this.import_module(
                   [location, arr_modname, compname],
                   obj,
-                  owncomp
+                  [owncomp]
                 );
               }
             }
@@ -507,18 +507,19 @@ module.exports = (...args) => {
               },
             };
 
-            components[compname] = this.comb_obj(
-              components[compname],
+            components[compname]["common"]["models"] = {};
+            components[compname]["common"] = this.comb_obj(
+              components[compname]["common"]["models"],
               await this.general(
-                [join(prjsrc, "src"), ["startup"], compname],
+                [join(prjsrc, "src", "common"), ["models"], compname],
                 [this.library, this.sys, setting]
               )
             );
 
-            components[compname]["common"] = this.comb_obj(
-              (components[compname]["common"]["models"] = {}),
+            components[compname] = this.comb_obj(
+              components[compname],
               await this.general(
-                [join(prjsrc, "src", "common"), ["models"], compname],
+                [join(prjsrc, "src"), ["startup"], compname],
                 [this.library, this.sys, setting]
               )
             );
