@@ -198,47 +198,52 @@ module.exports = (...args) => {
                 let arr_modname = dir_module(location, excludefile);
                 for (let modname of arr_modname) {
                   let modpath = join(location, modname);
-                  let jsfiles = readdirSync(join(modpath, "controller"));
-                  for (let jsfile of jsfiles) {
-                    let { module, regulation } = await require(join(
-                      modpath,
-                      "controller",
-                      jsfile
-                    ), "utf8")([modpath, modname, curdir], obj, [
-                      owncomp,
-                      structuredClone(reg),
-                    ]);
-                    if (module && regulation) {
-                      for (let [module_key, module_val] of Object.entries(
-                        module
-                      )) {
-                        if (Object.keys(module_val).length > 0) {
-                          for (let [key, val] of Object.entries(module_val)) {
-                            let controller;
-                            let url = key;
-                            let rtn = this.route;
-                            rtn["name"] = key;
-                            rtn["from"] = val;
-                            rtn["method"] = module_key;
-                            rtn["strict"] = false;
-                            for (let [elname, [element]] of Object.entries(
-                              regulation
-                            )) {
-                              if (element) {
-                                let arr = element.split(" ");
-                                if (arr.includes(key)) {
-                                  let prifix = elname.substring(0, 3);
-                                  rtn["rules"] = elname;
-                                  if (prifix == "YS_") rtn["strict"] = true;
-                                  break;
+                  if (!existsSync(join(modpath, "index.js"))) {
+                    let jsfiles = readdirSync(join(modpath, "controller"));
+                    for (let jsfile of jsfiles) {
+                      let { module, regulation } = await require(join(
+                        modpath,
+                        "controller",
+                        jsfile
+                      ), "utf8")([modpath, modname, curdir], obj, [
+                        owncomp,
+                        structuredClone(reg),
+                      ]);
+                      let ctrlname = path.parse(jsfile).name;
+                      if (module && regulation) {
+                        for (let [module_key, module_val] of Object.entries(
+                          module
+                        )) {
+                          if (Object.keys(module_val).length > 0) {
+                            for (let [key, val] of Object.entries(module_val)) {
+                              let controller;
+                              let url = key;
+                              let rtn = this.route;
+                              rtn["name"] = key;
+                              rtn["from"] = val;
+                              rtn["method"] = module_key;
+                              rtn["strict"] = false;
+                              for (let [elname, [element]] of Object.entries(
+                                regulation
+                              )) {
+                                if (element) {
+                                  let arr = element.split(" ");
+                                  if (arr.includes(key)) {
+                                    let prifix = elname.substring(0, 3);
+                                    rtn["rules"] = elname;
+                                    if (prifix == "YS_") rtn["strict"] = true;
+                                    break;
+                                  }
                                 }
                               }
-                            }
-                            controller = val;
-                            rtn["url"] = `/${compname}/${modname}/${url}`;
-                            if (rtn["url"] && rtn["method"]) {
-                              rtn["controller"] = controller;
-                              lib[value][rtn["url"]] = rtn;
+                              controller = val;
+                              rtn[
+                                "url"
+                              ] = `/${compname}/${modname}/${ctrlname}/${url}`;
+                              if (rtn["url"] && rtn["method"]) {
+                                rtn["controller"] = controller;
+                                lib[value][rtn["url"]] = rtn;
+                              }
                             }
                           }
                         }
