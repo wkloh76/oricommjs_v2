@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change rules import modules third parameter in array type at `engine/compmgr`. Completed on 2025-07-04
 - Swap the loading order of `startup` and `common.models` at `engine/compmgr`. Completed on 2025-07-04
 - Change `engine/compmgr` gui api url definition to three levels, i.e. controller file naming will be between api name and function name. Completed on 2025-07-06.
+- Update `list_releases_repos` function in `atomic/molecule/giteapi` to support retrieving repository releases from Github. Completed on 2025-07-07.
 
 ### Deprecated
 

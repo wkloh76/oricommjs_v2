@@ -99,11 +99,13 @@ module.exports = async (...args) => {
         const [param] = args;
         let output = handler.dataformat;
         try {
+          let api = "";
+          if (param.api == "gitea") api = "/api/v1/repos";
           if (!param.optional) param.optional = "";
           else param.optional = `${param.optional}`;
           let options = {
             method: "GET",
-            url: `${param.webapi}/api/v1/repos${param.category}/${param.repos}/releases${param.optional}`,
+            url: `${param.webapi}${api}${param.category}/${param.repos}/releases${param.optional}`,
             ...combine_header(param.auth, param.headers),
             timeout: 10000,
           };
