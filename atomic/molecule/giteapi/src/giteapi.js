@@ -106,7 +106,7 @@ module.exports = async (...args) => {
           let options = {
             method: "GET",
             url: `${param.webapi}${api}${param.category}/${param.repos}/releases${param.optional}`,
-            ...combine_header(param.auth, param.headers),
+            headers: combine_header(param.auth, param.headers),
             timeout: 10000,
           };
           output = await smfetch.request(options);
