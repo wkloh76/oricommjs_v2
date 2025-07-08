@@ -205,7 +205,7 @@ module.exports = (...args) => {
                         modpath,
                         "controller",
                         jsfile
-                      ), "utf8")([modpath, modname, curdir], obj, [
+                      ), "utf8")([modpath, modname, compname], obj, [
                         owncomp,
                         structuredClone(reg),
                       ]);

@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `list_org_repos` function at `atomic/molecule/giteapi`. Completed on 2025-07-04
 - Fix `guiapi` function failure split when rules regulation variable is undefined at `engine/compmgr`. Completed on 2025-07-04
 - Fix `list_releases_repos` function at `atomic/molecule/giteapi`. Completed on 2025-07-07
+- Fix `guiapi` function define wrong value to compname parameter when import module from controller at `engine/compmgr`. Completed on 2025-07-08
 
 ### Security
 
