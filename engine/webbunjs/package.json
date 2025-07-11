@@ -6,6 +6,7 @@
     "@hono/zod-openapi": "0.19.8",
     "hono": "4.8.2",
     "hono-sessions": "0.7.3",
+    "html-minifier-terser": "7.2.0",
     "pino": "9.7.0",
     "pino-roll": "3.1.0"
   }

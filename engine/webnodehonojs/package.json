@@ -5,6 +5,7 @@
     "@hono/swagger-editor": "1.0.1",
     "@hono/swagger-ui": "0.5.2",
     "@hono/zod-openapi": "0.19.8",
+    "html-minifier-terser": "7.2.0",
     "@libsql/client": "0.15.9",
     "hono": "4.8.2",
     "hono-sessions": "0.7.3",
