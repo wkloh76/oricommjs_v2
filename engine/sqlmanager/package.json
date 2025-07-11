@@ -5,7 +5,7 @@
         "bcrypt": "6.0.0",
         "csv-parser": "3.2.0",
         "nodejs-polars": "0.18.0",
-        "mariadb": "3.4.2",
+        "mariadb": "3.4.4",
         "sql-fmt": "2.1.0"
     }
 }
