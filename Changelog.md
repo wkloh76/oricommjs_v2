@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change `engine/compmgr` gui api url definition to three levels, i.e. controller file naming will be between api name and function name. Completed on 2025-07-06.
 - Update `list_releases_repos` function in `atomic/molecule/giteapi` to support retrieving repository releases from Github. Completed on 2025-07-07.
 - Change the default engine defination to `webnodehonojs` instead `webnodejs` which no longer support in the framework at `app.js`. Completed on 2025-07-11.
+- Change redirect gui url method in deskelectronjs engine which will axactly same like webnodejs. Completed on 2025-07-13
 
 ### Deprecated
 
