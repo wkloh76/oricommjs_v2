@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `list_releases_repos` function at `atomic/molecule/giteapi`. Completed on 2025-07-07
 - Fix `guiapi` function define wrong value to compname parameter when import module from controller at `engine/compmgr`. Completed on 2025-07-08
 - Fix both `webnodehonojs` and `webbunjs` engine which missing `html-minifier-terser` node module. Completed on 2025-07-11.
+- Fix session not store when after redirect next page at deskelectronjs engine. Completed on 2025-07-16
 
 ### Security
 
