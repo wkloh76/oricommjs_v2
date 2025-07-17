@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Re-design sqlite3 middleware and log in `engine/sqlmanager/src/sqlite3.js`. Completed on 2025-07-17
+- Release a simple design of the `atomic/atom/startupinit` module to help all components initialize the startup mode, especially the database sqlite. Completed on 2025-07-17.
 
 ### Changed
 
