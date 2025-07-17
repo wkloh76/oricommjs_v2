@@ -23,9 +23,9 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
+    const { datatype, errhandler, handler, powershell } = library.utils;
+    const { dayjs, logger, fs, path, pino } = sys;
 
-    const { fs, path, logger } = sys;
-    const { datatype, handler, errhandler } = library.utils;
     let sqlite3;
     if (cosetting.args.engine == "webbunjs") {
       const { Database } = require("bun:sqlite");
@@ -36,11 +36,10 @@ module.exports = (...args) => {
       let conn = {};
       let lib = {};
       let sqlmanager;
-      let dblog = {};
       let registered = {};
 
       class clsSQLiteDB {
-        constructor(connection, dbname, fn) {
+        constructor(connection, dbname, log) {
           if (!connection)
             throw {
               message: "Connection arguments undefined!",
@@ -50,7 +49,15 @@ module.exports = (...args) => {
           else {
             this._conn = connection;
             this._dbname = dbname;
-            this._fn = fn;
+            this._log = log;
+
+            return {
+              dboption: this.dboption,
+              rules: this.rules,
+              ischema: this.ischema,
+              query: this.query,
+              import: this.import,
+            };
           }
         }
 
@@ -137,6 +144,7 @@ module.exports = (...args) => {
             output.data = [];
             for (let statement of statements) {
               let query = this._conn.prepare(statement.sql);
+              this._log.info(statement.sql);
               switch (statement.type) {
                 case "INSERT":
                   output.data.push(query.run());
@@ -202,19 +210,6 @@ module.exports = (...args) => {
         get rules() {
           return structuredClone(this.#rules);
         }
-
-        /**
-         * Disconnect connection
-         * @alias module:sqlite3.clsSQLiteDB.disconnect
-         * @param {...Object} args - 1 parameter
-         * @returns {Null} - Return null
-         */
-        disconnect = async (...args) => {
-          await this._conn.close();
-          this._fn(this._dbname);
-          this._conn = null;
-          return;
-        };
 
         /**
          * Check SQLite3 database is exist
@@ -311,45 +306,7 @@ module.exports = (...args) => {
             return output;
           }
         };
-
-        /**
-         * backup SQLite3 database and save to file
-         * @alias module:sqlite3.clsSQLiteDB.backup
-         * @param {...Object} args - 1 parameters
-         * @param {String} args[0] - file is the sql file location to save
-         * @returns {Object} - Return object value which content both connection and schema status
-         */
-        backup = async (...args) => {
-          let [file] = args;
-          let output = handler.dataformat;
-          try {
-            if (!fs.existsSync(file)) await this._conn.backup(file);
-          } catch (error) {
-            output.code = 10003;
-            output.msg =
-              "SQLite3 backup failure:File already exits or path and folder permission issue!";
-            sqlmanager.errlog(error);
-          } finally {
-            return output;
-          }
-        };
       }
-
-      /**
-       * Destroy the deactive connection Id in the module cache
-       * @alias module:sqlite3.terminator
-       * @param {...Object} args - 1 parameter
-       *  @param {Integer} args[0] - threadId database connection Id.
-       * @returns {Null} - Return null
-       */
-      const terminator = (...args) => {
-        let [dbname] = args;
-        if (conn[dbname]) {
-          conn[dbname].disconnect();
-          delete conn[dbname];
-        }
-        return;
-      };
 
       /**
        * Establish SQLite3 database connection or create database if no exist
@@ -361,12 +318,11 @@ module.exports = (...args) => {
        * @returns {Object} - Return object value which content process status
        */
       const connect = async (...args) => {
-        let [dbname, compname] = args;
+        let [dbname, compname, log] = args;
         let output = handler.dataformat;
         try {
           if (registered[compname][dbname]) {
             let db = registered[compname][dbname];
-            // let options = {};
             let rtn;
             let logpath = db.path;
             if (db.path == "")
@@ -383,7 +339,8 @@ module.exports = (...args) => {
             //   };
             // if (db.type == "file") rtn = await new sqlite3(logpath, options);
             // else rtn = await new sqlite3(":memory:", options);
-            if (db.type == "file") rtn = await new sqlite3(logpath);
+            if (db.type == "file")
+              rtn = await new sqlite3(logpath, dbname, log);
             else rtn = await new sqlite3(":memory:");
             if (!rtn)
               throw {
@@ -391,10 +348,59 @@ module.exports = (...args) => {
                 stack: " newschema execution failure! libsql return undefind.",
               };
 
-            output.data = new clsSQLiteDB(rtn, dbname, terminator);
+            output.data = new clsSQLiteDB(rtn, dbname, log);
 
             if (!conn[dbname]) conn[dbname] = output.data;
           }
+          return output;
+        } catch (error) {
+          return errhandler(error);
+        }
+      };
+
+      /**
+       * Datalogger which will allow to keep every sql query statement into the log file
+       * @alias module:sqlite3.setuplog
+       * @param {...Object} args - 1 parameters
+       * @param {Object} args[0] - log is an object value in log file setting parameters
+       * @param {Object} args[1] - db is an object value for database parameters
+       * @param {String} args[2] - dbname is database connection name
+       * @returns {Object} - Return logger module in object type
+       */
+      const setuplog = async (...args) => {
+        const [log, db, dbname] = args;
+        const { engine, path: logdir } = db;
+        try {
+          let output = handler.dataformat;
+          let logpath = logdir;
+          if (logdir == "") logpath = path.join(cosetting.logpath, engine);
+          else logpath = path.join(logdir, engine, "log", dbname);
+          await powershell.shell(`mkdir -p ${logpath}`);
+
+          let tmplog = { ...log };
+          tmplog.symlink = db.symlink;
+
+          // 创建 Pino 日志记录器并配置轮转
+          output.data = pino({
+            level: "info",
+            transport: {
+              target: "pino-roll",
+              options: {
+                file: path.join(logpath, `${dbname}.log`),
+                ...tmplog,
+              },
+            },
+            // 添加时间戳
+            timestamp: () =>
+              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+            // 自定义日志格式
+            formatters: {
+              level: (label) => {
+                return { level: label };
+              },
+            },
+          });
+
           return output;
         } catch (error) {
           return errhandler(error);
@@ -411,53 +417,29 @@ module.exports = (...args) => {
        * @returns {Object} - Return object value which content process status
        */
       lib["register"] = async (...args) => {
-        let [db, dbname, compname] = args;
+        const [db, dbname, compname] = args;
+        const { setting, ...config } = db;
         let output = handler.dataformat;
         try {
-          if (!registered[compname]) registered[compname] = {};
-          let { ...dbconf } = db;
-          registered[compname][dbname] = dbconf;
-          let rtn = await connect(dbname, compname);
-          if (!rtn.code == 0) {
-            delete registered[compname][dbname];
-          } else rtn.data.disconnect();
+          if (!registered[compname]) {
+            registered[compname] = {};
+          }
+
+          if (!registered[compname][dbname]) {
+            let { setting: noused, ...dbsetting } =
+              setting.db[config.dbgroup][dbname];
+            registered[compname][dbname] = dbsetting;
+          }
+
+          if (registered[compname][dbname]) {
+            let log = await setuplog(setting.log, config, dbname);
+            let rtn = await connect(dbname, compname, log.data);
+            if (rtn.code == 0) registered[compname][dbname] = rtn.data;
+          }
         } catch (error) {
           output = errhandler(error);
         } finally {
           return output;
-        }
-      };
-
-      /**
-       * Create sql stamenet logger
-       * @alias module:sqlite3.createlog
-       * @param {...Object} args - 1 parameters
-       * @param {Object} args[0] - cosetting is an object value from global variable coresetting
-       * @param {Object} args[1] - path is a module from node_modules
-       * @returns {Object} - Return value in object type
-       */
-      lib["createlog"] = async (...args) => {
-        let [engine, setting] = args;
-        let { db, log } = setting;
-        try {
-          sqlmanager = engine;
-          let output = handler.dataformat;
-          let err;
-          for (let [key, val] of Object.entries(db)) {
-            let { ...dbconf } = val;
-            dbconf["engine"] = "sqlite3";
-            let rtn = await sqlmanager.setuplog(log, dbconf, key);
-            if (!dblog[key]) dblog[key] = rtn.data;
-            if (rtn.code !== 0) {
-              delete dblog[key];
-              err += `The ${key}.log sql statement log file create failure!`;
-            }
-          }
-          if (err) throw { message: "Failure to create log file!", stack: err };
-
-          return output;
-        } catch (error) {
-          return errhandler(error);
         }
       };
 
@@ -499,6 +481,19 @@ module.exports = (...args) => {
             resolve(output);
           }
         });
+      };
+
+      /**
+       * Destroy the deactive connection Id in the module cache
+       * @alias module:sqlite3.terminator
+       * @param {...Object} args - 1 parameter
+       *  @param {Integer} args[0] - threadId database connection Id.
+       * @returns {Null} - Return null
+       */
+      lib["terminator"] = (...args) => {
+        let [dbname] = args;
+        if (conn[dbname]) delete conn[dbname];
+        return;
       };
 
       resolve(lib);

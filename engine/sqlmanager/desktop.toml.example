@@ -11,8 +11,8 @@ dateFormat = "yyyy-MM-dd"
 
 [production.sqlite3.db]
 [production.sqlite3.db.group]
-workdb = { path = "", type = "memory" }
-filedb = { path = "", type = "file" }
+workdb = { path = "", type = "memory", symlink = true }
+filedb = { path = "", type = "file", symlink = true }
 
 [production.mariadb]
 
@@ -41,8 +41,8 @@ dateFormat = "yyyy-MM-dd"
 
 [debug.sqlite3.db]
 [debug.sqlite3.db.group]
-workdb = { path = "", type = "memory", backup = "" }
-filedb = { path = "", type = "file", backup = "" }
+workdb = { path = "", type = "memory", symlink = true }
+filedb = { path = "", type = "file", symlink = true }
 
 [debug.mariadb]
 
