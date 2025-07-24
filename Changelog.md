@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix session not pass to onredict funcion in `reaction.js` at deskelectronjs engine. Completed on 2025-07-24
+
 ### Security
 
 [1.0.3]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.0.3
