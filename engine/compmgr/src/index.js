@@ -15,8 +15,6 @@
  */
 "use strict";
 
-const { set } = require("@sagold/json-pointer");
-
 /**
  * The asistant of main module which is handle the submodule in each sub folder.
  * @module src_index
