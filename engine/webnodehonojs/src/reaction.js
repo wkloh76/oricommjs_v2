@@ -739,7 +739,7 @@ module.exports = (...args) => {
           header: cnt.req.header,
           params: cnt.req.params || {},
           path: cnt.req.path,
-          query: cnt.req.query || {},
+          query: cnt.req.query() || {},
           text: cnt.req.text,
           session: cnt.get("session").cache,
           method: cnt.req.method,
