@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix session not pass to onredict funcion in `reaction.js` at deskelectronjs engine. Completed on 2025-07-24
 - Fix `GET` querystring parameters empty data issue in both webhononodejs and webbunjs engine. Completed on 2025-07-31
+- Fix GOT module unrecognized URLSearchParams data format in atom/smfetch/src/gotfetch.js. Completed on 2025-07-31
 
 ### Security
 
