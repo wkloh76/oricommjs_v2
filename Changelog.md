@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Re-design sqlite3 middleware and log in `engine/sqlmanager/src/sqlite3.js`. Completed on 2025-07-17
 - Release a simple design of the `atomic/atom/startupinit` module to help all components initialize the startup mode, especially the database sqlite. Completed on 2025-07-17.
+- Add get_repos_rawfile function to giteapi molecule at atomic which able retrive raw file from gitea tag in json format. Completed on 2025-07-31
 
 ### Changed
 
 - Redesign data passing from frontend request to backend and date return at deskelectronjs engine. Completed on 2025-07-25
+- Increase timeout value to 30s in giteapi molecule at atomic. Completed on 2025-07-31
 
 ### Deprecated
 
