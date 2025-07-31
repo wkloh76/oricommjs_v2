@@ -313,7 +313,6 @@ module.exports = async (...args) => {
 
             tagname = `${location}/${tagname}`;
 
-            console.log(options);
             const downloadStream = got.stream(options);
             const fileWriterStream = createWriteStream(tagname);
 

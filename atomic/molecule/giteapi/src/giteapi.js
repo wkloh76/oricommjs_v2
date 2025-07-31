@@ -169,7 +169,6 @@ module.exports = async (...args) => {
               cond.picker
             );
         } catch (error) {
-          console.log(error);
         } finally {
           return output;
         }

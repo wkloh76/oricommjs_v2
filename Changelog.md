@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Remove unsed module from compmgr engine. Completed on 2025-07-25
+- Remove unsed console.log from atom/smfetch and molecule/giteapi. Completed on 2025-07-31
 
 ### Fixed
 
