@@ -189,6 +189,12 @@ export default await (() => {
           reqdata,
         });
 
+        if (data.headers)
+          data.headers = {
+            ...data.headers,
+            "X-Requested-With": "XMLHttpRequest",
+          };
+        else data.headers = { "X-Requested-With": "XMLHttpRequest" };
         let { url: furl, ...fdata } = data;
         if (async) {
           fetch(furl, fdata)
@@ -228,6 +234,9 @@ export default await (() => {
         } else {
           let response = await fetch(furl, fdata);
           let result = {
+            code: 0,
+            data: null,
+            msg: "",
             status: response.status,
             statusText: response.statusText,
           };
@@ -240,13 +249,13 @@ export default await (() => {
               result.data = await response.blob();
             } else {
               let resp = await response.json();
-              if (ajax) result.data = await resp;
-              else result = resp;
-
-              if (achieve) achieve(result);
+              result = { ...result, ...resp };
             }
           } else {
-            if (fault) fault(result);
+            if (response.status == 301) {
+              let resp = await response.json();
+              window.location = resp.redirect;
+            }
           }
           return result;
         }

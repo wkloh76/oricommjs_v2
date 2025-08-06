@@ -408,6 +408,47 @@ module.exports = (...args) => {
       };
 
       /**
+       * Download file base on buffer or physical file
+       * @alias module:reaction.downloadproc
+       * @param {...Object} args - 1 parameters
+       * @param {Object} args[0] - res the object for render to frontend
+       * @param {Object} args[1] - file the object for file content and information
+       */
+      const downloadproc = async (...args) => {
+        let [res, file] = args;
+        let { content, ctype, filename, save } = file;
+
+        let disposition,
+          fname = "",
+          content_type = {};
+        if (filename != "") fname = `; filename="${filename}"`;
+
+        if (Object.keys(mimes).includes(ctype))
+          content_type = { "Content-Type": mimes[ctype] };
+
+        if (save) disposition = `attachment ${fname}`;
+        else disposition = "inline";
+
+        let headers = {
+          "Cache-Control": "no-cache",
+          "Content-Disposition": disposition,
+          ...content_type,
+        };
+
+        if (Buffer.isBuffer(content)) {
+          res.set({
+            ...headers,
+            "Content-Length": Buffer.byteLength(content).toString(),
+          });
+          res.status(200).send(content);
+        } else {
+          res.set(headers);
+          if (fs.existsSync(content)) res.status(200).sendFile(content);
+          else res.status(404).send("File not found");
+        }
+      };
+
+      /**
        * The final process which is sending resutl to frontend
        * @alias module:reaction.processEnd
        * @param {...Object} args - 1 parameters
@@ -421,6 +462,7 @@ module.exports = (...args) => {
             let {
               options: {
                 css,
+                download,
                 html,
                 injectionjs,
                 js,
@@ -439,10 +481,15 @@ module.exports = (...args) => {
             let isredirect = handler.check_empty(redirect);
             let isjson = handler.check_empty(json);
             let ishtml = handler.check_empty(html);
+            // if (!handler.check_empty(download.content)) {
+            //   downloadproc(res, download);
+            //   resolve(rtn);
+            // }
             // let iscss = handler.check_empty(options.css);
 
             if (!isredirect) {
-              resolve(cnt.redirect(redirect, 301));
+              if (orires.isfetchreq) resolve(cnt.json({ redirect }, 301));
+              else resolve(cnt.redirect(redirect, 301));
             } else if (!isjson) {
               resolve(cnt.json(json, status));
               // } else if (!iscss) {
@@ -745,6 +792,10 @@ module.exports = (...args) => {
           method: cnt.req.method,
         };
         let orires = {};
+        orires.isfetchreq =
+          cnt.req.raw.headers.get("X-Requested-With") === "XMLHttpRequest" ||
+          cnt.req.raw.headers.get("Accept")?.includes("application/json") ||
+          cnt.req.raw.headers.get("Sec-Fetch-Mode") === "cors";
         let fn;
         try {
           //Resolve web page caching across all browsers

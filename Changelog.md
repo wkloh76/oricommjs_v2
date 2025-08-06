@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Redesign data passing from frontend request to backend and date return at deskelectronjs engine. Completed on 2025-07-25
 - Increase timeout value to 30s in giteapi molecule at atomic. Completed on 2025-07-31
+- Improve redirect from atom/smfetch, engine/webnodehonojs and engine/webbunjs which will determite the request from browser or fetchapi. Completed on 2025-08-06
 
 ### Deprecated
 

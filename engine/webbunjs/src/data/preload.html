@@ -313,8 +313,8 @@
   window.addEventListener("DOMContentLoaded", async () => {
     if (mjs) {
       if (mjs.lib.length > 0) await loadlib(mjs.lib);
-      if (Object.keys(mjs.initialize).length > 0)
-        await initialize(mjs.initialize);
+       if (Object.keys(mjs.initialize.initialize).length > 0)
+        await initialize(mjs.initialize.initialize);
     }
     await start();
   });
