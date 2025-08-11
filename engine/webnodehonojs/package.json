@@ -1,15 +1,16 @@
 {
   "name": "webnodehonojs",
   "dependencies": {
-    "@hono/node-server": "1.15.0",
+    "@hono/node-server": "1.18.1",
     "@hono/swagger-editor": "1.0.1",
     "@hono/swagger-ui": "0.5.2",
-    "@hono/zod-openapi": "0.19.9",
+    "@hono/zod-openapi": "1.1.0",
     "html-minifier-terser": "7.2.0",
-    "@libsql/client": "0.15.9",
-    "hono": "4.8.4",
+    "jsdom": "25.0.1",
+    "@libsql/client": "0.15.10",
+    "hono": "4.9.0",
     "hono-sessions": "0.8.0",
-    "pino": "9.7.0",
+    "pino": "9.8.0",
     "pino-roll": "3.1.0"
   }
 }
