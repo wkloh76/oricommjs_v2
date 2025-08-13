@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add get_repos_rawfile function to giteapi molecule at atomic which able retrive raw file from gitea tag in json format. Completed on 2025-07-31
 - Apply session.destroy function into deskelectronjs engine. Completed on 2025-08-07
 - Add missing and upgrade package. Completed on 2025-08-011
+- Add missing upgrade to engine/webbunjs. Completed on 2025-08-013
 
 ### Changed
 
