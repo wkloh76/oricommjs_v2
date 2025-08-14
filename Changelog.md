@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Upgrade hono version to 4.9.1 for both webbunjs and webnodehonojs engine. Completed on 2025-08-013
+- Upgrade hono version to 4.9.1 for both webbunjs and webnodehonojs engine. Completed on 2025-08-13
+- Implement download file function to both webnodehonojs and webbunjs engine. Completed on 2025-08-14
 
 ### Changed
 

@@ -28,9 +28,9 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
-    const { htmlTags } = library.utils.handler;
+    const { htmlTags, mimes } = handler;
     const { fs, logerr: logerror, path } = sys;
-
+    const { createReadStream, statSync } = fs;
     try {
       const basic =
         /\s?<!doctype html>|(<html\b[^>]*>|<body\b[^>]*>|<x-[^>]+>)+/i;
@@ -407,6 +407,11 @@ module.exports = (...args) => {
         });
       };
 
+      // Helper function to determine the content type
+      const getContentType = (path) => {
+        return { [path.split(".").pop()]: mimes[path.split(".").pop()] };
+      };
+
       /**
        * Download file base on buffer or physical file
        * @alias module:reaction.downloadproc
@@ -415,7 +420,7 @@ module.exports = (...args) => {
        * @param {Object} args[1] - file the object for file content and information
        */
       const downloadproc = async (...args) => {
-        let [res, file] = args;
+        let [c, file] = args;
         let { content, ctype, filename, save } = file;
 
         let disposition,
@@ -429,22 +434,39 @@ module.exports = (...args) => {
         if (save) disposition = `attachment ${fname}`;
         else disposition = "inline";
 
-        let headers = {
-          "Cache-Control": "no-cache",
-          "Content-Disposition": disposition,
-          ...content_type,
+        let options = {
+          headers: {
+            "Cache-Control": "no-cache",
+            "Content-Disposition": disposition,
+            ...content_type,
+          },
         };
 
+        let cssContent;
         if (Buffer.isBuffer(content)) {
-          res.set({
-            ...headers,
-            "Content-Length": Buffer.byteLength(content).toString(),
-          });
-          res.status(200).send(content);
-        } else {
-          res.set(headers);
-          if (fs.existsSync(content)) res.status(200).sendFile(content);
-          else res.status(404).send("File not found");
+          cssContent = content;
+          options.headers["Content-Length"] =
+            Buffer.byteLength(cssContent).toString();
+          return c.body(cssContent, options);
+        } else if (fs.existsSync(content)) {
+          // Get the mimes type
+          let tmimes = getContentType(content);
+          // Serve the file with the correct content-length header
+          if (tmimes) {
+            let [[key, val]] = Object.entries(tmimes);
+            options.headers["Content-Type"] = val;
+
+            if (key == "gz" || !val) {
+              options.headers["Content-Length"] =
+                statSync(content).size.toString();
+              return c.body(createReadStream(content), options);
+            } else {
+              cssContent = readFileSync(content);
+              options.headers["Content-Length"] =
+                Buffer.byteLength(cssContent).toString();
+              return c.body(cssContent, options);
+            }
+          }
         }
       };
 
@@ -481,10 +503,9 @@ module.exports = (...args) => {
             let isredirect = handler.check_empty(redirect);
             let isjson = handler.check_empty(json);
             let ishtml = handler.check_empty(html);
-            // if (!handler.check_empty(download.content)) {
-            //   downloadproc(res, download);
-            //   resolve(rtn);
-            // }
+            if (!handler.check_empty(download.content))
+              resolve(downloadproc(cnt, download));
+
             // let iscss = handler.check_empty(options.css);
 
             if (!isredirect) {
@@ -627,7 +648,7 @@ module.exports = (...args) => {
         if (!handler.check_empty(options.redirect)) return false;
         if (!handler.check_empty(options.json)) return false;
         if (!handler.check_empty(options.html)) return false;
-
+        if (!handler.check_empty(options.download.content)) return false;
         return true;
       };
 
