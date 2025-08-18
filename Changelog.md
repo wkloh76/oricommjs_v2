@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgrade hono version to 4.9.1 for both webbunjs and webnodehonojs engine. Completed on 2025-08-13
 - Implement download file function to both webnodehonojs and webbunjs engine. Completed on 2025-08-14
+- Added refengine data to the coresetting.toml.example file. Completed on 2025-08-18.
 
 ### Changed
 
