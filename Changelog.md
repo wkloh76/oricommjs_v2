@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update the import modules method from atomic at app.js. Completed on 2025-08-20.
+
 ### Deprecated
 
 ### Removed

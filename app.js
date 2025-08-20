@@ -158,11 +158,14 @@
           ];
           cosetting["atomic"] = {};
           for (let val of cosetting.general.atomic) {
-            cosetting["atomic"][val] = [
-              path.join(dir, "atomic", val),
-              utils.dir_module(path.join(dir, "atomic", val), []),
-              val,
-            ];
+            let atomicpath = path.join(dir, "atomic", val);
+            if (fs.existsSync(atomicpath)) {
+              cosetting["atomic"][val] = [
+                path.join(dir, "atomic", val),
+                utils.dir_module(atomicpath, []),
+                val,
+              ];
+            }
           }
           cosetting["components"] = [
             path.join(dir, "components"),
@@ -384,8 +387,10 @@
           let rtn = {};
           try {
             for (let val of general) {
-              rtn[val] = await import_cjs(atomic[val], utils, obj);
-              library["atomic"][val] = rtn[val];
+              if (atomic[val]) {
+                rtn[val] = await import_cjs(atomic[val], utils, obj);
+                library["atomic"][val] = rtn[val];
+              }
             }
             output.data = rtn;
             resolve(output);
