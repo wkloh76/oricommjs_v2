@@ -1,0 +1,31 @@
+appId: ""
+productName: ""
+copyright: Copyright © 2023 ${author}
+directories:
+  buildResources: ./build
+  output: ./dist
+files:
+  - "app.js"
+  - "atomic/**/*"
+  - "components/**/*"
+  - "engine/**/*"
+  - "utils/**/*"
+  - "**/node_modules/**/*"
+  - "coresetting.toml"
+  - "package.json"
+  - "!{dev-app-update.yml,Changelog.md,README.md}"
+asar: true
+compression: maximum
+# afterSign: build/notarize.js
+linux:
+  target:
+    - target: deb           
+  maintainer: ""
+  category: Utility
+
+appImage:
+  artifactName: ${name}-${version}.${ext}
+npmRebuild: false
+publish:
+  provider: generic
+  url: ""

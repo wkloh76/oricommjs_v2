@@ -8,9 +8,11 @@ files:
   - "app.js"
   - "atomic/**/*"
   - "components/**/*"
-  - "core/**/*"
+  - "engine/**/*"
+  - "utils/**/*"
   - "**/node_modules/**/*"
   - "coresetting.toml"
+  - "package.json"
   - "!{dev-app-update.yml,Changelog.md,README.md}"
 asar: true
 compression: maximum
