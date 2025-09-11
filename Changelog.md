@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Redefine deskelectronjs electron-builder installer method. Completed on 2025-08-22
+- Update some dependencies modules to latest version such as `dayjs,pino,got,libsql,@libsql/client,jsdom,hono`. Completed on 2025-09-11
 
 ### Deprecated
 

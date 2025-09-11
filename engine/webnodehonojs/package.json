@@ -6,11 +6,11 @@
     "@hono/swagger-ui": "0.5.2",
     "@hono/zod-openapi": "1.1.0",
     "html-minifier-terser": "7.2.0",
-    "jsdom": "25.0.1",
-    "@libsql/client": "0.15.10",
-    "hono": "4.9.1",
+    "jsdom": "26.1.0 ",
+    "@libsql/client": "0.15.15",
+    "hono": "4.9.6",
     "hono-sessions": "0.8.0",
-    "pino": "9.8.0",
+    "pino": "9.9.5",
     "pino-roll": "3.1.0"
   }
 }
