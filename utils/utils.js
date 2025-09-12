@@ -42,7 +42,7 @@ module.exports = (...args) => {
         try {
           let output = typeof value;
           if (output == "string") {
-            if (!isNaN(value)) output = "number";
+            if (value.length > 0) if (!isNaN(value)) output = "number";
           } else if (output == "object") {
             if (Array.isArray(value)) {
               output = "array";

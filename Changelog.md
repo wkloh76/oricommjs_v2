@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix bug in `utils\datatype` function which return wrong type when value is empty string. Completed on 2025-09-12
+
 ### Security
 
 [1.0.5]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.0.5
