@@ -116,6 +116,28 @@ module.exports = async (...args) => {
         }
       };
 
+      lib.list_branches_repos = async (...args) => {
+        const [param] = args;
+        let output = handler.dataformat;
+        try {
+          let api = "";
+          if (param.api == "gitea") api = "/api/v1/repos";
+          if (!param.optional) param.optional = "";
+          else param.optional = `${param.optional}`;
+          let options = {
+            method: "GET",
+            url: `${param.webapi}${api}${param.category}/${param.repos}/branches`,
+            headers: combine_header(param.auth, param.headers),
+            timeout: 30000,
+          };
+          output = await smfetch.request(options);
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
+
       lib.download_repos = async (...args) => {
         const [param] = args;
         let output = handler.dataformat;

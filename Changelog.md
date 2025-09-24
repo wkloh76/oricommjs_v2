@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add list_branches_repos function into atomic\molecule\giteapi module. Completed on 2025-09-24
+
 ### Changed
 
 - Redefine deskelectronjs electron-builder installer method. Completed on 2025-08-22
 - Update some dependencies modules to latest version such as `dayjs,pino,got,libsql,@libsql/client,jsdom,hono`. Completed on 2025-09-11
 - Update @hono/node-server modules dependencies to latest version. Completed on 2025-09-12
+- Update some dependencies modules to latest version such as `dayjs,pino,got,libsql,@libsql/client,jsdom,hono`. Completed on 2025-09-24
 
 ### Deprecated
 
