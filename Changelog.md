@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix bug in `utils\datatype` function which return wrong type when value is empty string. Completed on 2025-09-12
+- Fix bug in `engine\deskelectronjs\src\reaction.js` logger is not function issue. Completed on 2025-10-02
 
 ### Security
 

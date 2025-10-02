@@ -25,7 +25,7 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { minify } = require("html-minifier-terser");
     const jsdom = require("jsdom");
-    const { fs, path, logerr } = sys;
+    const { fs, path, logerr: loggerr } = sys;
     const { handler, getNestedObject } = library.utils;
     try {
       const molecule = await require("./reaction/molecule")(params, obj);
@@ -190,12 +190,12 @@ module.exports = (...args) => {
               let rtnimport_less = molecule.import_less(document, less, params);
               if (rtnimport_less) throw rtnimport_less;
               if (!rendererr)
-              res.status(status).send(
-                await minify(dom.serialize(), {
-                  collapseWhitespace: true,
-                }),
-                sess
-              );
+                res.status(status).send(
+                  await minify(dom.serialize(), {
+                    collapseWhitespace: true,
+                  }),
+                  sess
+                );
               else
                 res.status(status).rendererr(
                   await minify(dom.serialize(), {
@@ -493,7 +493,7 @@ module.exports = (...args) => {
        */
       const logerr = (...args) => {
         let [message] = args;
-        logerr.error(message);
+        loggerr.error(message);
       };
 
       /**
