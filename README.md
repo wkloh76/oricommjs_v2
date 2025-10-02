@@ -1,9 +1,9 @@
 # OriCommJS-V2
 
 ![Static Badge](https://img.shields.io/badge/License-Mulan_PSL_v2-_)
-![Static Badge](https://img.shields.io/badge/NodeJS-V20_.19_.2-_)
-![Static Badge](https://img.shields.io/badge/BunJS-V1_.2_.18-_)
-![Static Badge](https://img.shields.io/badge/ElectronJS-V34_.2_.0-_)
+![Static Badge](https://img.shields.io/badge/NodeJS-V24_.9_.0-_)
+![Static Badge](https://img.shields.io/badge/BunJS-V1_.2_.23-_)
+![Static Badge](https://img.shields.io/badge/ElectronJS-V38_.2_.0-_)
 ![Static Badge](https://img.shields.io/badge/OS-Ubuntu_24-_?style=flat)
 ![Static Badge](https://img.shields.io/badge/OS-Windows_10-_?style=flat)
 ![GitHub Release](https://img.shields.io/github/v/release/wkloh76/oricommjs_v2)
