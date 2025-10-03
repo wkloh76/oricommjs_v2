@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update some dependencies modules to latest version such as `dayjs,pino,got,libsql,@libsql/client,jsdom,hono`. Completed on 2025-09-11
 - Update @hono/node-server modules dependencies to latest version. Completed on 2025-09-12
 - Update some dependencies modules to latest version such as `dayjs,pino,got,libsql,@libsql/client,jsdom,hono`. Completed on 2025-09-24
+- Update @hono/node-server modules dependencies to latest version 1.19.5. Completed on 2025-10-03
 
 ### Deprecated
 
