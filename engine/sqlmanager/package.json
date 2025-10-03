@@ -4,7 +4,7 @@
         "libsql": "0.5.22",
         "bcrypt": "6.0.0",
         "csv-parser": "3.2.0",
-        "nodejs-polars": "0.21.0",
+        "nodejs-polars": "0.21.1",
         "mariadb": "3.4.5",
         "sql-fmt": "2.1.0"
     }
