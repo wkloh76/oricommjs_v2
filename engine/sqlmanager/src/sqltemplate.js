@@ -287,18 +287,16 @@ module.exports = (...args) => {
        * @param {Object} args[1] - sqljson an object value of sql in json format(reserve)
        * @returns {Object} - Return value in object type
        */
-      lib["generate"] = async (...args) => {
+      lib["generate"] = (...args) => {
         let [sqlgeneric = {}, sqljson = {}] = args;
         let output = handler.dataformat;
 
         try {
           let [[presqlcmd, cond], sqlcmd, jsondata] = transform(
-            await Promise.all([extract(sqlgeneric), extract(sqljson)])
+            extract(sqlgeneric),
+            extract(sqljson)
           );
-          let rtnsqlcmd = await Promise.all([
-            getsqlcmd.apply(null, presqlcmd),
-            getsqloperator(cond),
-          ]);
+          let rtnsqlcmd = [getsqlcmd(presqlcmd), getsqloperator(cond)];
           if (jsondata) rtnsqlcmd.splice(1, 0, jsondata);
           rtnsqlcmd.map((value, index) => {
             if (value.code != 0) throw value;

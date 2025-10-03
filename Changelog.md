@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add list_branches_repos function into atomic\molecule\giteapi module. Completed on 2025-09-24
-- Upgrade nodejs to version 24.9.0, electronjs to version 38.2.0 and bunjs to version 1.2.23. Completed on 2025-10-02
 
 ### Changed
 
