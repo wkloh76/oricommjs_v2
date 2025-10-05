@@ -78,7 +78,7 @@ module.exports = (...args) => {
             let dbfile;
             if (store.path == "") dbfile = join(logpath, "./sessions.db3");
             else dbfile = join(store.path, "./sessions.db3");
-            store.client = new sqlite3(dbfile);
+            store.client = new sqlite3(dbfile, { strict: true });
             console.log("Session db run silently!");
             setsession.store = new SqliteStore(store.client);
           }

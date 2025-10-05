@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bug fix webbunjs engine insert empty value into the sessiion table issue. Completed on 2025-10-06
+
 ### Security
 
 [1.0.6]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.0.6
