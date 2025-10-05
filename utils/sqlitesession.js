@@ -85,9 +85,7 @@ module.exports = {
           data: JSON.stringify(initialData),
           expire: initialData["_expire"] || "",
         });
-        console.log("asda");
       } catch (error) {
-        console.log(error);
         console.error("Error setting session:", error);
       } finally {
         return output;
@@ -100,7 +98,6 @@ module.exports = {
         let query = this.db.prepare(statement);
         query.run({ sid: sessionId });
       } catch (error) {
-        console.log(error);
         console.error("Error deleting session:", error);
       } finally {
         return output;
