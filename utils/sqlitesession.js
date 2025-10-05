@@ -15,18 +15,14 @@
  */
 "use strict";
 /**
- * The submodule of utils
- * @module utils_powershell
- */
-"use strict";
-/**
  * Submodule handles http/https session storage
  * in sqlite format work with @libsql/client module
  * @module utils_sqlitesession
  */
 module.exports = {
   SqliteStore: class {
-    constructor(db, tableName = "sessions") {
+    constructor(...args) {
+      const [engine = "node", db, tableName = "sessions"] = args;
       Object.defineProperty(this, "db", {
         enumerable: true,
         configurable: true,
@@ -48,6 +44,8 @@ module.exports = {
           path: "/",
         },
       };
+
+      this.engine = engine;
       this.db = db;
       this.tableName = tableName;
       this.initTable();
@@ -55,7 +53,7 @@ module.exports = {
 
     async initTable() {
       try {
-        await this.db.execute(
+        await this.db.exec(
           `CREATE TABLE IF NOT EXISTS ${this.tableName} (sid TEXT PRIMARY KEY,sess JSON, expire TEXT)`
         ); // "options" JSON NOT NULL,
       } catch (error) {
@@ -63,49 +61,88 @@ module.exports = {
       }
     }
 
-    async getSessionById(sessionId) {
+    getSessionById(sessionId) {
       try {
-        const result = await this.db.execute({
-          sql: `SELECT sess FROM ${this.tableName} WHERE sid = ?`,
-          args: [sessionId],
-        });
-
-        if (result.rows.length === 0) return null;
-        return JSON.parse(result.rows[0].sess);
+        let query, result;
+        let statement = `SELECT sess FROM ${this.tableName} WHERE sid =$sid`;
+        switch (this.engine) {
+          case "node":
+            query = this.db.prepare(statement);
+            break;
+          case "bun":
+            query = this.db.query(statement);
+            break;
+        }
+        result = query.get({ $sid: sessionId });
+        if (result) {
+          return JSON.parse(result.sess);
+        } else {
+          return null;
+        }
       } catch (error) {
         console.error("Error getting session:", error);
         return null;
       }
     }
-    async createSession(sessionId, initialData) {
+    createSession(sessionId, initialData) {
       try {
         let sess = { ...this.dummyepxress, ...initialData };
+        let query;
+
+        let statement = `INSERT INTO ${this.tableName} (sid, sess, expire) VALUES ($id, $data,$expire)`;
         sess.cookie.expires = initialData["_expire"];
-        await this.db.execute({
-          sql: `INSERT INTO ${this.tableName} (sid, sess, expire) VALUES (?, ?, ?)`,
-          args: [sessionId, JSON.stringify(sess), initialData["_expire"] || ""],
+        switch (this.engine) {
+          case "node":
+            query = this.db.prepare(statement);
+            break;
+          case "bun":
+            query = this.db.query(statement);
+            break;
+        }
+        query.run({
+          $id: sessionId,
+          $data: JSON.stringify(initialData),
+          $expire: initialData["_expire"] || "",
         });
       } catch (error) {
         console.error("Error setting session:", error);
       }
     }
-    async deleteSession(sessionId) {
+    deleteSession(sessionId) {
       try {
-        await this.db.execute({
-          sql: `DELETE FROM ${this.tableName} WHERE sid =?`,
-          args: [sessionId],
-        });
+        let query, result;
+        let statement = `DELETE FROM ${this.tableName} WHERE sid = $sid`;
+        switch (this.engine) {
+          case "node":
+            query = this.db.prepare(statement);
+            break;
+          case "bun":
+            query = this.db.query(statement);
+            break;
+        }
+        query.run({ $sid: sessionId });
       } catch (error) {
         console.error("Error deleting session:", error);
       }
     }
-    async persistSessionData(sessionId, sessionData) {
+    persistSessionData(sessionId, sessionData) {
       try {
         let sess = { ...this.dummyepxress, ...sessionData };
+        let query, result;
+        let statement = `UPDATE ${this.tableName} SET sess = $data, expire = $expire WHERE sid = $sid`;
         sess.cookie.expires = sessionData["_expire"];
-        await this.db.execute({
-          sql: `UPDATE ${this.tableName} SET sess = ?, expire = ? WHERE sid = ?`,
-          args: [JSON.stringify(sess), sessionData["_expire"] || "", sessionId],
+        switch (this.engine) {
+          case "node":
+            query = this.db.prepare(statement);
+            break;
+          case "bun":
+            query = this.db.query(statement);
+            break;
+        }
+        query.run({
+          $sid: sessionId,
+          $data: JSON.stringify(sessionData),
+          $expire: sessionData["_expire"] || "",
         });
       } catch (error) {
         console.error("Error destroying session table:", error);

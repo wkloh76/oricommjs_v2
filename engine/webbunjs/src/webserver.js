@@ -15,7 +15,7 @@
  */
 "use strict";
 const { serve } = require("bun");
-const { createClient: sqlite3 } = require("@libsql/client");
+const { Database: sqlite3 } = require("bun:sqlite");
 const { swaggerUI } = require("@hono/swagger-ui");
 const { OpenAPIHono, createRoute, z } = require("@hono/zod-openapi");
 const { Hono } = require("hono");
@@ -77,16 +77,10 @@ module.exports = (...args) => {
           if (savestore) {
             let dbfile;
             if (store.path == "") dbfile = join(logpath, "./sessions.db3");
-            else dbfile = join(store.path, "./sessions.db3");
-            // const turso = createClient({
-            //   url: `file:${dbfile}`,
-            // });
-
-            store.client = new sqlite3({
-              url: `file:${dbfile}`,
-            });
+            else dbfile = join(store.path, "./sessions.db3");           
+            store.client = new sqlite3(dbfile);          
             console.log("Session db run silently!");
-            setsession.store = new SqliteStore(store.client);
+            setsession.store = new SqliteStore("bun", store.client);
           }
 
           const mkdir = util.promisify(fs.mkdir);
