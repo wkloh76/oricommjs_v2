@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Optimize sqlitesession design in utils. Completed on 2025-10-05
+
 ### Deprecated
 
 ### Removed

@@ -80,7 +80,7 @@ module.exports = (...args) => {
             else dbfile = join(store.path, "./sessions.db3");
             store.client = new sqlite3(dbfile);
             console.log("Session db run silently!");
-            setsession.store = new SqliteStore("node", store.client);
+            setsession.store = new SqliteStore(store.client);
           }
 
           const mkdir = util.promisify(fs.mkdir);
