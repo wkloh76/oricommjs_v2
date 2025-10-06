@@ -16,7 +16,7 @@
 "use strict";
 /**
  * A module which handle web api fetch in backend server service
- * @module src_got
+ * @module src_startupinit
  */
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -31,14 +31,14 @@ module.exports = async (...args) => {
       let lib = {};
 
       lib["sqlite3"] = async (...args) => {
-        const [[setting, dbengine, compname], pathname, sqlite3] = args;
+        const [[setting, compname], pathname, sqlite3] = args;
         let output = handler.dataformat;
         try {
           let err;
           let connection = {};
           for (let [kconconf, conconf] of Object.entries(setting.db)) {
             for (let [key, dbconf] of Object.entries(conconf)) {
-              dbconf["engine"] = dbengine;
+              dbconf["engine"] = "sqlite3";
               dbconf["setting"] = setting;
               dbconf["dbgroup"] = kconconf;
               let register = await sqlite3.register(dbconf, key, compname);

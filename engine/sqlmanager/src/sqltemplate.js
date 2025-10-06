@@ -26,6 +26,7 @@ module.exports = (...args) => {
     const sqlfmt = require("sql-fmt");
     const { handler, errhandler } = library.utils;
     try {
+      let tableless = ["SQLITE"];
       let lib = {
         /**
          *  Getter sql json format
@@ -69,6 +70,9 @@ module.exports = (...args) => {
         let output = handler.dataformat;
         try {
           for (let [cmd] of Object.entries(sqlcmds)) {
+            let frmtble;
+            if (sqldb == undefined) frmtble = "";
+            else frmtble = `${sqldb}.`;
             if (sqlcmds[cmd]) {
               let statement,
                 tables = "";
@@ -79,7 +83,7 @@ module.exports = (...args) => {
                     statement = "INSERT INTO ";
                     tables =
                       `${sqltables[0].trim()} ` + sqlfmt`${sqlcmds[cmd][0]}`;
-                    if (sqldb) tables = `${sqldb}.${tables}`;
+                    if (sqldb) tables = `${frmtble}${tables}`;
                   }
                   break;
 
@@ -93,6 +97,7 @@ module.exports = (...args) => {
                     for (let tlbidx in sqltables) {
                       for (let [key, val] of Object.entries(SELECT[tlbidx])) {
                         let castdata = `${sqltables[tlbidx]}.${key}`;
+                        if (sqldb == undefined) castdata = key;
                         if (val) castdata += ` AS ${val}`;
                         fields += `${castdata},`;
                       }
@@ -233,7 +238,7 @@ module.exports = (...args) => {
       };
 
       const transform = (...args) => {
-        const [[generic, sqljson]] = args;
+        const [generic, sqljson] = args;
         if (generic) {
           let { cond, DB, presqlcmd, sqlcmd, TABLE } = generic;
           return [[[presqlcmd, DB, TABLE], cond], sqlcmd];
@@ -296,7 +301,10 @@ module.exports = (...args) => {
             extract(sqlgeneric),
             extract(sqljson)
           );
-          let rtnsqlcmd = [getsqlcmd(presqlcmd), getsqloperator(cond)];
+          let rtnsqlcmd = [
+            getsqlcmd.apply(null, presqlcmd),
+            getsqloperator(cond),
+          ];
           if (jsondata) rtnsqlcmd.splice(1, 0, jsondata);
           rtnsqlcmd.map((value, index) => {
             if (value.code != 0) throw value;

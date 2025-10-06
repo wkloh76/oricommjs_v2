@@ -26,11 +26,16 @@ module.exports = (...args) => {
     const { datatype, errhandler, handler, powershell } = library.utils;
     const { dayjs, logger, fs, path, pino } = sys;
 
-    let sqlite3;
+    let sqlite3,
+      prm = [];
     if (cosetting.args.engine == "webbunjs") {
       const { Database } = require("bun:sqlite");
       sqlite3 = Database;
-    } else sqlite3 = require("libsql");
+      prm.push({ strict: true });
+    } else {
+      const { DatabaseSync } = require("node:sqlite");
+      sqlite3 = DatabaseSync;
+    }
 
     try {
       let conn = {};
@@ -317,7 +322,7 @@ module.exports = (...args) => {
        * @param {String} args[2] - dbname is db onnection name base on coresetting.ongoing
        * @returns {Object} - Return object value which content process status
        */
-      const connect = async (...args) => {
+      const connect = (...args) => {
         let [dbname, compname, log] = args;
         let output = handler.dataformat;
         try {
@@ -332,16 +337,16 @@ module.exports = (...args) => {
                 `${dbname}.db3`
               );
             else logpath = path.join(db.path, db.engine, `${dbname}.db3`);
+            let prm = [];
+            if (db.type == "file") {
+              if (prm.length == 0) prm = [logpath];
+              else prm = [logpath, ...prm];
+            } else {
+              if (prm.length == 0) prm = [":memory:"];
+              else prm = [":memory:", ...prm];
+            }
 
-            // if (dblog[dbname])
-            //   options.verbose = (message) => {
-            //     dblog[dbname].info(message);
-            //   };
-            // if (db.type == "file") rtn = await new sqlite3(logpath, options);
-            // else rtn = await new sqlite3(":memory:", options);
-            if (db.type == "file")
-              rtn = await new sqlite3(logpath, dbname, log);
-            else rtn = await new sqlite3(":memory:");
+            rtn = new sqlite3(...prm);
             if (!rtn)
               throw {
                 message: "newschema execution failure!",
@@ -433,7 +438,7 @@ module.exports = (...args) => {
 
           if (registered[compname][dbname]) {
             let log = await setuplog(setting.log, config, dbname);
-            let rtn = await connect(dbname, compname, log.data);
+            let rtn = connect(dbname, compname, log.data);
             if (rtn.code == 0) registered[compname][dbname] = rtn.data;
           }
         } catch (error) {
@@ -452,35 +457,33 @@ module.exports = (...args) => {
        * @returns {Object} - Return value in object type which embed db connection module
        */
       lib["connector"] = (...args) => {
-        return new Promise(async (resolve) => {
-          let [dbname, compname] = args;
-          let output = handler.dataformat;
-          try {
-            let dbarr = Object.keys(registered[compname]);
-            if (!dbarr.includes(dbname)) {
-              if (registered[compname][dbname]) {
-                if (!output.data) output.data = {};
-                let rtn = await connect(key, compname);
-                if (rtn.code == 0) output.data[key] = rtn.data;
-              } else
-                throw {
-                  code: 10004,
-                  msg: "Unmatching database connection name compare with coresetting.ongoiong setting!",
-                };
-            } else {
+        let [dbname, compname] = args;
+        let output = handler.dataformat;
+        try {
+          let dbarr = Object.keys(registered[compname]);
+          if (!dbarr.includes(dbname)) {
+            if (registered[compname][dbname]) {
               if (!output.data) output.data = {};
-              if (conn[dbname]) output.data[dbname] = conn[dbname];
-              else {
-                let rtn = await connect(dbname, compname);
-                if (rtn.code == 0) output.data[dbname] = rtn.data;
-              }
+              let rtn = connect(key, compname);
+              if (rtn.code == 0) output.data[key] = rtn.data;
+            } else
+              throw {
+                code: 10004,
+                msg: "Unmatching database connection name compare with coresetting.ongoiong setting!",
+              };
+          } else {
+            if (!output.data) output.data = {};
+            if (conn[dbname]) output.data[dbname] = conn[dbname];
+            else {
+              let rtn = connect(dbname, compname);
+              if (rtn.code == 0) output.data[dbname] = rtn.data;
             }
-          } catch (error) {
-            output = errhandler(error);
-          } finally {
-            resolve(output);
           }
-        });
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
       };
 
       /**
