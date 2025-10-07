@@ -23,8 +23,10 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
+    const { datatype, errhandler, handler, powershell } = library.utils;
+    const { dayjs, fs, path, pino } = sys;
     const mariadb = require("mariadb");
-    const { datatype, handler, errhandler } = library.utils;
+
     try {
       let conn = {};
       let lib = {};
@@ -34,7 +36,7 @@ module.exports = (...args) => {
       let conncount = 0;
 
       class clsMariaDB {
-        constructor(connection, logger, fn) {
+        constructor(connection, obj, log) {
           if (!connection)
             throw {
               message: "Connection arguments undefined!",
@@ -43,8 +45,19 @@ module.exports = (...args) => {
             };
           else {
             this._conn = connection;
-            this._logger = logger;
-            this._fn = fn;
+            this._terminator = obj.terminator;
+            this._dbinfo = obj.dbinfo;
+            this._log = log;
+
+            return {
+              dboption: this.dboption,
+              rules: this.rules,
+              threadId: this.threadId,
+              ischema: this.ischema,
+              query: this.query,
+              import: this.import,
+              disconnect: this.disconnect,
+            };
           }
         }
 
@@ -83,6 +96,7 @@ module.exports = (...args) => {
                 sqlstatement = await statement.sql(data);
               } else sqlstatement = statement.sql;
               let query = { sql: sqlstatement, ...opt };
+              this._log.info(sqlstatement);
               let result, rows;
               switch (statement.type) {
                 case "INSERT":
@@ -146,6 +160,7 @@ module.exports = (...args) => {
             output.data = [];
             for (let statement of statements) {
               let query = { sql: statement.sql, ...opt };
+              this._log.info(statement.sql);
               let result, rows;
               switch (statement.type) {
                 case "INSERT":
@@ -255,8 +270,9 @@ module.exports = (...args) => {
          */
         disconnect = async (...args) => {
           await this._conn.end();
-          this._fn(this._conn.threadId);
-          this._conn = null;
+          await this._conn.destroy();
+          this._log.info(` Connection id ${this._conn.threadId} disconneted!`);
+          this._terminator(this._conn.threadId);
           return;
         };
 
@@ -271,10 +287,8 @@ module.exports = (...args) => {
           let output = false;
           try {
             let statement = {
-              sql:
-                "SELECT COUNT(DISTINCT `table_name`) AS counter FROM `information_schema`.`columns` WHERE `table_schema` = '" +
-                dbname +
-                "';",
+              sql: `SELECT COUNT(table_name) AS counter FROM information_schema.tables WHERE table_schema='${dbname}' 
+              AND table_type = 'BASE TABLE' AND table_schema not in ('information_schema','mysql','performance_schema','sys');`,
               ...this.dboption,
             };
             let [rows] = await this._conn.query(statement);
@@ -333,23 +347,41 @@ module.exports = (...args) => {
             return output;
           }
         };
-      }
 
-      /**
-       * Destroy the deactive connection Id in the module cache
-       * @alias module:mariadb.terminator
-       * @param {...Object} args - 1 parameter
-       *  @param {Integer} args[0] - threadId database connection Id.
-       * @returns {Null} - Return null
-       */
-      const terminator = (...args) => {
-        let [threadId] = args;
-        if (conn[threadId]) {
-          delete conn[threadId];
-          conncount -= 1;
-        }
-        return;
-      };
+        /**
+         * Imposrt SQLite3 database base on sql file format
+         * @alias module:mariadb.clsMariaDB.import
+         * @param {...Object} args - 1 parameters
+         * @param {String} args[0] - file is the sql file location
+         * @returns {Object} - Return object value which content both connection and schema status
+         */
+        import = async (...args) => {
+          let [file] = args;
+          let output = handler.dataformat;
+          try {
+            if (fs.existsSync(file)) {
+              let { host, port, user, password } = this._dbinfo;
+              await mariadb.importFile({
+                host,
+                port,
+                user,
+                password,
+                database: "mysql",
+                file,
+              });
+            } else {
+              output.code = 10001;
+              output.msg = "Cannot found the file for impoort!";
+            }
+          } catch (error) {
+            output.code = 10002;
+            output.msg = "MariaDB import failure:SQL file format wrong!";
+            sqlmanager.errlog(error);
+          } finally {
+            return output;
+          }
+        };
+      }
 
       /**
        * Register database pre-connection to the engine by on coresetting.toml defination
@@ -361,7 +393,7 @@ module.exports = (...args) => {
        * @returns {Object} - Return object value which content process status
        */
       const connect = async (...args) => {
-        let [dbname, compname] = args;
+        let [dbname, compname, log] = args;
         let output = handler.dataformat;
         try {
           if (registered[compname][dbname]) {
@@ -374,13 +406,69 @@ module.exports = (...args) => {
               };
 
             conncount += 1;
-            output.data = new clsMariaDB(rtn, dblog[dbname], terminator);
+            output.data = new clsMariaDB(
+              rtn,
+              {
+                dbinfo: registered[compname][dbname],
+                terminator: lib["terminator"],
+              },
+              log
+            );
             if (!conn[output.data.threadId]) conn[output.data.threadId] = true;
           }
         } catch (error) {
           output = errhandler(error);
         } finally {
           return output;
+        }
+      };
+
+      /**
+       * Datalogger which will allow to keep every sql query statement into the log file
+       * @alias module:mariadb.setuplog
+       * @param {...Object} args - 1 parameters
+       * @param {Object} args[0] - log is an object value in log file setting parameters
+       * @param {Object} args[1] - db is an object value for database parameters
+       * @param {String} args[2] - dbname is database connection name
+       * @returns {Object} - Return logger module in object type
+       */
+      const setuplog = async (...args) => {
+        const [log, db, dbname] = args;
+        const { engine, path: logdir } = db;
+        try {
+          let output = handler.dataformat;
+          let logpath = logdir;
+          if (logdir == "") logpath = path.join(cosetting.logpath, engine);
+          else logpath = path.join(logdir, engine, "log", dbname);
+          await powershell.shell(`mkdir -p ${logpath}`);
+
+          let tmplog = { ...log };
+          tmplog.symlink = db.symlink;
+
+          // 创建 Pino 日志记录器并配置轮转
+          output.data = pino({
+            level: "info",
+            transport: {
+              target: "pino-roll",
+              options: {
+                file: path.join(logpath, `${dbname}.log`),
+                ...tmplog,
+              },
+            },
+            // 添加时间戳
+            timestamp: () =>
+              `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+            // 自定义日志格式
+            formatters: {
+              level: (label) => {
+                return { level: label };
+              },
+            },
+          });
+
+          return output;
+        } catch (error) {
+          return errhandler(error);
         }
       };
 
@@ -394,54 +482,33 @@ module.exports = (...args) => {
        * @returns {Object} - Return object value which content process status
        */
       lib["register"] = async (...args) => {
-        let [db, dbname, compname] = args;
+        const [db, dbname, compname] = args;
+        const { setting, ...config } = db;
         let output = handler.dataformat;
         try {
-          if (!registered[compname]) registered[compname] = {};
-          let { path: location, ...dbconf } = db;
-          registered[compname][dbname] = dbconf;
-          let rtn = await connect(dbname, compname);
-          if (!rtn.code == 0) {
-            delete registered[compname][dbname];
-            throw rtn;
-          } else rtn.data.disconnect();
+          if (!registered[compname]) {
+            registered[compname] = {};
+          }
+
+          if (!registered[compname][dbname]) {
+            let { setting: noused, ...dbsetting } =
+              setting.db[config.dbgroup][dbname];
+            registered[compname][dbname] = dbsetting;
+          }
+
+          if (registered[compname][dbname]) {
+            let log = await setuplog(setting.log, config, dbname);
+            dblog = log.data;
+            let rtn = await connect(dbname, compname, dblog);
+            if (!rtn.code == 0) {
+              delete registered[compname][dbname];
+              throw rtn;
+            } else await rtn.data.disconnect();
+          }
         } catch (error) {
           output = errhandler(error);
         } finally {
           return output;
-        }
-      };
-
-      /**
-       * Create sql stamenet logger
-       * @alias module:mariadb.createlog
-       * @param {...Object} args - 1 parameters
-       * @param {Object} args[0] - cosetting is an object value from global variable coresetting
-       * @param {Object} args[1] - path is a module from node_modules
-       * @returns {Object} - Return value in object type
-       */
-      lib["createlog"] = async (...args) => {
-        let [engine, setting] = args;
-        let { db, log } = setting;
-        try {
-          sqlmanager = engine;
-          let output = handler.dataformat;
-          let err;
-          for (let [key, val] of Object.entries(db)) {
-            let { ...dbconf } = val;
-            dbconf["engine"] = "mariadb";
-            let rtn = await sqlmanager.setuplog(log, dbconf, key);
-            if (!dblog[key]) dblog[key] = rtn.data;
-            if (rtn.code !== 0) {
-              delete dblog[key];
-              err += `The ${key}.log sql statement log file create failure!`;
-            }
-          }
-          if (err) throw { message: "Failure to create log file!", stack: err };
-
-          return output;
-        } catch (error) {
-          return errhandler(error);
         }
       };
 
@@ -462,7 +529,7 @@ module.exports = (...args) => {
             if (!dbarr.includes(dbname)) {
               if (registered[compname][dbname]) {
                 if (!output.data) output.data = {};
-                let rtn = await connect(key, compname);
+                let rtn = await connect(key, compname, dblog);
                 if (rtn.code == 0) output.data[key] = rtn.data;
               } else
                 throw {
@@ -470,7 +537,7 @@ module.exports = (...args) => {
                   msg: "Unmatching database connection name compare with coresetting.ongoiong setting!",
                 };
             } else {
-              let rtn = await connect(dbname, compname);
+              let rtn = await connect(dbname, compname, dblog);
               if (rtn.code == 0) {
                 output.data = {};
                 output.data[dbname] = rtn.data;
@@ -482,6 +549,22 @@ module.exports = (...args) => {
             resolve(output);
           }
         });
+      };
+
+      /**
+       * Destroy the deactive connection Id in the module cache
+       * @alias module:mariadb.terminator
+       * @param {...Object} args - 1 parameter
+       *  @param {Integer} args[0] - threadId database connection Id.
+       * @returns {Null} - Return null
+       */
+      lib["terminator"] = async (...args) => {
+        let [threadId] = args;
+        if (conn[threadId]) {
+          delete conn[threadId];
+          conncount -= 1;
+        }
+        return;
       };
 
       resolve(lib);
