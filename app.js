@@ -456,36 +456,29 @@
         return new Promise(async (resolve, reject) => {
           const [params, obj] = args;
           const [library, sys] = obj;
-          const {
-            dir,
-            utils: { errhandler, handler },
-          } = library;
-          const {
-            fs: { existsSync, readFileSync, writeFileSync },
-            path: { join },
-          } = sys;
+          const { dir, utils } = library;
+          const { errhandler, handler, sanbox } = utils;
+          const { fs, path } = sys;
+          const { existsSync, readFileSync, writeFileSync } = fs;
+          const { join } = path;
           let output = handler.dataformat;
 
           try {
+            let routefilename = join(dir, "components", "route.json");
+            let routefile;
+
             if (params.routejson) {
-              let routefilename = join(dir, "components", "route.json");
-              let routefile;
               if (existsSync(routefilename))
                 routefile = JSON.parse(readFileSync(routefilename, "utf8"));
 
-              if (!routefile)
-                writeFileSync(
-                  routefilename,
-                  JSON.stringify(params.routejson, null, 2)
-                );
-              else if (
+              if (
+                !routefile ||
                 JSON.stringify(params.routejson) !== JSON.stringify(routefile)
               )
-                writeFileSync(
-                  routefilename,
-                  JSON.stringify(params.routejson, null, 2)
-                );
+                routefile = JSON.stringify(params.routejson, null, 2);
             }
+            if (routefile)
+              await sanbox(writeFileSync, [routefilename, routefile]);
             resolve(output);
           } catch (error) {
             reject(errhandler(error));
