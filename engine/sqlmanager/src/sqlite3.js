@@ -24,7 +24,7 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { datatype, errhandler, handler, powershell } = library.utils;
-    const { dayjs, logger, fs, path, pino } = sys;
+    const { dayjs, fs, path, pino } = sys;
 
     let sqlite3,
       prm = [];
@@ -88,6 +88,7 @@ module.exports = (...args) => {
             output.data = [];
             for (let statement of statements) {
               let query = this._conn.prepare(statement.sql);
+              this._log.info(statement.sql);
               let beginTransaction;
               switch (statement.type) {
                 case "INSERT":

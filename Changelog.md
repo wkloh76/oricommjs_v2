@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade nodejs,bunjs and electronjs to 24.9.0,1.2.23 and 38.2.1. Completed on 2025-10-05
 - Implment built in sqlite database egine instead third party "@libsql/client" dependencies module for both webbunjs and webnodehonojs engine to handle web session. Completed on 2025-10-05
 - Implment built in sqlite database egine to sqlmanager. Completed on 2025-10-06
+- Apply write query stament to the log file in sqlmanager engine at sqlite3 module trans function. Completed on 2025-10-07
 
 ### Changed
 

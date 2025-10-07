@@ -53,6 +53,6 @@ mkdir = true
 limit = { count = 10 }
 dateFormat = "yyyy-MM-dd"
 
-
 [debug.mariadb.db]
-workdb = { path = "", port = 3306, host = "127.0.0.1", user = "root", password = "root", database = "mysql", waitForConnections = true, connectionLimit = 10, queueLimit = 0 }
+[debug.mariadb.db.group]
+workdb = { path = "", port = 3306, host = "127.0.0.1", user = "root", password = "root", database = "", waitForConnections = true, connectionLimit = 10, queueLimit = 0 }
