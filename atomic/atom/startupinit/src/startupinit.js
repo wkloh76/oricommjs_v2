@@ -94,6 +94,7 @@ module.exports = async (...args) => {
                     if (!(await conn.data[key].ischema(key)))
                       err += "Import database failure!";
                   }
+                  connection[key].disconnect();
                 }
               }
             }

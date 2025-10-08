@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix write `route.json` file permission issue cause entire service corrupted in app.js. Completed on 2025-10-07
 - Fix out of control the create new mariadb classs in sqlmanager engine. Completed on 2025-10-08
+- Fix mariadb connection unable to handler destroy issue. Completed on 2025-10-08
 
 ### Security
 

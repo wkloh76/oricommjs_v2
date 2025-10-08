@@ -286,7 +286,7 @@ module.exports = (...args) => {
         /**
          * Disconnect connection
          * @alias module:mariadb.clsMariaDB.disconnect
-         * @param {...Object} args - 1 parameter
+         * @param {...Object} args - 0 parameter
          * @returns {Null} - Return null
          */
         disconnect = async (...args) => {
@@ -296,7 +296,7 @@ module.exports = (...args) => {
             this._log.info(
               ` Connection id ${this._conn.threadId} below ${this._conname} is disconneted!`
             );
-            this._terminator(this._conname);
+            this._terminator(this._conn.threadId);
           }
           return;
         };
@@ -422,18 +422,39 @@ module.exports = (...args) => {
         let output = handler.dataformat;
         try {
           if (registered[compname][dbname]) {
-            if (!conn[`${compname}_${dbname}`]) {
-              let rtn;
-              let { pool, symlink, ...conopt } = registered[compname][dbname];
-              if (pool) rtn = await mariadb.createPool(conopt);
-              else rtn = await mariadb.createConnection(conopt);
+            let rtn;
+            let { pool, symlink, ...conopt } = registered[compname][dbname];
+
+            if (pool) {
+              if (!conn[`${compname}_${dbname}`]) {
+                rtn = await mariadb.createPool(conopt);
+                if (!rtn)
+                  throw {
+                    message: "Mariadb database connenction establish failure!",
+                    stack:
+                      " newschema execution failure!mariadb return undefind.",
+                  };
+                conncount += 1;
+                output.data = await new clsMariaDB(
+                  rtn,
+                  {
+                    pool,
+                    conname: `${compname}_${dbname}`,
+                    dbinfo: registered[compname][dbname],
+                    terminator: lib["terminator"],
+                  },
+                  log
+                );
+                conn[`${compname}_${dbname}`] = output.data;
+              } else output.data = conn[`${compname}_${dbname}`];
+            } else {
+              rtn = await mariadb.createConnection(conopt);
               if (!rtn)
                 throw {
                   message: "Mariadb database connenction establish failure!",
                   stack:
                     " newschema execution failure!mariadb return undefind.",
                 };
-
               conncount += 1;
               output.data = await new clsMariaDB(
                 rtn,
@@ -445,8 +466,8 @@ module.exports = (...args) => {
                 },
                 log
               );
-              conn[`${compname}_${dbname}`] = output.data;
-            } else output.data = conn[`${compname}_${dbname}`];
+              conn[output.data.threadId] = output.data;
+            }
           }
         } catch (error) {
           output = errhandler(error);
