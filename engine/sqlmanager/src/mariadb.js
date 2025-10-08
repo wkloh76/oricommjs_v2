@@ -36,7 +36,8 @@ module.exports = (...args) => {
       let conncount = 0;
 
       class clsMariaDB {
-        constructor(connection, obj, log) {
+        constructor(...args) {
+          const [connection, obj, log] = args;
           if (!connection)
             throw {
               message: "Connection arguments undefined!",
@@ -49,16 +50,25 @@ module.exports = (...args) => {
             this._terminator = obj.terminator;
             this._dbinfo = obj.dbinfo;
             this._log = log;
+            this._conname = obj.conname;
+            this._threadId = 0;
 
-            return {
-              dboption: this.dboption,
-              rules: this.rules,
-              threadId: this.threadId,
-              ischema: this.ischema,
-              query: this.query,
-              import: this.import,
-              disconnect: this.disconnect,
-            };
+            return (async () => {
+              if (this._pool) {
+                let dbcon = await this._conn.getConnection();
+                this._threadId = dbcon.threadId;
+                dbcon.release();
+              } else this._threadId = this._conn.threadId;
+              return {
+                dboption: this.dboption,
+                rules: this.rules,
+                threadId: this._threadId,
+                ischema: this.ischema,
+                query: this.query,
+                import: this.import,
+                disconnect: this.disconnect,
+              };
+            })();
           }
         }
 
@@ -84,6 +94,7 @@ module.exports = (...args) => {
           let output;
           if (this._pool) {
             let dbcon = await this._conn.getConnection();
+            this._threadId = dbcon.threadId;
             output = await dbcon.query(query);
             dbcon.release();
           } else output = await this._conn.query(query);
@@ -273,16 +284,6 @@ module.exports = (...args) => {
         }
 
         /**
-         * Getter the connection threadId value
-         * @type {Object}
-         * @memberof module:mariadb.clsMariaDB.property.threadId
-         * @instance
-         */
-        get threadId() {
-          return this._conn.threadId;
-        }
-
-        /**
          * Disconnect connection
          * @alias module:mariadb.clsMariaDB.disconnect
          * @param {...Object} args - 1 parameter
@@ -293,9 +294,9 @@ module.exports = (...args) => {
             await this._conn.end();
             await this._conn.destroy();
             this._log.info(
-              ` Connection id ${this._conn.threadId} disconneted!`
+              ` Connection id ${this._conn.threadId} below ${this._conname} is disconneted!`
             );
-            this._terminator(this._conn.threadId);
+            this._terminator(this._conname);
           }
           return;
         };
@@ -421,27 +422,31 @@ module.exports = (...args) => {
         let output = handler.dataformat;
         try {
           if (registered[compname][dbname]) {
-            let rtn;
-            let { pool, symlink, ...conopt } = registered[compname][dbname];
-            if (pool) rtn = await mariadb.createPool(conopt);
-            else rtn = await mariadb.createConnection(conopt);
-            if (!rtn)
-              throw {
-                message: "Mariadb database connenction establish failure!",
-                stack: " newschema execution failure!mariadb return undefind.",
-              };
+            if (!conn[`${compname}_${dbname}`]) {
+              let rtn;
+              let { pool, symlink, ...conopt } = registered[compname][dbname];
+              if (pool) rtn = await mariadb.createPool(conopt);
+              else rtn = await mariadb.createConnection(conopt);
+              if (!rtn)
+                throw {
+                  message: "Mariadb database connenction establish failure!",
+                  stack:
+                    " newschema execution failure!mariadb return undefind.",
+                };
 
-            conncount += 1;
-            output.data = new clsMariaDB(
-              rtn,
-              {
-                pool,
-                dbinfo: registered[compname][dbname],
-                terminator: lib["terminator"],
-              },
-              log
-            );
-            if (!conn[output.data.threadId]) conn[output.data.threadId] = true;
+              conncount += 1;
+              output.data = await new clsMariaDB(
+                rtn,
+                {
+                  pool,
+                  conname: `${compname}_${dbname}`,
+                  dbinfo: registered[compname][dbname],
+                  terminator: lib["terminator"],
+                },
+                log
+              );
+              conn[`${compname}_${dbname}`] = output.data;
+            } else output.data = conn[`${compname}_${dbname}`];
           }
         } catch (error) {
           output = errhandler(error);
