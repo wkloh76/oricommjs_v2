@@ -45,6 +45,7 @@ module.exports = (...args) => {
             };
           else {
             this._conn = connection;
+            this._pool = obj.pool;
             this._terminator = obj.terminator;
             this._dbinfo = obj.dbinfo;
             this._log = log;
@@ -78,6 +79,17 @@ module.exports = (...args) => {
           decimalAsNumber: false,
         };
 
+        conhandler = async (...args) => {
+          const [query] = args;
+          let output;
+          if (this._pool) {
+            let dbcon = await this._conn.getConnection();
+            output = await dbcon.query(query);
+            dbcon.release();
+          } else output = await this._conn.query(query);
+          return output;
+        };
+
         /**
          * Proeduce the sql statement to database with transaction
          * @alias module:mariadb.clsMariaDB.trans
@@ -100,7 +112,8 @@ module.exports = (...args) => {
               let result, rows;
               switch (statement.type) {
                 case "INSERT":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
                 case "UPDATE":
@@ -114,16 +127,19 @@ module.exports = (...args) => {
                     ];
                     output.code = 10007;
                   } else {
-                    rows = await this._conn.query(query);
+                    rows = await this.conhandler(query);
+                    // rows = await this._conn.query(query);
                     result = rows[0];
                   }
                   break;
                 case "DELETE":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
                 case "SELECT":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
               }
@@ -164,7 +180,8 @@ module.exports = (...args) => {
               let result, rows;
               switch (statement.type) {
                 case "INSERT":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
                 case "UPDATE":
@@ -178,16 +195,19 @@ module.exports = (...args) => {
                     ];
                     output.code = 10007;
                   } else {
-                    rows = await this._conn.query(query);
+                    rows = await this.conhandler(query);
+                    // rows = await this._conn.query(query);
                     result = rows[0];
                   }
                   break;
                 case "DELETE":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
                 case "SELECT":
-                  rows = await this._conn.query(query);
+                  rows = await this.conhandler(query);
+                  // rows = await this._conn.query(query);
                   result = rows[0];
                   break;
               }
@@ -269,10 +289,14 @@ module.exports = (...args) => {
          * @returns {Null} - Return null
          */
         disconnect = async (...args) => {
-          await this._conn.end();
-          await this._conn.destroy();
-          this._log.info(` Connection id ${this._conn.threadId} disconneted!`);
-          this._terminator(this._conn.threadId);
+          if (!this._pool) {
+            await this._conn.end();
+            await this._conn.destroy();
+            this._log.info(
+              ` Connection id ${this._conn.threadId} disconneted!`
+            );
+            this._terminator(this._conn.threadId);
+          }
           return;
         };
 
@@ -398,7 +422,9 @@ module.exports = (...args) => {
         try {
           if (registered[compname][dbname]) {
             let rtn;
-            rtn = await mariadb.createConnection(registered[compname][dbname]);
+            let { pool, symlink, ...conopt } = registered[compname][dbname];
+            if (pool) rtn = await mariadb.createPool(conopt);
+            else rtn = await mariadb.createConnection(conopt);
             if (!rtn)
               throw {
                 message: "Mariadb database connenction establish failure!",
@@ -409,6 +435,7 @@ module.exports = (...args) => {
             output.data = new clsMariaDB(
               rtn,
               {
+                pool,
                 dbinfo: registered[compname][dbname],
                 terminator: lib["terminator"],
               },
