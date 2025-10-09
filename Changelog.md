@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Summary
 
 - Focus on developing the deskelectronjs engine to make it more powerful.
+- Add auto create locally session folder if not exists to both webbunjs and webnonohonojs engine. Completed on 2025-10-08
 
 ### Added
 
