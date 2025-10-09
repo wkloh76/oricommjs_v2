@@ -301,7 +301,7 @@ module.exports = (...args) => {
           app.use("*", sessionMiddleware(sessionval));
           app.use(
             bodyLimit({
-              maxSize: setting.webbunjs.parser.maxSize,
+              maxSize: setting.webnodehonojs.parser.maxSize,
               onError: (cnt) => {
                 return cnt.text("overflow :(", 413);
               },
