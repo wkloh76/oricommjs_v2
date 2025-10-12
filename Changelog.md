@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add pool connection feature to sqlmanger engine for mariadb module. Completed on 2025-10-08
+- Add sudopwd argument to app.js. Completed on 2025-10-12
 
 ### Changed
 

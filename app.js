@@ -120,6 +120,8 @@
               bigint: false,
             });
             let { debug, production, ...setting } = psetting;
+            if (cosetting.args["sudopwd"])
+              setting.general.sudopwd = cosetting.args["sudopwd"];
             cosetting = { ...cosetting, ...setting };
             cosetting["nodepath"] = path.join(dir, "node_modules");
 
