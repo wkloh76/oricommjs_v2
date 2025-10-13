@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove unused `pino` dependencies from deskelectronjs, webbunjs and webnodehonojs engine. Completed on 2025-10-13
+
 ### Fixed
 
 - Bug fix bodyLimit at webnodehonojs engine. Completed on 2025-10-09
