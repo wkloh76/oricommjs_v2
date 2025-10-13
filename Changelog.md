@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bug fix bodyLimit at webnodehonojs engine. Completed on 2025-10-09
+- Bug fix deskelectronjs engine no responding when the first page loading not found. Completed on 2025-10-13
 
 ### Security
 

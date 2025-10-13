@@ -12,6 +12,8 @@ auth =""
 encryptionKey = "string_at_least_32_characters_long"
 expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  86400 is 1 day
 cookieOptions= {sameSite= 'Lax', path= '/', httpOnly= true}
+store = { path = ""}
+savestore = true
 
 [deskelectronjs.window]
 title = ""
