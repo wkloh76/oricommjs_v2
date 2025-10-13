@@ -15,6 +15,21 @@
  */
 
 "use strict";
+const { DatabaseSync: sqlite3 } = require("node:sqlite");
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  net,
+  protocol,
+  screen,
+  session,
+} = require("electron");
+const { minify } = require("html-minifier-terser");
+const url = require("url");
+const crypto = require("crypto");
+const util = require("util");
 /**
  * The submodule of init_electron
  * @module src_desktop
@@ -31,29 +46,18 @@ module.exports = (...args) => {
       errhandler,
       handler,
       intercomm,
+      sqlitesession,
     } = library.utils;
-    const { existsSync } = sys.fs;
-    const { join } = sys.path;
-
-    const {
-      app,
-      BrowserWindow,
-      dialog,
-      ipcMain,
-      net,
-      protocol,
-      screen,
-      session,
-    } = require("electron");
-    const { minify } = require("html-minifier-terser");
-    const url = require("url");
-    const crypto = require("crypto");
+    const { SqliteStore } = sqlitesession;
+    const { dayjs, fs, path, pino } = sys;
+    const { existsSync } = fs;
+    const { join } = path;
 
     try {
       let lib = {};
       let winlist = [];
       let reglist = {};
-      let reaction, sessopt, ses, cache;
+      let reaction, sessopt, ses, cache, sessionval, sessionMiddleware, logger;
       let registry = { el: "deskelectron", winshare: {} };
 
       ipcMain.handle("validate-session", async () => {
@@ -91,6 +95,135 @@ module.exports = (...args) => {
         } catch (error) {
           return error;
         }
+      };
+
+      class clsSess {
+        constructor(connection, dbname, log) {
+          if (!connection)
+            throw {
+              message: "Connection arguments undefined!",
+              stack:
+                " Arguments undefined cause clsSQLiteDB rejection the instance class request !.",
+            };
+          else {
+            this._conn = connection;
+            this._dbname = dbname;
+            this._log = log;
+
+            return {
+              dboption: this.dboption,
+              rules: this.rules,
+              ischema: this.ischema,
+              query: this.query,
+              import: this.import,
+            };
+          }
+        }
+
+        // Add object to session storage
+        add_session = async (key, value) => {
+          try {
+            ses.cookies.remove("http://localhost", key);
+            await ses.cookies.set({
+              url: `http://localhost`,
+              name: key,
+              value: JSON.stringify(value),
+              expirationDate:
+                Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
+              httpOnly: sessopt.cookieOptions.httpOnly,
+              secure: sessopt.encryptionKey,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        // Retrieve object from session
+        get_session = async (key) => {
+          let [data] = await ses.cookies.get({
+            url: `http://localhost`,
+            name: key,
+          });
+          return data;
+        };
+
+        remove_session = async (key) => {
+          try {
+            ses.cookies.remove("http://localhost", key);
+            cache = undefined;
+          } catch (error) {
+            console.log(error);
+          }
+        };
+        // Add object to session storage
+        renew_session = async (key, value) => {
+          try {
+            let extract = {};
+            for (let [k, v] of Object.entries(value)) {
+              if (
+                !"domain expirationDate hostOnly httpOnly name path sameSite secure session"
+                  .split(" ")
+                  .includes(k)
+              )
+                extract[k] = v;
+            }
+            ses.cookies.remove("http://localhost", key);
+            await ses.cookies.set({
+              url: `http://localhost`,
+              name: key,
+              value: JSON.stringify(extract),
+              expirationDate:
+                Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
+              httpOnly: sessopt.cookieOptions.httpOnly,
+              secure: sessopt.encryptionKey,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        update_session = async (...args) => {
+          const [key, sess_data] = args;
+          let output = handler.dataformat;
+          try {
+            let sess = await get_session(key);
+            if (sess && sess_data) {
+              let result = arr_diffidx(
+                Object.keys(sess_data),
+                Object.keys(sess)
+              );
+              if (result.data.length > 0) {
+                let extraData = {};
+                for (let v of result.data)
+                  if (v.from == "source")
+                    extraData[v.value] = sess_data[v.value];
+                await add_session("session_data", extraData);
+              }
+            }
+          } catch (error) {
+            output = errhandler(error);
+          } finally {
+            return output;
+          }
+        };
+      }
+
+      const reqlog = (...args) => {
+        const [request, response] = args;
+        logger.info(
+          {
+            method: request.method,
+            url: request.originalUrl,
+            userAgent: `Chrome/${process.versions.chrome} electron/${process.versions.electron}`,
+            status: response.status,
+            responseTime: `${Date.now() - request.reqtime}ms`,
+            ip: "::ffff:127.0.0.1",
+            query: JSON.stringify(request.query),
+            body: JSON.stringify(request.body),
+            params: JSON.stringify(request.param),
+          },
+          "request completed"
+        );
       };
 
       // Add object to session storage
@@ -179,6 +312,7 @@ module.exports = (...args) => {
       const onfetch = (...args) => {
         return new Promise(async (resolve) => {
           let [event, request] = args;
+          request = { ...request, reqlog, reqtime: Date.now() };
 
           let ses_data = await get_session("session_data");
           if (!ses_data && !cache) {
@@ -230,12 +364,15 @@ module.exports = (...args) => {
               status: function (...args) {
                 return this;
               },
-              redirect: async function (url, sess) {
+              redirect: async function (...args) {
+                const [req, res] = args;
+                const { htmlstr, session: sess } = req;
+
                 let session = {};
                 if (Object.keys(sess).length != 0) session = { ...sess };
                 let result = await reaction["onredirect"](
                   {
-                    originalUrl: url,
+                    originalUrl: htmlstr,
                     params: {},
                     session,
                   },
@@ -247,6 +384,7 @@ module.exports = (...args) => {
                 }
 
                 reroute(sess, result.data);
+                reqlog(req, res);
                 await update_session("session_data", sess);
                 return;
               },
@@ -261,13 +399,18 @@ module.exports = (...args) => {
                 };
                 return;
               },
-              send: async function (url, sess) {
-                intercomm.fire("deskinit", ["data", url]);
+              send: async function (...args) {
+                const [req, res] = args;
+                const { reqlog, htmlstr, session: sess } = req;
+                reqlog(req, res);
+                intercomm.fire("deskinit", ["data", htmlstr]);
                 await update_session("session_data", sess);
                 return;
               },
-              rendererr: async function (url, sess) {
-                reroute(sess, url);
+              rendererr: async function (...args) {
+                const [req] = args;
+                const { htmlstr, session: sess } = req;
+                reroute(sess, htmlstr);
                 await update_session("session_data", sess);
                 return;
               },
@@ -330,7 +473,8 @@ module.exports = (...args) => {
               },
             },
           ]);
-
+          sessionMiddleware = new clsSess(sessionval);
+          // app.use("*", sessionMiddleware(sessionval));
           return;
         } catch (error) {
           return error;
@@ -408,10 +552,9 @@ module.exports = (...args) => {
        * @returns
        */
       const establish = async (...args) => {
-        let [setting] = args;
-        let {
-          deskelectronjs: { window: winopt },
-        } = setting;
+        const [setting] = args;
+        const { window: winopt } = setting[setting.args.engine];
+
         try {
           let monwidth = "";
           let monheight = "";
@@ -619,6 +762,9 @@ module.exports = (...args) => {
       lib["start"] = (...args) => {
         return new Promise(async (resolve) => {
           let [setting, obj] = args;
+          let { logpath } = setting;
+          let { savestore, store, ...setsession } =
+            setting[setting.args.engine].session;
           let { deskelectronjs } = setting;
           let { reaction: reactionjs, autoupdate } = obj;
           reaction = reactionjs;
@@ -639,6 +785,45 @@ module.exports = (...args) => {
                 ongoing = structuredClone(setting.ongoing[dname]);
               }
             }
+
+            if (savestore) {
+              let mkdir = util.promisify(fs.mkdir);
+              let dbfile;
+              if (store.path == "") {
+                await mkdir(join(logpath, curdir), { recursive: true });
+                dbfile = join(logpath, "./sessions.db3");
+              } else {
+                await mkdir(store.path, { recursive: true });
+                dbfile = join(store.path, "./sessions.db3");
+              }
+              store.client = new sqlite3(dbfile);
+              console.log("Session db run silently!");
+              setsession.store = new SqliteStore(store.client);
+            }
+
+            // Setup server log
+            // 创建 Pino 日志记录器并配置轮转
+            logger = pino({
+              level: "info",
+              transport: {
+                target: "pino-roll",
+                options: {
+                  file: join(logpath, curdir, "success.log"),
+                  ...cosetting.log.success,
+                },
+              },
+              // 添加时间戳
+              timestamp: () =>
+                `,"time":"${dayjs().format("YYYY-MM-DD HH:mm:ss")}"`,
+              // 自定义日志格式
+              formatters: {
+                level: (label) => {
+                  return { level: label };
+                },
+              },
+            });
+
+            sessionval = setsession;
 
             await Promise.all([
               load_atomic(

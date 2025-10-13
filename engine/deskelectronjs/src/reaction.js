@@ -82,7 +82,8 @@ module.exports = (...args) => {
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
-          let [res, sess] = args;
+          let [req, res] = args;
+          let { session: sess } = req;
           try {
             let {
               options: {
@@ -109,7 +110,15 @@ module.exports = (...args) => {
             // let iscss = handler.check_empty(options.css);
 
             if (!isredirect) {
-              res.redirect(redirect, sess);
+              res.redirect(
+                {
+                  ...req,
+                  htmlstr: redirect,
+                },
+                { status: 200 }
+              );
+
+              // res.redirect(redirect, sess);
               resolve(rtn);
             } else if (!isjson) {
               res.status(status).json(json);
@@ -189,10 +198,13 @@ module.exports = (...args) => {
               let rtnimport_less = molecule.import_less(document, less, params);
               if (rtnimport_less) throw rtnimport_less;
               res.status(status).send(
-                await minify(dom.serialize(), {
-                  collapseWhitespace: true,
-                }),
-                sess
+                {
+                  ...req,
+                  htmlstr: await minify(dom.serialize(), {
+                    collapseWhitespace: true,
+                  }),
+                },
+                { status: 200 }
               );
             } else {
               throw {
@@ -243,7 +255,7 @@ module.exports = (...args) => {
       const procredirect = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
-          let [res] = args;
+          let [req, res] = args;
           try {
             let {
               options: {
@@ -705,7 +717,7 @@ module.exports = (...args) => {
             orires.locals.render.options.redirect = redirect;
           } else throw { code: 404, message: "Page not found" };
 
-          let rtn = await processEnd(orires, orireq.session);
+          let rtn = await processEnd({ ...customObj }, orires);
           if (rtn.code !== 0) throw rtn;
         } catch (error) {
           orires.locals = { render: handler.webview };
@@ -747,7 +759,7 @@ module.exports = (...args) => {
           if (typeof errmessage == "string") errmsg += errmessage;
           else errmsg += JSON.stringify(errmessage);
           logerr(errmsg);
-          let result_catch = await processEnd(orires, orireq.session);
+          let result_catch = await processEnd({ ...customObj }, orires);
           if (result_catch.code != 0) {
             let msg = "onrquest catch error:";
             if (result_catch.stack) msg += result_catch.stack;
@@ -915,7 +927,7 @@ module.exports = (...args) => {
             }
           }
 
-          let rtn = await procredirect(orires);
+          let rtn = await procredirect(orireq, orires);
 
           if (rtn.code !== 0) throw rtn;
           return rtn;
@@ -960,7 +972,7 @@ module.exports = (...args) => {
           else errmsg += JSON.stringify(errmessage);
           logerr(errmsg);
 
-          return await procredirect(orires);
+          return await procredirect(orireq, orires);
         }
       };
 
