@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The deskelectronjs engine handles session data relying on sqlite files and memory types. Completed on 2025-10-14
+
 ### Deprecated
 
 ### Removed

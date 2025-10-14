@@ -57,7 +57,7 @@ module.exports = (...args) => {
       let lib = {};
       let winlist = [];
       let reglist = {};
-      let reaction, sessopt, ses, cache, sessionval, sessionMiddleware, logger;
+      let cache, logger, reaction, sessopt, ses;
       let registry = { el: "deskelectron", winshare: {} };
 
       ipcMain.handle("validate-session", async () => {
@@ -473,8 +473,7 @@ module.exports = (...args) => {
               },
             },
           ]);
-          sessionMiddleware = new clsSess(sessionval);
-          // app.use("*", sessionMiddleware(sessionval));
+
           return;
         } catch (error) {
           return error;
@@ -786,9 +785,9 @@ module.exports = (...args) => {
               }
             }
 
+            let dbfile;
             if (savestore) {
               let mkdir = util.promisify(fs.mkdir);
-              let dbfile;
               if (store.path == "") {
                 await mkdir(join(logpath, curdir), { recursive: true });
                 dbfile = join(logpath, "./sessions.db3");
@@ -796,10 +795,13 @@ module.exports = (...args) => {
                 await mkdir(store.path, { recursive: true });
                 dbfile = join(store.path, "./sessions.db3");
               }
-              store.client = new sqlite3(dbfile);
+              console.log("Session db run in file!");
+            } else {
+              dbfile = ":memory:";
               console.log("Session db run silently!");
-              setsession.store = new SqliteStore(store.client);
             }
+            let dbcon = new sqlite3(dbfile);
+            let sess_store = new SqliteStore(dbcon);
 
             // Setup server log
             // 创建 Pino 日志记录器并配置轮转
@@ -822,8 +824,6 @@ module.exports = (...args) => {
                 },
               },
             });
-
-            sessionval = setsession;
 
             await Promise.all([
               load_atomic(
