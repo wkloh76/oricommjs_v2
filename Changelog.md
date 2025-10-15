@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Apply log module to keep requested data and save to log file. Completed on 2025-10-13
+- Apply the sessionMiddleware in deskelectronjs. Completed on 2025-10-15
 
 ### Changed
 

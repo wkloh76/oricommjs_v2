@@ -30,6 +30,7 @@ const { minify } = require("html-minifier-terser");
 const url = require("url");
 const crypto = require("crypto");
 const util = require("util");
+const { json } = require("stream/consumers");
 /**
  * The submodule of init_electron
  * @module src_desktop
@@ -57,19 +58,17 @@ module.exports = (...args) => {
       let lib = {};
       let winlist = [];
       let reglist = {};
-      let cache, logger, reaction, sessopt, ses;
+      let logger, reaction, ses, sess_handler;
       let registry = { el: "deskelectron", winshare: {} };
 
       ipcMain.handle("validate-session", async () => {
-        const [cookie] = await session.defaultSession.cookies.get({
-          name: "electron_session",
-        });
-        if (!cookie || cookie.expirationDate * 1000 <= Date.now()) {
-          await session.defaultSession.clearStorageData();
-          winlist[0].webContents.send("session-expired");
-          return false;
-        }
-        return true;
+        const data = await sess_handler.Expired();
+        // if (!cookie || cookie.expirationDate * 1000 <= Date.now()) {
+        //   await session.defaultSession.clearStorageData();
+        //   winlist[0].webContents.send("session-expired");
+        //   return false;
+        // }
+        return data;
       });
 
       const register = (...args) => {
@@ -97,114 +96,136 @@ module.exports = (...args) => {
         }
       };
 
-      class clsSess {
-        constructor(connection, dbname, log) {
-          if (!connection)
-            throw {
-              message: "Connection arguments undefined!",
-              stack:
-                " Arguments undefined cause clsSQLiteDB rejection the instance class request !.",
-            };
-          else {
-            this._conn = connection;
-            this._dbname = dbname;
-            this._log = log;
+      class sessionMiddleware {
+        constructor(...args) {
+          const [store, sess, sessconf] = args;
+          this._db = store;
+          this._sess = sess;
+          this._sessconf = sessconf;
+          this._id;
+          this._sessid = {};
+          this._initialData = {
+            _accessed: null,
+            _data: {},
+            _delete: false,
+            _expire: null,
+          };
+          this.init();
 
-            return {
-              dboption: this.dboption,
-              rules: this.rules,
-              ischema: this.ischema,
-              query: this.query,
-              import: this.import,
-            };
+          return {
+            Session: this.checkSession,
+            Expired: this.checkExpire,
+            Clear: this.clearSession,
+          };
+        }
+
+        async init() {
+          this._id = crypto.randomUUID();
+          let sid = this._db.getSessionById(this._id);
+          if (sid == null) {
+            this._db.createSession(this._id, this._initialData);
+            let cookiedata = this.initcookie(this._id);
+            await this.createSession(cookiedata);
           }
         }
 
-        // Add object to session storage
-        add_session = async (key, value) => {
+        checkSession = async (...args) => {
+          let [req] = args;
           try {
-            ses.cookies.remove("http://localhost", key);
-            await ses.cookies.set({
-              url: `http://localhost`,
-              name: key,
-              value: JSON.stringify(value),
-              expirationDate:
-                Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
-              httpOnly: sessopt.cookieOptions.httpOnly,
-              secure: sessopt.encryptionKey,
-            });
-          } catch (error) {
-            console.log(error);
-          }
-        };
+            let name = this._sessconf.cookieOptions.name;
+            let curdt = dayjs().valueOf();
+            let cookiedata = this.initcookie(this._id);
+            let sess = await this.getSession({ name });
+            let dbsess = this._db.getSessionById(this._id);
+            let svalue = this._initialData;
+            let dbvalue = this._initialData;
+            let timestamp = this._sessconf.expireAfterSeconds * 1000 + curdt;
+            let _accessed = dayjs(curdt).toISOString();
+            let _expire = dayjs(timestamp).toISOString();
+            let value = JSON.parse(cookiedata.value);
+            let _data = {};
 
-        // Retrieve object from session
-        get_session = async (key) => {
-          let [data] = await ses.cookies.get({
-            url: `http://localhost`,
-            name: key,
-          });
-          return data;
-        };
-
-        remove_session = async (key) => {
-          try {
-            ses.cookies.remove("http://localhost", key);
-            cache = undefined;
-          } catch (error) {
-            console.log(error);
-          }
-        };
-        // Add object to session storage
-        renew_session = async (key, value) => {
-          try {
-            let extract = {};
-            for (let [k, v] of Object.entries(value)) {
+            if (sess) svalue = JSON.parse(sess.value);
+            if (dbsess) dbvalue = dbsess;
+            if (req.session) {
               if (
-                !"domain expirationDate hostOnly httpOnly name path sameSite secure session"
-                  .split(" ")
-                  .includes(k)
-              )
-                extract[k] = v;
+                JSON.stringify(value._data) != JSON.stringify(req.session._data)
+              ) {
+                _data = { ...value._data, ...req.session._data };
+              } else _data = dbvalue._data;
+            } else {
+              if (Object.keys(dbvalue._data) > Object.keys(svalue._data))
+                _data = { ...dbvalue._data, ...svalue._data };
+              if (Object.keys(svalue._data) > Object.keys(dbvalue._data))
+                _data = { ...svalue._data, ...dbvalue._data };
+              else _data = dbvalue._data;
             }
-            ses.cookies.remove("http://localhost", key);
-            await ses.cookies.set({
-              url: `http://localhost`,
-              name: key,
-              value: JSON.stringify(extract),
-              expirationDate:
-                Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
-              httpOnly: sessopt.cookieOptions.httpOnly,
-              secure: sessopt.encryptionKey,
-            });
+
+            value = {
+              ...value,
+              _accessed,
+              _expire,
+              _data,
+            };
+
+            req.session = value;
+
+            cookiedata.value = JSON.stringify(value);
+            await this.createSession(cookiedata);
+            this._db.persistSessionData(this._id, value);
+            req["session"] = value;
           } catch (error) {
             console.log(error);
           }
         };
 
-        update_session = async (...args) => {
-          const [key, sess_data] = args;
-          let output = handler.dataformat;
-          try {
-            let sess = await get_session(key);
-            if (sess && sess_data) {
-              let result = arr_diffidx(
-                Object.keys(sess_data),
-                Object.keys(sess)
+        checkExpire = async () => {
+          let output = false;
+          let name = this._sessconf.cookieOptions.name;
+          let cookiedata = this.initcookie(this._id);
+          let sess = await this.getSession({ name });
+          let dbsess = this._db.getSessionById(this._id);
+          if (sess) {
+            let sessdata = JSON.parse(sess.value);
+            let expire = dayjs(sessdata._expire).valueOf();
+            let curdt = dayjs().valueOf();
+            if (curdt > expire) {
+              await this.createSession(cookiedata);
+              this._db.persistSessionData(
+                this._id,
+                JSON.parse(cookiedata.value)
               );
-              if (result.data.length > 0) {
-                let extraData = {};
-                for (let v of result.data)
-                  if (v.from == "source")
-                    extraData[v.value] = sess_data[v.value];
-                await add_session("session_data", extraData);
-              }
+              output = true;
             }
-          } catch (error) {
-            output = errhandler(error);
-          } finally {
-            return output;
           }
+          return output;
+        };
+
+        clearSession = async () => {
+          let cookiedata = this.initcookie(this._id);
+          await this.createSession(cookiedata);
+          let value = JSON.parse(cookiedata.value);
+          this._db.persistSessionData(this._id, value);
+        };
+
+        initcookie = (sessionId) => {
+          let { domain, sameSite, ...cookiedata } =
+            this._sessconf.cookieOptions;
+          cookiedata.id = sessionId;
+          cookiedata.secure = this._sessconf.encryptionKey;
+          cookiedata.url = `http://${domain}`;
+          cookiedata.value = JSON.stringify(this._initialData);
+          return cookiedata;
+        };
+
+        createSession = async (value) => {
+          await this._sess.cookies.set(value);
+          return;
+        };
+
+        getSession = async (value) => {
+          let [data] = await this._sess.cookies.get(value);
+          return data;
         };
       }
 
@@ -226,133 +247,11 @@ module.exports = (...args) => {
         );
       };
 
-      // Add object to session storage
-      const add_session = async (key, value) => {
-        try {
-          ses.cookies.remove("http://localhost", key);
-          await ses.cookies.set({
-            url: `http://localhost`,
-            name: key,
-            value: JSON.stringify(value),
-            expirationDate:
-              Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
-            httpOnly: sessopt.cookieOptions.httpOnly,
-            secure: sessopt.encryptionKey,
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      };
-
-      // Retrieve object from session
-      const get_session = async (key) => {
-        let [data] = await ses.cookies.get({
-          url: `http://localhost`,
-          name: key,
-        });
-        return data;
-      };
-
-      const remove_session = async (key) => {
-        try {
-          ses.cookies.remove("http://localhost", key);
-          cache = undefined;
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      // Add object to session storage
-      const renew_session = async (key, value) => {
-        try {
-          let extract = {};
-          for (let [k, v] of Object.entries(value)) {
-            if (
-              !"domain expirationDate hostOnly httpOnly name path sameSite secure session"
-                .split(" ")
-                .includes(k)
-            )
-              extract[k] = v;
-          }
-          ses.cookies.remove("http://localhost", key);
-          await ses.cookies.set({
-            url: `http://localhost`,
-            name: key,
-            value: JSON.stringify(extract),
-            expirationDate:
-              Math.floor(Date.now() / 1000) + sessopt.expireAfterSeconds,
-            httpOnly: sessopt.cookieOptions.httpOnly,
-            secure: sessopt.encryptionKey,
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      };
-
-      const update_session = async (...args) => {
-        const [key, sess_data] = args;
-        let output = handler.dataformat;
-        try {
-          let sess = await get_session(key);
-          if (sess && sess_data) {
-            let result = arr_diffidx(Object.keys(sess_data), Object.keys(sess));
-            if (result.data.length > 0) {
-              let extraData = {};
-              for (let v of result.data)
-                if (v.from == "source") extraData[v.value] = sess_data[v.value];
-              await add_session("session_data", extraData);
-            }
-          }
-        } catch (error) {
-          output = errhandler(error);
-        } finally {
-          return output;
-        }
-      };
-
       const onfetch = (...args) => {
         return new Promise(async (resolve) => {
           let [event, request] = args;
+          await sess_handler.Session(request);
           request = { ...request, reqlog, reqtime: Date.now() };
-
-          let ses_data = await get_session("session_data");
-          if (!ses_data && !cache) {
-            await add_session("session_data", {});
-            request["session"] = {
-              ...(await get_session("session_data")),
-              clear_session: function () {
-                remove_session("session_data");
-                return;
-              },
-            };
-            delete request["session"].value;
-          } else if (!ses_data && cache) {
-            await renew_session("session_data", cache);
-            ses_data = await get_session("session_data");
-            let extract = JSON.parse(ses_data.value);
-            request["session"] = ses_data;
-            delete request["session"].value;
-            request["session"] = {
-              ...request["session"],
-              ...extract,
-              clear_session: function () {
-                remove_session("session_data");
-                return;
-              },
-            };
-            cache = undefined;
-          } else {
-            let extract = JSON.parse(ses_data.value);
-            request["session"] = ses_data;
-            delete request["session"].value;
-            request["session"] = {
-              ...request["session"],
-              ...extract,
-              clear_session: function () {
-                remove_session("session_data");
-                return;
-              },
-            };
-          }
 
           try {
             let ans;
@@ -383,9 +282,10 @@ module.exports = (...args) => {
                   if (result instanceof ReferenceError) throw result;
                 }
 
+                if (!(await sess_handler.Expired()))
+                  await sess_handler.Session(req);
                 reroute(sess, result.data);
                 reqlog(req, res);
-                await update_session("session_data", sess);
                 return;
               },
               json: async function (data) {
@@ -404,14 +304,15 @@ module.exports = (...args) => {
                 const { reqlog, htmlstr, session: sess } = req;
                 reqlog(req, res);
                 intercomm.fire("deskinit", ["data", htmlstr]);
-                await update_session("session_data", sess);
+                req;
+                await sess_handler.Session(req);
                 return;
               },
               rendererr: async function (...args) {
                 const [req] = args;
                 const { htmlstr, session: sess } = req;
                 reroute(sess, htmlstr);
-                await update_session("session_data", sess);
+                await sess_handler.Session(req);
                 return;
               },
               end: function (...args) {
@@ -762,12 +663,12 @@ module.exports = (...args) => {
         return new Promise(async (resolve) => {
           let [setting, obj] = args;
           let { logpath } = setting;
-          let { savestore, store, ...setsession } =
+          let { savestore, store, cookieOptions } =
             setting[setting.args.engine].session;
           let { deskelectronjs } = setting;
           let { reaction: reactionjs, autoupdate } = obj;
           reaction = reactionjs;
-          sessopt = setting.deskelectronjs.session;
+          // sessopt = setting.deskelectronjs.session;
 
           try {
             let ongoing;
@@ -802,6 +703,12 @@ module.exports = (...args) => {
             }
             let dbcon = new sqlite3(dbfile);
             let sess_store = new SqliteStore(dbcon);
+            ses = session.fromPartition("persist:my-session");
+            sess_handler = new sessionMiddleware(
+              sess_store,
+              ses,
+              setting[setting.args.engine].session
+            );
 
             // Setup server log
             // 创建 Pino 日志记录器并配置轮转
@@ -864,7 +771,7 @@ module.exports = (...args) => {
             });
 
             await autoupdate.init(setting);
-            ses = session.fromPartition("persist:my-session");
+            // ses = session.fromPartition("persist:my-session");
             await onfetch(null, {
               method: "GET",
               originalUrl: ongoing.defaulturl,

@@ -551,18 +551,14 @@ module.exports = (...args) => {
        * @param {Array} args[1] - orires http response module
        */
       lib["onrequest"] = async (...args) => {
-        let [{ session: _session, ...customObj }, orires, next] = args;
-        let { clear_session, ...session } = _session;
+        let [{ session, ...customObj }, orires, next] = args;
+
         let orireq;
         let fn;
 
         if (session) {
           customObj["session"] = {
             ...session,
-            destroy() {
-              clear_session();
-              if (this) for (let k of Object.keys(this)) delete this[k];
-            },
           };
         }
         orireq = customObj;
