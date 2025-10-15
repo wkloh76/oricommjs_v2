@@ -74,9 +74,9 @@ module.exports = (...args) => {
           app.use(cors());
           app.use(secureHeaders());
 
+          let dbfile;
           if (savestore) {
             let mkdir = util.promisify(fs.mkdir);
-            let dbfile;
             if (store.path == "") {
               await mkdir(join(logpath, curdir), { recursive: true });
               dbfile = join(logpath, "./sessions.db3");
@@ -84,10 +84,13 @@ module.exports = (...args) => {
               await mkdir(store.path, { recursive: true });
               dbfile = join(store.path, "./sessions.db3");
             }
-            store.client = new sqlite3(dbfile);
+            console.log("Session db run in file!");
+          } else {
+            dbfile = ":memory:";
             console.log("Session db run silently!");
-            setsession.store = new SqliteStore(store.client);
           }
+          store.client = new sqlite3(dbfile);
+          setsession.store = new SqliteStore(store.client);
 
           // Setup server log
           // 创建 Pino 日志记录器并配置轮转
