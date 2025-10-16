@@ -13,8 +13,10 @@
   "dependencies": {
     "@ltd/j-toml": "1.38.0",
     "@sagold/json-pointer": "7.1.2",
+    "chalk": "5.6.2",
     "dayjs": "1.11.18",
     "ini": "5.0.0",
+    "inquirer": "12.10.0",
     "multer": "1.4.5-lts.2",
     "pino": "10.0.0",
     "yaml": "2.8.1"

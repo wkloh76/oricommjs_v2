@@ -1103,6 +1103,8 @@ module.exports = (...args) => {
       };
 
       // Function to encrypt a password
+      // const secretKey = crypto.randomBytes(32); // 32 bytes for aes-256
+      // const iv = crypto.randomBytes(16); // 16 bytes for AES block size
       const encryptor = (...args) => {
         const [password, obj] = args;
         const { algorithm, secretKey, iv } = obj;

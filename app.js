@@ -19,6 +19,9 @@
  * @module app
  */
 (async () => {
+  const { default: chalk } = await import("chalk");
+  const { default: inquirer } = await import("inquirer");
+
   try {
     let argv = [];
     let homedir;
@@ -631,6 +634,31 @@
         [kernel, sysmodule, coresetting]
       )),
     };
+
+    let conftoml = sysmodule.path.join(coresetting.logpath, "conf.toml");
+    if (!sysmodule.fs.existsSync(conftoml)) {
+      let question = [
+        {
+          type: "password",
+          message: chalk.whiteBright.bgBlue(
+            "This is the first time setup!\nPlease provide your authorize password for some privileage setting:\n"
+          ),
+          name: "sudopwd",
+          mask: chalk.yellow.bgBlue("*"),
+        },
+      ];
+      let { sudopwd } = await inquirer.prompt(question);
+      if (sudopwd && sudopwd !== "") {
+        let encodepwd = kernel.utils.encryptor(sudopwd, coresetting.general);
+        let tomlString = sysmodule.toml.stringify(
+          { encryptpwd: encodepwd },
+          { newline: "\n" }
+        );
+        sysmodule.fs.writeFileSync(conftoml, tomlString);
+        process.exit(1);
+      }
+    }
+
     let rtn = await startup(null, [kernel, sysmodule, coresetting]);
     if (rtn.code != 0) throw rtn;
     console.log(
