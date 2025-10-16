@@ -75,10 +75,10 @@ module.exports = (...args) => {
           app.use(secureHeaders());
 
           let dbfile;
+          let mkdir = util.promisify(fs.mkdir);
+          await mkdir(join(logpath, curdir), { recursive: true });
           if (savestore) {
-            let mkdir = util.promisify(fs.mkdir);
             if (store.path == "") {
-              await mkdir(join(logpath, curdir), { recursive: true });
               dbfile = join(logpath, "./sessions.db3");
             } else {
               await mkdir(store.path, { recursive: true });
