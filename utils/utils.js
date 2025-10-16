@@ -16,6 +16,8 @@
 "use strict";
 const { Module } = require("module");
 const vm = require("vm");
+const crypto = require("crypto");
+const util = require("util");
 
 /**
  * The submodule utils module
@@ -27,10 +29,8 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { fs, path, jptr } = sys;
-
-    const util = require("util");
-    const busboy = require("busboy");
     const multer = require("multer");
+
     try {
       /**
        * Get the data type
@@ -1102,6 +1102,42 @@ module.exports = (...args) => {
         }
       };
 
+      // Function to encrypt a password
+      const encryptor = (...args) => {
+        const [password, obj] = args;
+        const { algorithm, secretKey, iv } = obj;
+        const cipher = crypto.createCipheriv(
+          algorithm,
+          Buffer.from(secretKey, "hex"),
+          Buffer.from(iv, "hex")
+        );
+        let encrypted = cipher.update(password, "utf8", "hex");
+        encrypted += cipher.final("hex");
+        return {
+          iv: iv,
+          encryptedData: encrypted,
+        };
+      };
+
+      // Function to decrypt an encrypted password
+      const decryptor = (...args) => {
+        const [encryptedObject, obj] = args;
+        const { algorithm, secretKey, iv } = obj;
+        const decipherIv = Buffer.from(encryptedObject.iv, "hex");
+        const decipher = crypto.createDecipheriv(
+          algorithm,
+          Buffer.from(secretKey, "hex"),
+          decipherIv
+        );
+        let decrypted = decipher.update(
+          encryptedObject.encryptedData,
+          "hex",
+          "utf8"
+        );
+        decrypted += decipher.final("utf8");
+        return decrypted;
+      };
+
       let lib = {
         dir_module,
         import_cjs,
@@ -1133,7 +1169,10 @@ module.exports = (...args) => {
         str_replacelast,
         vmloader,
         fmloader,
+        encryptor,
+        decryptor,
       };
+
       resolve(lib);
     } catch (error) {
       reject(error);
