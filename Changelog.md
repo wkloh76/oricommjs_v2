@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply the sessionMiddleware in deskelectronjs. Completed on 2025-10-15
 - Add aes-256 encrypt and decrypt function to utils. Completed on 2025-10-16
 - Implement encrypt user password and save the filename `conf.toml` to user home at app.js. Completed on 2025-10-16
+- Implement decrypt user password from file `conf.toml` at deskelectronjs engine autoupadate. Completed on 2025-10-16
 
 ### Changed
 

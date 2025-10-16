@@ -663,12 +663,10 @@ module.exports = (...args) => {
         return new Promise(async (resolve) => {
           let [setting, obj] = args;
           let { logpath } = setting;
-          let { savestore, store, cookieOptions } =
-            setting[setting.args.engine].session;
+          let { savestore, store } = setting[setting.args.engine].session;
           let { deskelectronjs } = setting;
           let { reaction: reactionjs, autoupdate } = obj;
           reaction = reactionjs;
-          // sessopt = setting.deskelectronjs.session;
 
           try {
             let ongoing;

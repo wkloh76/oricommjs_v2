@@ -14,6 +14,10 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
+const util = require("util");
+const os = require("os");
+const stream = require("stream");
+const crypto = require("crypto");
 /**
  * The submodule of auto update execute program
  * @module src_updater
@@ -23,14 +27,11 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { fs, path, yaml } = sys;
+    const { utils } = library;
+    const { fs, path, toml, yaml } = sys;
     const { app } = require("electron");
     const logger = require("electron-log");
-    const util = require("util");
-    const os = require("os");
     const { default: got } = await import("got");
-    const stream = require("stream");
-    const crypto = require("crypto");
     const ini = require("ini");
 
     try {
@@ -296,18 +297,6 @@ module.exports = (...args) => {
         }
       };
 
-      const whoami = async (...args) => {
-        let [general] = args;
-        try {
-          let { sudopwd } = general;
-          let output = "";
-          let { stdout } = await cwdexec("echo $(whoami)");
-          if (stdout.trim() != "root") output = `echo ${sudopwd} | sudo -S `;
-
-          return output;
-        } catch (e) {}
-      };
-
       lib.init = async (...args) => {
         let [setting] = args;
         let {
@@ -329,7 +318,14 @@ module.exports = (...args) => {
         logger.transports.file.resolvePathFn = () =>
           path.join(app.getPath("appData"), "logs", "eupdater.log");
 
-        sudo = await whoami(general);
+        let conftoml = path.join(cosetting.logpath, "conf.toml");
+        if (fs.existsSync(conftoml)) {
+          let conf = toml.parse(fs.readFileSync(conftoml), {
+            bigint: false,
+          });
+          sudo = utils.decryptor(conf.encryptpwd, cosetting.general);
+        }
+
         if (auth !== undefined && auth != "") {
           addHeader.headers["Authorization"] = auth;
         }
