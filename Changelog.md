@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Apply html module to utils. Completed on 2025-10-20
 - Implement utils/html module to webbunjs engine reaction module. Completed on 2025-10-20
+- Add `rtn["compname"] = compname` into compmgr engine to declare the function binding from which components. Completed on 2025-10-21
 
 ### Changed
 

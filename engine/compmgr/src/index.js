@@ -221,6 +221,7 @@ module.exports = (...args) => {
                               rtn["from"] = val;
                               rtn["method"] = module_key;
                               rtn["strict"] = false;
+                              rtn["compname"] = compname;
                               for (let [elname, [element]] of Object.entries(
                                 regulation
                               )) {
