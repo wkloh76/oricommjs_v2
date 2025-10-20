@@ -19,46 +19,46 @@
  * @module utils_intercomm
  */
 module.exports = (...args) => {
-  return new Promise(async (resolve, reject) => {
-    const [params, obj] = args;
-    const event = require("events");
-    try {
-      let myemitter = new event.EventEmitter();
+  const [params, obj] = args;
+  const event = require("events");
+  let lib = {};
+  try {
+    let myemitter = new event.EventEmitter();
 
-      function register(...args) {
-        let [ch, opt, fn] = args;
-        let output;
-        try {
-          switch (opt) {
-            case "always":
-              myemitter.on(ch, fn);
-              break;
-            case "once":
-              myemitter.once(ch, fn);
-              break;
-          }
-        } catch (error) {
-          output = error;
-        } finally {
-          return output;
+    const register = (...args) => {
+      let [ch, opt, fn] = args;
+      let output;
+      try {
+        switch (opt) {
+          case "always":
+            myemitter.on(ch, fn);
+            break;
+          case "once":
+            myemitter.once(ch, fn);
+            break;
         }
+      } catch (error) {
+        output = error;
+      } finally {
+        return output;
       }
+    };
 
-      function fire(...args) {
-        let [ch, param] = args;
-        let output;
-        try {
-          myemitter.emit(ch, ...param);
-        } catch (error) {
-          output = error;
-        } finally {
-          return output;
-        }
+    const fire = (...args) => {
+      let [ch, param] = args;
+      let output;
+      try {
+        myemitter.emit(ch, ...param);
+      } catch (error) {
+        output = error;
+      } finally {
+        return output;
       }
-      let lib = { register: register, fire: fire };
-      resolve(lib);
-    } catch (error) {
-      reject(error);
-    }
-  });
+    };
+    lib = { register: register, fire: fire };
+  } catch (error) {
+    lib = error;
+  } finally {
+    return lib;
+  }
 };

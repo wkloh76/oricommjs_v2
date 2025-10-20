@@ -19,183 +19,182 @@
  * @module utils_powershell
  */
 module.exports = (...args) => {
-  return new Promise(async (resolve, reject) => {
-    const [params, obj] = args;
-    const util = require("util");
-    const os = require("os");
-    const cwdexec = util.promisify(require("child_process").exec);
-    const execFile = util.promisify(require("child_process").execFile);
-    try {
-      const dataformat = {
-        code: 0,
-        msg: "",
-        data: null,
-      };
-      const execrtn = {
-        error: null,
-        stdout: null,
-        stderr: null,
-        ok: true,
-        code: 0,
-      };
-      let userid = null;
-      let lib = {
-        /**
-         * Getter the user id
-         * @type {String}
-         * @memberof module:powershell.getuid
-         * @instance
-         */
-        get getuid() {
-          return userid;
-        },
-      };
-
+  const [params, obj] = args;
+  const util = require("util");
+  const os = require("os");
+  const cwdexec = util.promisify(require("child_process").exec);
+  const execFile = util.promisify(require("child_process").execFile);
+  let lib = {};
+  try {
+    const dataformat = {
+      code: 0,
+      msg: "",
+      data: null,
+    };
+    const execrtn = {
+      error: null,
+      stdout: null,
+      stderr: null,
+      ok: true,
+      code: 0,
+    };
+    let userid = null;
+    lib = {
       /**
-       * Check current user in linux os.
-       * @alias module:powershell.initial
-       * @returns {Object } - Return current user.
+       * Getter the user id
+       * @type {String}
+       * @memberof module:powershell.getuid
+       * @instance
        */
-      lib["initial"] = () => {
-        return new Promise(async (resolve, reject) => {
-          let output = structuredClone(dataformat);
-          try {
-            if (os.type() == "Linux") {
-              let rtn = await lib.shell(
-                "id | awk '{print $1}' | sed 's/.*(//;s/)$//'"
-              );
-              userid = rtn.data.stdout.trim();
-              output.data = {
-                userid: userid,
-              };
-              resolve(output);
-            } else {
-              userid = null;
-              resolve(output);
-            }
-          } catch (error) {
-            output.code = -1;
-            output.msg = error.message;
-            output.data = error;
+      get getuid() {
+        return userid;
+      },
+    };
+
+    /**
+     * Check current user in linux os.
+     * @alias module:powershell.initial
+     * @returns {Object } - Return current user.
+     */
+    lib["initial"] = () => {
+      return new Promise(async (resolve, reject) => {
+        let output = structuredClone(dataformat);
+        try {
+          if (os.type() == "Linux") {
+            let rtn = await lib.shell(
+              "id | awk '{print $1}' | sed 's/.*(//;s/)$//'"
+            );
+            userid = rtn.data.stdout.trim();
+            output.data = {
+              userid: userid,
+            };
+            resolve(output);
+          } else {
+            userid = null;
             resolve(output);
           }
-        });
-      };
+        } catch (error) {
+          output.code = -1;
+          output.msg = error.message;
+          output.data = error;
+          resolve(output);
+        }
+      });
+    };
 
-      /**
-       * Execute linux command line with non privilege.
-       * @alias module:powershell.shell
-       * @param {String} cmd - Accept multi command line with non privilege.
-       * @param {String} dir - Set to a specific working directory for a specific command line.
-       * @returns {Object } - Return value which is return from the linux terminal.
-       */
-      lib["shell"] = (...params) => {
-        return new Promise(async (resolve, reject) => {
-          let [cmd, dir] = params;
-          let cmdobject = structuredClone(execrtn),
-            result = structuredClone(dataformat);
-          try {
-            let proc = [cmd];
-            if (dir) proc.push({ cwd: dir });
-            const { error, stdout, stderr } = await cwdexec.apply(null, proc);
-            cmdobject.error = error;
-            cmdobject.stdout = stdout;
-            cmdobject.stderr = stderr;
+    /**
+     * Execute linux command line with non privilege.
+     * @alias module:powershell.shell
+     * @param {String} cmd - Accept multi command line with non privilege.
+     * @param {String} dir - Set to a specific working directory for a specific command line.
+     * @returns {Object } - Return value which is return from the linux terminal.
+     */
+    lib["shell"] = (...params) => {
+      return new Promise(async (resolve, reject) => {
+        let [cmd, dir] = params;
+        let cmdobject = structuredClone(execrtn),
+          result = structuredClone(dataformat);
+        try {
+          let proc = [cmd];
+          if (dir) proc.push({ cwd: dir });
+          const { error, stdout, stderr } = await cwdexec.apply(null, proc);
+          cmdobject.error = error;
+          cmdobject.stdout = stdout;
+          cmdobject.stderr = stderr;
 
-            if (error) {
-              cmdobject.ok = false;
-              cmdobject.code = -2;
-            } else cmdobject.error = null;
-            result.code = 0;
-            result.data = cmdobject;
-            resolve(result);
-          } catch (error) {
-            result.code = -1;
-            result.msg = error.message;
-            result.data = error;
-            resolve(result);
-          }
-        });
-      };
+          if (error) {
+            cmdobject.ok = false;
+            cmdobject.code = -2;
+          } else cmdobject.error = null;
+          result.code = 0;
+          result.data = cmdobject;
+          resolve(result);
+        } catch (error) {
+          result.code = -1;
+          result.msg = error.message;
+          result.data = error;
+          resolve(result);
+        }
+      });
+    };
 
-      /**
-       * Executes an external application linux command line with non privilege.
-       * @alias module:powershell.shellfile
-       * @param {String} cmd - Accept single command line execute file with non privilege.
-       * @param {String} args - Arguments.
-       * * @param {String} opt - Set to a specific working directory for a specific command line.
-       * @returns {Object } - Return value which is return from the linux terminal.
-       */
-      lib["shellfile"] = (...params) => {
-        return new Promise(async (resolve, reject) => {
-          let [cmd, args, opt] = params;
-          let cmdobject = structuredClone(execrtn),
-            result = structuredClone(dataformat);
-          try {
-            let proc = [cmd, args];
-            if (opt) proc.push(opt);
+    /**
+     * Executes an external application linux command line with non privilege.
+     * @alias module:powershell.shellfile
+     * @param {String} cmd - Accept single command line execute file with non privilege.
+     * @param {String} args - Arguments.
+     * * @param {String} opt - Set to a specific working directory for a specific command line.
+     * @returns {Object } - Return value which is return from the linux terminal.
+     */
+    lib["shellfile"] = (...params) => {
+      return new Promise(async (resolve, reject) => {
+        let [cmd, args, opt] = params;
+        let cmdobject = structuredClone(execrtn),
+          result = structuredClone(dataformat);
+        try {
+          let proc = [cmd, args];
+          if (opt) proc.push(opt);
 
-            const { error, stdout, stderr } = await execFile.apply(null, proc);
-            cmdobject.error = error;
-            cmdobject.stdout = stdout;
-            cmdobject.stderr = stderr;
+          const { error, stdout, stderr } = await execFile.apply(null, proc);
+          cmdobject.error = error;
+          cmdobject.stdout = stdout;
+          cmdobject.stderr = stderr;
 
-            if (error) {
-              cmdobject.ok = false;
-              cmdobject.code = -2;
-            } else cmdobject.error = null;
-            result.code = 0;
-            result.data = cmdobject;
-            resolve(result);
-          } catch (error) {
-            result.code = -1;
-            result.msg = error.message;
-            result.data = error;
-            resolve(result);
-          }
-        });
-      };
+          if (error) {
+            cmdobject.ok = false;
+            cmdobject.code = -2;
+          } else cmdobject.error = null;
+          result.code = 0;
+          result.data = cmdobject;
+          resolve(result);
+        } catch (error) {
+          result.code = -1;
+          result.msg = error.message;
+          result.data = error;
+          resolve(result);
+        }
+      });
+    };
 
-      /**
-       * Execute linux command line with privilege.
-       * @alias module:powershell.sudoshell
-       * @param {String} pwd - Linux user password.
-       * @param {String} cmd - Accept multi command line with privilege.
-       * @param {String} dir - Set to a specific working directory for a specific command line.
-       * @returns {Object } - Return value which is return from the linux terminal.
-       */
-      lib["sudoshell"] = (...params) => {
-        return new Promise(async (resolve, reject) => {
-          let [pwd, cmd, dir] = params;
-          let cmdobject = structuredClone(execrtn),
-            result = structuredClone(dataformat);
-          try {
-            let proc = [`echo ${pwd} | sudo -S ${cmd}`];
-            if (dir) proc.push({ cwd: dir });
-            const { error, stdout, stderr } = await cwdexec.apply(null, proc);
-            cmdobject.error = error;
-            cmdobject.stdout = stdout;
-            cmdobject.stderr = stderr;
+    /**
+     * Execute linux command line with privilege.
+     * @alias module:powershell.sudoshell
+     * @param {String} pwd - Linux user password.
+     * @param {String} cmd - Accept multi command line with privilege.
+     * @param {String} dir - Set to a specific working directory for a specific command line.
+     * @returns {Object } - Return value which is return from the linux terminal.
+     */
+    lib["sudoshell"] = (...params) => {
+      return new Promise(async (resolve, reject) => {
+        let [pwd, cmd, dir] = params;
+        let cmdobject = structuredClone(execrtn),
+          result = structuredClone(dataformat);
+        try {
+          let proc = [`echo ${pwd} | sudo -S ${cmd}`];
+          if (dir) proc.push({ cwd: dir });
+          const { error, stdout, stderr } = await cwdexec.apply(null, proc);
+          cmdobject.error = error;
+          cmdobject.stdout = stdout;
+          cmdobject.stderr = stderr;
 
-            if (error) {
-              cmdobject.ok = false;
-              cmdobject.code = -2;
-            } else cmdobject.error = null;
-            result.code = 0;
-            result.data = cmdobject;
-            resolve(result);
-          } catch (error) {
-            result.code = -1;
-            result.msg = error.message;
-            result.data = error;
-            resolve(result);
-          }
-        });
-      };
-
-      resolve(lib);
-    } catch (error) {
-      reject(error);
-    }
-  });
+          if (error) {
+            cmdobject.ok = false;
+            cmdobject.code = -2;
+          } else cmdobject.error = null;
+          result.code = 0;
+          result.data = cmdobject;
+          resolve(result);
+        } catch (error) {
+          result.code = -1;
+          result.msg = error.message;
+          result.data = error;
+          resolve(result);
+        }
+      });
+    };
+  } catch (error) {
+    lib = error;
+  } finally {
+    return lib;
+  }
 };

@@ -24,12 +24,13 @@ module.exports = (...args) => {
 
     try {
       let lib = {
-        ...(await require("./utils")(params, obj)),
+        ...require("./utils")(params, obj),
       };
-      lib["handler"] = await require("./handler")(params, obj);
-      lib["powershell"] = await require("./powershell")(params, obj);
-      lib["intercomm"] = await require("./intercomm")(params, obj);
+      lib["handler"] = require("./handler")(params, obj);
+      lib["powershell"] = require("./powershell")(params, obj);
+      lib["intercomm"] = require("./intercomm")(params, obj);
       lib["sqlitesession"] = require("./sqlitesession");
+      lib["html"] = require("./html")(params, obj);
 
       resolve(lib);
     } catch (error) {

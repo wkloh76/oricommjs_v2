@@ -19,250 +19,250 @@
  * @module utils_handler
  */
 module.exports = (...args) => {
-  return new Promise(async (resolve, reject) => {
-    const [params, obj] = args;
-    try {
-      let lib = {
-        /**
-         * Getter the dataformat value
-         * @type {Object}
-         * @memberof module:handler.dataformat
-         * @instance
-         */
-        get dataformat() {
-          return Object.assign(
-            {},
-            {
-              code: 0,
-              msg: "",
-              data: null,
-            }
-          );
-        },
-
-        /**
-         *  Getter the restful api dataformat value
-         * @type {Object}
-         * @memberof module:handler.restfulapi
-         * @instance
-         */
-        get restfulapi() {
-          return Object.assign(
-            {},
-            {
-              DELETE: {},
-              HEAD: {},
-              GET: {},
-              PATCH: {},
-              POST: {},
-              PUT: {},
-            }
-          );
-        },
-
-        /**
-         *  Getter serialize dataformat value
-         * @type {Object}
-         * @memberof module:handler.fmtseries
-         * @instance
-         */
-        get fmtseries() {
-          return Object.assign(
-            {},
-            {
-              err: [],
-              func: {},
-              share: {},
-            }
-          );
-        },
-
-        get wfwseries() {
-          return Object.assign(
-            {},
-            {
-              error: "",
-              func: "",
-              name: "",
-              param: [],
-              pull: [],
-              push: [],
-            }
-          );
-        },
-
-        /**
-         *  Getter the web view render as html dataformat value
-         * @type {Object}
-         * @memberof module:handler.webview
-         * @instance
-         */
-        get webview() {
-          return Object.assign(
-            {},
-            {
-              options: {
-                css: { atomic: [], locally: [], other: [], remotely: [] },
-                download: {
-                  content: "",
-                  ctype: "",
-                  filename: "",
-                  save: false,
-                },
-                html: "",
-                injectioncss: {},
-                injectionjs: { variables: {}, modules: {} },
-                injectionless: {},
-                js: { atomic: [], locally: [], other: [], remotely: [] },
-                json: {},
-                layer: {
-                  layouts: "",
-                  childs: { path: "", excluded: [], external: [], htmlstr: [] },
-                },
-                less: {
-                  engine: { atomic: "", locally: "", remotely: "", other: "" },
-                  style: { atomic: [], locally: [], other: [], remotely: [] },
-                },
-                mjs: {
-                  atomic: [],
-                  initialize: {},
-                  locally: [],
-                  other: [],
-                  remotely: [],
-                },
-                menu: {},
-                params: { locally: "", remotely: "" },
-                redirect: "",
-                show: true,
-                tray: {},
-              },
-              status: 200,
-              view: "",
-            }
-          );
-        },
-
-        get webengine() {
-          return Object.assign(
-            {},
-            {
-              path: "",
-              load: {
-                htmlevent: {},
-                htmlrender: {},
-                htmllogicflow: {},
-                htmlcollection: {},
-                htmlworkflow: {},
-              },
-              trigger: {},
-              startup: "",
-            }
-          );
-        },
-
-        get sqlgeneric() {
-          return Object.assign(
-            {},
-            {
-              DB: "SQLITE",
-              TABLE: [],
-              INSERT: [{}],
-              SELECT: [{}],
-              UPDATE: [{}],
-              WHERE: { AND: {}, OR: {}, BETWEEN: {}, LIKE: {} },
-            }
-          );
-        },
-        get sqlitejson() {
-          return Object.assign(
-            {},
-            {
-              TABLE: [],
-              WHERE: {
-                EACH: { FIELD: [], VALUES: [] },
-                TREE: { FIELD: [], VALUES: [] },
-                TYPE: { FIELD: [], VALUES: [] },
-                VALID: { FIELD: [], VALUES: [] },
-              },
-              ODER_BY: { FIELD: [], VALUES: [] },
-              GROUP_BY: { FIELD: [], VALUES: [] },
-              SELECT: {
-                EXTRACT: { FIELD: [], VALUES: [], OUTPUT: [] },
-                TREE: { FIELD: [], VALUES: [] },
-                TYPE: { FIELD: [], VALUES: [] },
-                VALID: { FIELD: [], VALUES: [] },
-              },
-              UPDATE: {
-                SET: { FIELD: [], VALUES: [] },
-                INSERT: { FIELD: [], VALUES: [] },
-                REPLACE: { FIELD: [], VALUES: [] },
-                REMOVE: { FIELD: [], VALUES: [] },
-              },
-            }
-          );
-        },
-      };
-
+  const [params, obj] = args;
+  let lib = {};
+  try {
+    lib = {
       /**
-       * Pick data frontend, either post or get value
-       * @alias module:handler.getprm
-       * @param {Array} args - Expresss framework request object
-       * @returns {Object} - Return  value
+       * Getter the dataformat value
+       * @type {Object}
+       * @memberof module:handler.dataformat
+       * @instance
        */
-      lib.getprm = function (...args) {
-        let [req] = args;
-        let output = {};
-        try {
-          let isquery = lib.check_empty(req.query);
-          let isbody = lib.check_empty(req.body);
-          let isparams = lib.check_empty(req.params);
-          if (!isquery) output = { ...output, ...req.query };
-          if (!isbody) output = { ...output, ...req.body };
-          if (!isparams) output = { ...output, ...req.params };
-          return output;
-        } catch (error) {
-          return error;
-        }
-      };
-
-      /**
-       * Checking the value is empty or not
-       * @alias module:handler.check_empty
-       * @param {...Object} args - 2 parameters
-       * @param {Array} args[0] - input is a data
-       * @returns {Object} - Return  value
-       */
-      lib.check_empty = function (...args) {
-        let [input] = args;
-        let type = typeof input;
-        let output = false;
-
-        try {
-          if (type == "object" && Array.isArray(input)) type = "array";
-
-          switch (type) {
-            case "string":
-              if (input === "") output = true;
-              break;
-            case "object":
-              if (Object.keys(input).length === 0) output = true;
-              break;
-            case "array":
-              if (input.length === 0) output = true;
-              break;
+      get dataformat() {
+        return Object.assign(
+          {},
+          {
+            code: 0,
+            msg: "",
+            data: null,
           }
+        );
+      },
 
-          return output;
-        } catch (error) {
-          return error;
+      /**
+       *  Getter the restful api dataformat value
+       * @type {Object}
+       * @memberof module:handler.restfulapi
+       * @instance
+       */
+      get restfulapi() {
+        return Object.assign(
+          {},
+          {
+            DELETE: {},
+            HEAD: {},
+            GET: {},
+            PATCH: {},
+            POST: {},
+            PUT: {},
+          }
+        );
+      },
+
+      /**
+       *  Getter serialize dataformat value
+       * @type {Object}
+       * @memberof module:handler.fmtseries
+       * @instance
+       */
+      get fmtseries() {
+        return Object.assign(
+          {},
+          {
+            err: [],
+            func: {},
+            share: {},
+          }
+        );
+      },
+
+      get wfwseries() {
+        return Object.assign(
+          {},
+          {
+            error: "",
+            func: "",
+            name: "",
+            param: [],
+            pull: [],
+            push: [],
+          }
+        );
+      },
+
+      /**
+       *  Getter the web view render as html dataformat value
+       * @type {Object}
+       * @memberof module:handler.webview
+       * @instance
+       */
+      get webview() {
+        return Object.assign(
+          {},
+          {
+            options: {
+              css: { atomic: [], locally: [], other: [], remotely: [] },
+              download: {
+                content: "",
+                ctype: "",
+                filename: "",
+                save: false,
+              },
+              html: "",
+              injectioncss: {},
+              injectionjs: { variables: {}, modules: {} },
+              injectionless: {},
+              js: { atomic: [], locally: [], other: [], remotely: [] },
+              json: {},
+              layer: {
+                layouts: "",
+                childs: { path: "", excluded: [], external: [], htmlstr: [] },
+              },
+              less: {
+                engine: { atomic: "", locally: "", remotely: "", other: "" },
+                style: { atomic: [], locally: [], other: [], remotely: [] },
+              },
+              mjs: {
+                atomic: [],
+                initialize: {},
+                locally: [],
+                other: [],
+                remotely: [],
+              },
+              menu: {},
+              params: { locally: "", remotely: "" },
+              redirect: "",
+              show: true,
+              tray: {},
+            },
+            status: 200,
+            view: "",
+          }
+        );
+      },
+
+      get webengine() {
+        return Object.assign(
+          {},
+          {
+            path: "",
+            load: {
+              htmlevent: {},
+              htmlrender: {},
+              htmllogicflow: {},
+              htmlcollection: {},
+              htmlworkflow: {},
+            },
+            trigger: {},
+            startup: "",
+          }
+        );
+      },
+
+      get sqlgeneric() {
+        return Object.assign(
+          {},
+          {
+            DB: "SQLITE",
+            TABLE: [],
+            INSERT: [{}],
+            SELECT: [{}],
+            UPDATE: [{}],
+            WHERE: { AND: {}, OR: {}, BETWEEN: {}, LIKE: {} },
+          }
+        );
+      },
+      get sqlitejson() {
+        return Object.assign(
+          {},
+          {
+            TABLE: [],
+            WHERE: {
+              EACH: { FIELD: [], VALUES: [] },
+              TREE: { FIELD: [], VALUES: [] },
+              TYPE: { FIELD: [], VALUES: [] },
+              VALID: { FIELD: [], VALUES: [] },
+            },
+            ODER_BY: { FIELD: [], VALUES: [] },
+            GROUP_BY: { FIELD: [], VALUES: [] },
+            SELECT: {
+              EXTRACT: { FIELD: [], VALUES: [], OUTPUT: [] },
+              TREE: { FIELD: [], VALUES: [] },
+              TYPE: { FIELD: [], VALUES: [] },
+              VALID: { FIELD: [], VALUES: [] },
+            },
+            UPDATE: {
+              SET: { FIELD: [], VALUES: [] },
+              INSERT: { FIELD: [], VALUES: [] },
+              REPLACE: { FIELD: [], VALUES: [] },
+              REMOVE: { FIELD: [], VALUES: [] },
+            },
+          }
+        );
+      },
+    };
+
+    /**
+     * Pick data frontend, either post or get value
+     * @alias module:handler.getprm
+     * @param {Array} args - Expresss framework request object
+     * @returns {Object} - Return  value
+     */
+    lib.getprm = function (...args) {
+      let [req] = args;
+      let output = {};
+      try {
+        let isquery = lib.check_empty(req.query);
+        let isbody = lib.check_empty(req.body);
+        let isparams = lib.check_empty(req.params);
+        if (!isquery) output = { ...output, ...req.query };
+        if (!isbody) output = { ...output, ...req.body };
+        if (!isparams) output = { ...output, ...req.params };
+        return output;
+      } catch (error) {
+        return error;
+      }
+    };
+
+    /**
+     * Checking the value is empty or not
+     * @alias module:handler.check_empty
+     * @param {...Object} args - 2 parameters
+     * @param {Array} args[0] - input is a data
+     * @returns {Object} - Return  value
+     */
+    lib.check_empty = function (...args) {
+      let [input] = args;
+      let type = typeof input;
+      let output = false;
+
+      try {
+        if (type == "object" && Array.isArray(input)) type = "array";
+
+        switch (type) {
+          case "string":
+            if (input === "") output = true;
+            break;
+          case "object":
+            if (Object.keys(input).length === 0) output = true;
+            break;
+          case "array":
+            if (input.length === 0) output = true;
+            break;
         }
-      };
 
-      lib.mimes = require("./handler/mimes.json");
-      lib.htmlTags = require("./handler/html-tags.json");
-      resolve(lib);
-    } catch (error) {
-      reject(error);
-    }
-  });
+        return output;
+      } catch (error) {
+        return error;
+      }
+    };
+
+    lib.mimes = require("./handler/mimes.json");
+    lib.htmlTags = require("./handler/html-tags.json");
+  } catch (error) {
+    lib = error;
+  } finally {
+    return lib;
+  }
 };
