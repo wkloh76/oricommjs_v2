@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply html module to utils. Completed on 2025-10-20
 - Implement utils/html module to webbunjs engine reaction module. Completed on 2025-10-20
 - Add `rtn["compname"] = compname` into compmgr engine to declare the function binding from which components. Completed on 2025-10-21
+- Add `jpointer.js` to utils which is part of utils function (jptr) instead `@sagold/json-pointer` module. Completed on 2025-10-22
 
 ### Changed
 
@@ -27,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Remove duplicate code from onrequest function as `reaction.js` in webbunjs and webnodehonojs engine. Completed on 2025-10-22
+- Remove `@sagold/json-pointer` dependencies from main package.json. Completed on 2025-10-22
+- Remove `jptr` the module from global sysmodule at `app.js`. Completed on 2025-10-22
 
 ### Fixed
 

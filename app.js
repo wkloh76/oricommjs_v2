@@ -38,7 +38,6 @@
       events: require("events"),
       fs: require("fs"),
       ini: require("ini"),
-      jptr: require("@sagold/json-pointer"),
       path: require("path"),
       toml: require("@ltd/j-toml"),
       yaml: require("yaml"),
@@ -623,13 +622,6 @@
     let rtnconflog = await configlog(coresetting, sysmodule.path);
     if (rtnconflog.code != 0) throw rtnconflog;
     else sysmodule = { ...sysmodule, ...rtnconflog.data };
-
-    kernel.utils = {
-      ...(await require(sysmodule.path.join(kernel.dir, "utils"))(
-        [sysmodule.path.join(kernel.dir, "utils"), "utils"],
-        [kernel, sysmodule, coresetting]
-      )),
-    };
 
     let conftoml = sysmodule.path.join(coresetting.logpath, "conf.toml");
     if (!sysmodule.fs.existsSync(conftoml)) {

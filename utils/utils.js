@@ -429,10 +429,15 @@ module.exports = (...args) => {
       serialize = async (...args) => {
         return new Promise(async (resolve) => {
           const [params, obj, verbose = true] = args;
-          const [library, sys] = obj;
-          const { datatype, errhandler, getNestedObject, handler, sanbox } =
-            library.utils;
-          const { jptr } = sys;
+          const [library] = obj;
+          const {
+            datatype,
+            errhandler,
+            getNestedObject,
+            handler,
+            jptr,
+            sanbox,
+          } = library.utils;
 
           try {
             const { err, func: funcs, workflow, share } = params;

@@ -24,7 +24,8 @@ module.exports = (...args) => {
     let [library] = obj;
 
     try {
-      library.utils = require("./utils")(params, obj);
+      library.utils = { jptr: (await import(`./jspointer.js`)).default };
+      library.utils = { ...library.utils, ...require("./utils")(params, obj) };
       library.utils["io"] = require("./io")(params, obj);
       library.utils["handler"] = require("./handler")(params, obj);
       library.utils["powershell"] = require("./powershell")(params, obj);
