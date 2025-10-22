@@ -20,19 +20,19 @@
  */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
-    const [params, obj] = args;
+    let [params, obj] = args;
+    let [library] = obj;
 
     try {
-      let lib = {
-        ...require("./utils")(params, obj),
-      };
-      lib["handler"] = require("./handler")(params, obj);
-      lib["powershell"] = require("./powershell")(params, obj);
-      lib["intercomm"] = require("./intercomm")(params, obj);
-      lib["sqlitesession"] = require("./sqlitesession");
-      lib["html"] = require("./html")(params, obj);
+      library.utils = require("./utils")(params, obj);
+      library.utils["io"] = require("./io")(params, obj);
+      library.utils["handler"] = require("./handler")(params, obj);
+      library.utils["powershell"] = require("./powershell")(params, obj);
+      library.utils["intercomm"] = require("./intercomm")(params, obj);
+      library.utils["sqlitesession"] = require("./sqlitesession");
+      library.utils["html"] = require("./html")(params, obj);
 
-      resolve(lib);
+      resolve(library.utils);
     } catch (error) {
       reject(error);
     }

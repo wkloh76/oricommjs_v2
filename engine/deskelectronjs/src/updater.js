@@ -27,7 +27,7 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { utils } = library;
+    const { decryptor } = library.utils.io;
     const { fs, path, toml, yaml } = sys;
     const { app } = require("electron");
     const logger = require("electron-log");
@@ -323,7 +323,7 @@ module.exports = (...args) => {
           let conf = toml.parse(fs.readFileSync(conftoml), {
             bigint: false,
           });
-          sudo = utils.decryptor(conf.encryptpwd, cosetting.general);
+          sudo = decryptor(conf.encryptpwd, cosetting.general);
         }
 
         if (auth !== undefined && auth != "") {

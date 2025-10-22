@@ -158,7 +158,7 @@
 
           cosetting["engine"] = [
             path.join(dir, "engine"),
-            utils.dir_module(path.join(dir, "engine"), exlude_engine),
+            utils.io.dir_module(path.join(dir, "engine"), exlude_engine),
             "engine",
           ];
           cosetting["atomic"] = {};
@@ -167,14 +167,14 @@
             if (fs.existsSync(atomicpath)) {
               cosetting["atomic"][val] = [
                 path.join(dir, "atomic", val),
-                utils.dir_module(atomicpath, []),
+                utils.io.dir_module(atomicpath, []),
                 val,
               ];
             }
           }
           cosetting["components"] = [
             path.join(dir, "components"),
-            utils.dir_module(path.join(dir, "components"), []),
+            utils.io.dir_module(path.join(dir, "components"), []),
             "components",
           ];
           output.data = {
@@ -327,13 +327,11 @@
         return new Promise(async (resolve, reject) => {
           const [params, obj] = args;
           const [library, sys, cosetting] = obj;
-          const {
-            utils,
-            utils: { errhandler, handler, import_cjs },
-          } = library;
+          const { errhandler, handler, io } = library.utils;
+          const { import_cjs } = io;
           let output = handler.dataformat;
           try {
-            output.data = await import_cjs(params, utils, obj);
+            output.data = await import_cjs(params, { errhandler }, obj);
             if (output.code != 0) throw output;
             resolve(output);
           } catch (error) {
@@ -348,7 +346,7 @@
           const [library, sys, cosetting] = obj;
           const { engine, utils } = library;
           const { cengine } = engine.compmgr;
-          const { errhandler, handler, import_vcjs } = utils;
+          const { errhandler, handler } = utils;
           const { fs, path } = sys;
           const { join } = path;
           const { type: enginetype } = cosetting.general.engine;
@@ -384,16 +382,14 @@
           const [params, obj] = args;
           const [atomic, general] = params;
           const [library] = obj;
-          const {
-            utils,
-            utils: { errhandler, handler, import_cjs },
-          } = library;
+          const { errhandler, handler, io } = library.utils;
+          const { import_cjs } = io;
           let output = handler.dataformat;
           let rtn = {};
           try {
             for (let val of general) {
               if (atomic[val]) {
-                rtn[val] = await import_cjs(atomic[val], utils, obj);
+                rtn[val] = await import_cjs(atomic[val], { errhandler }, obj);
                 library["atomic"][val] = rtn[val];
               }
             }
@@ -649,7 +645,7 @@
       ];
       let { sudopwd } = await inquirer.prompt(question);
       if (sudopwd && sudopwd !== "") {
-        let encodepwd = kernel.utils.encryptor(sudopwd, coresetting.general);
+        let encodepwd = kernel.utils.io.encryptor(sudopwd, coresetting.general);
         let tomlString = sysmodule.toml.stringify(
           { encryptpwd: encodepwd },
           { newline: "\n" }

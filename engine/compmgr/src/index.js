@@ -74,8 +74,8 @@ module.exports = (...args) => {
           const [setting] = args;
           const { components, utils } = library;
           const { [compname]: owncomp } = components;
-          const { dir_module, errhandler, handler, import_cjs, import_vcjs } =
-            utils;
+          const { errhandler, handler, io } = utils;
+          const { dir_module } = io;
           const { fs, path } = sys;
           const { existsSync } = fs;
           const { join } = path;
@@ -108,8 +108,8 @@ module.exports = (...args) => {
           const [library, sys, cosetting] = obj;
           const { components, utils } = library;
           const { [compname]: owncomp } = components;
-          const { dir_module, errhandler, handler, import_cjs, import_vcjs } =
-            utils;
+          const { errhandler, handler, io } = utils;
+          const { dir_module } = io;
           const { fs, path } = sys;
           const { join } = path;
           const { existsSync, readFileSync } = fs;
@@ -166,8 +166,8 @@ module.exports = (...args) => {
           const [library, sys, cosetting] = obj;
           const { components, utils } = library;
           const { [compname]: owncomp } = components;
-          const { dir_module, errhandler, handler, import_vcjs, objpick } =
-            utils;
+          const { errhandler, handler, io, objpick } = utils;
+          const { dir_module } = io;
           const { fs, path } = sys;
           const { existsSync, readdirSync } = fs;
           const { join } = path;

@@ -38,8 +38,8 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { datatype, dir_module, sqlitesession, str_replacelast } =
-      library.utils;
+    const { datatype, io, sqlitesession, str_replacelast } = library.utils;
+    const { dir_module } = io;
     const { SqliteStore } = sqlitesession;
     const { mimes } = library.utils.handler;
     const { dayjs, fs, path, pino } = sys;

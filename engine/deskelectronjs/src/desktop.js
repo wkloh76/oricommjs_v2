@@ -40,15 +40,9 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const {
-      arr_diffidx,
-      datatype,
-      dir_module,
-      errhandler,
-      handler,
-      intercomm,
-      sqlitesession,
-    } = library.utils;
+    const { datatype, errhandler, handler, io, intercomm, sqlitesession } =
+      library.utils;
+    const { dir_module } = io;
     const { SqliteStore } = sqlitesession;
     const { dayjs, fs, path, pino } = sys;
     const { existsSync } = fs;
