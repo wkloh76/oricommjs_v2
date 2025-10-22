@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove duplicate code from onrequest function as `reaction.js` in webbunjs and webnodehonojs engine. Completed on 2025-10-22
+
 ### Fixed
 
 ### Security

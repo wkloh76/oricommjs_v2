@@ -880,13 +880,8 @@ module.exports = (...args) => {
                 if (chkrule) response = { ...response, rule: chkrule };
 
                 let queuertn;
-                if (permit && fn.idx == idx) {
-                  queuertn = await inspector(queue[fname], [orireq, response]);
-                  queuertn["action"] = queuertn.render;
-                } else if (fn.idx != idx) {
-                  queuertn = await inspector(queue[fname], [orireq, response]);
-                  queuertn["action"] = queuertn.render;
-                }
+                queuertn = await inspector(queue[fname], [orireq, response]);
+                queuertn["action"] = queuertn.render;
 
                 let { err, render, stack, message, ...res } = queuertn;
                 if (stack && message) {
