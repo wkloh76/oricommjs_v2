@@ -24,12 +24,13 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [mpath, mname] = params;
     const [library, sys, cosetting] = obj;
-
-    const { path } = sys;
+    const { join } = sys.path;
     try {
-      let dir = path.join(mpath, "src");
-      let lib = await require(dir)([dir, mname], obj);
-
+      let dir = join(mpath, "src");
+      let lib = {
+        cengine: require(join(dir, "cengine")),
+        honoassist: require(join(dir, "honoassist"))(params, obj),
+      };
       resolve(lib);
     } catch (error) {
       reject(error);

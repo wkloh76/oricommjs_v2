@@ -17,8 +17,8 @@
     "ini": "5.0.0",
     "inquirer": "12.10.0",
     "multer": "1.4.5-lts.2",
-    "pino": "10.0.0",
-    "pino-roll": "3.1.0",
+    "pino": "10.1.0",
+    "pino-roll": "4.0.0",
     "yaml": "2.8.1"
   },
   "devDependencies": {

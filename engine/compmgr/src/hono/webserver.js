@@ -14,21 +14,6 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
-const { serve } = require("bun");
-const { Database: sqlite3 } = require("bun:sqlite");
-const { swaggerUI } = require("@hono/swagger-ui");
-const { OpenAPIHono, createRoute, z } = require("@hono/zod-openapi");
-const { Hono } = require("hono");
-
-const { bodyLimit } = require("hono/body-limit");
-const { getConnInfo } = require("hono/bun");
-const { cors } = require("hono/cors");
-const { secureHeaders } = require("hono/secure-headers");
-const { serveStatic } = require("hono/serve-static");
-const { sessionMiddleware } = require("hono-sessions");
-const { minify } = require("html-minifier-terser");
-const util = require("util");
-
 /**
  * Submodule handles the http server, which uses hono to manage http requests and responses
  * @module src_webserver
@@ -38,12 +23,11 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { datatype, handler, io, sqlitesession, str_replacelast } =
-      library.utils;
+    const { datatype, io, sqlitesession, str_replacelast } = library.utils;
     const { dir_module } = io;
     const { SqliteStore } = sqlitesession;
-    const { mimes } = handler;
-    const { dayjs, fs, path, pino } = sys;
+    const { mimes } = library.utils.handler;
+    const { dayjs, fs, jsbeautify, path, pino } = sys;
     const { existsSync, readFileSync } = fs;
     const { join } = path;
 
@@ -281,6 +265,69 @@ module.exports = (...args) => {
         }
       };
 
+      // Convert module object to string
+      const moduleToString = (module) => {
+        const exports = [];
+        const lib = [];
+
+        // Handle named exports
+        for (const [key, value] of Object.entries(module)) {
+          lib.push(key);
+          exports.push(`const ${key} = ${value.toString()}`);
+        }
+
+        return `try { let lib = {}; ${exports.join("\n")}; lib={${lib.join(
+          ","
+        )}};return lib;} catch (error) {return error;}`;
+      };
+
+      const load_utilsshare = (...args) => {
+        let [share, enginetype, obj] = args;
+        let key = "/library/*";
+        obj.app.use(
+          `${key}`,
+          serveStatic({
+            // root: `${val}`,
+            getContent: (urlpath, c) => {
+              let filePath = `${urlpath.replace(`${key}`, "")}`;
+              let {
+                handler,
+                powershell,
+                intercomm,
+                sqlitesession,
+                html,
+                io,
+                ...utils
+              } = library.utils;
+
+              let result = jsbeautify(
+                `export default () => { ${moduleToString(utils)} };`,
+                {
+                  indent_size: 2, // Indent with 2 spaces
+                  space_in_empty_paren: true, // Add space in empty parentheses
+                  // Many other options are available for customization
+                }
+              );
+
+              // Get the mimes type
+              const mimes = getContentType(filePath);
+
+              // Serve the file with the correct content-length header
+              if (mimes) {
+                const cssContent = Buffer.from(result, "utf8");
+                const options = {
+                  headers: {
+                    "Content-Type": mimes,
+                    "Content-Length": Buffer.byteLength(cssContent).toString(),
+                  },
+                };
+                return c.body(cssContent, options);
+              }
+            },
+          })
+        );
+      };
+
       /**
        * Loading atomic, public static files share and establish web server service
        * @alias module:webserver.start
@@ -290,36 +337,23 @@ module.exports = (...args) => {
        * @returns {Object} - Return null | error object
        */
       lib["start"] = async (...args) => {
-        let [[setting, reaction], compmgr] = args;
-        const { honoassist } = compmgr;
+        let [setting, reaction] = args;
         try {
           let rtnestablish = await establish(setting);
           if (rtnestablish) throw rtnestablish;
-          honoassist.atomic(
-            [setting.share.atomic, setting.genernalexcludefile],
-            {
-              register: app.use,
-              serveStatic,
-            }
-          );
-
-          honoassist.assets(
-            [setting.share.public, setting.general.engine.type],
-            {
+          await Promise.all([
+            load_atomic(setting.share.atomic, setting.genernalexcludefile, {
+              app,
+            }),
+            load_pubshare(setting.share.public, setting.general.engine.type, {
               reaction,
-              register: app.use,
-              serveStatic,
-            }
-          );
-          // await Promise.all([
-          //   // load_atomic(setting.share.atomic, setting.genernalexcludefile, {
-          //   //   app,
-          //   // }),
-          //   load_pubshare(setting.share.public, setting.general.engine.type, {
-          //     reaction,
-          //     app,
-          //   }),
-          // ]);
+              app,
+            }),
+            load_utilsshare(setting.share.public, setting.general.engine.type, {
+              reaction,
+              app,
+            }),
+          ]);
 
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));

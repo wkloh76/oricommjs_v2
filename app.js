@@ -426,10 +426,9 @@
         return new Promise(async (resolve, reject) => {
           const [params, obj] = args;
           const [library] = obj;
-          const {
-            components,
-            utils: { errhandler, handler },
-          } = library;
+          const { components, engine, utils } = library;
+          const { errhandler, handler } = utils;
+
           let output = handler.dataformat;
 
           try {
@@ -443,7 +442,7 @@
               }
             }
             if (start) {
-              let rtn = await start(params);
+              let rtn = await start(params, engine.compmgr);
               if (rtn) throw rtn;
             }
             resolve(output);

@@ -1,0 +1,6 @@
+{
+  "name": "compmgr",
+  "dependencies": {
+    "js-beautify": "1.15.4"
+  }
+}
