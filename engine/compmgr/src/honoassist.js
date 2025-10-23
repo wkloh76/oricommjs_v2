@@ -21,44 +21,76 @@
  */
 
 module.exports = (...args) => {
+  const beautify = require("js-beautify/js");
+  const { minify } = require("html-minifier-terser");
+  const jsdom = require("jsdom");
+  const { htmlTags, mimes } = require("./hono/htmldata.json");
+
   const [params, obj] = args;
   const [pathname, curdir] = params;
   const [library, sys, cosetting] = obj;
-  const { datatype, errhandler, handler, io, str_replacelast } = library.utils;
-  const { mimes } = handler;
+  const { datatype, errhandler, io } = library.utils;
   const { dir_module } = io;
   const { fs, logerr: logerror, path } = sys;
   const { existsSync, readFileSync } = fs;
-  const { join } = path;
+  const { join, basename } = path;
+
+  const basic = /\s?<!doctype html>|(<html\b[^>]*>|<body\b[^>]*>|<x-[^>]+>)+/i;
+  const full = new RegExp(
+    htmlTags.map((tag) => `<${tag}\\b[^>]*>`).join("|"),
+    "i"
+  );
+
   let lib = {};
   try {
-    // Helper function to determine the content type
     const getContentType = (path) => {
       return mimes[path.split(".").pop()];
     };
 
-    const getExistFile = (...args) => {
-      const [name, route, fpath] = args;
-      const pattern = `${fpath}${route}`.slice(0, -1);
-      const fname = name.replace(pattern, "");
-      let mimes = getContentType(fname);
-      let cssContent = Buffer.from("");
+    const getExistFile = async (...args) => {
+      let [name, route, fpath] = args;
+      let bname, fname, filePath, mimes, cssContent, options;
+
+      route = route.slice(0, -1);
+      bname = basename(name);
+      fname = name.substring(name.lastIndexOf(route)).replace(route, "");
+      filePath = join(fpath, fname);
+      mimes = getContentType(filePath);
+      cssContent = Buffer.from("");
+
       if (!mimes) mimes = "text/plain";
+      if (fs.existsSync(filePath)) {
+        if (library.mode != "Production") cssContent = readFileSync(filePath);
+        else
+          cssContent = Buffer.from(
+            await minify(readFileSync(filePath).toString(), {
+              collapseWhitespace: true,
+            })
+          );
+      }
 
-      let fdirectory = `${fpath}/`;
-      if (fname.lastIndexOf("/") > -1) fdirectory = fpath;
-
-      let filePath = `${fdirectory}${fname}`;
-      // Check if the file exists
-      if (fs.existsSync(filePath)) cssContent = readFileSync(filePath);
-
-      let options = {
+      options = {
         headers: {
           "Content-Type": mimes,
           "Content-Length": Buffer.byteLength(cssContent).toString(),
         },
       };
       return [cssContent, options];
+    };
+
+    const registration = (...args) => {
+      const [params, obj] = args;
+      const [route, fpath] = params;
+      const { serveStatic, register } = obj;
+      register(
+        route,
+        serveStatic({
+          root: fpath,
+          getContent: async (fname, c) => {
+            return c.body(...(await getExistFile(fname, route, fpath)));
+          },
+        })
+      );
     };
 
     /**
@@ -73,37 +105,15 @@ module.exports = (...args) => {
     const atomic = (...args) => {
       const [params, obj] = args;
       const [share, excludefile] = params;
-      const { serveStatic, register } = obj;
 
       let atomic = dir_module(share, excludefile);
       for (let atomic_items of atomic) {
         let units = dir_module(join(share, atomic_items), excludefile);
         for (let unit of units) {
           let fpath = join(share, atomic_items, unit, "src", "browser");
+          let route = `/atomic/${atomic_items}/${unit}/*`;
           if (existsSync(fpath)) {
-            let route = `/atomic/${atomic_items}/${unit}/*`;
-            register(
-              route,
-              serveStatic({
-                root: fpath,
-                getContent: (fname, c) => {
-                  // let mimes = getContentType(fname);
-                  // let name = getExistFile(fname, route, fpath);
-                  // let cssContent = Buffer.from("");
-                  // if (name) cssContent = readFileSync(filePath);
-                  // if (!mimes) mimes = "text/plain";
-
-                  // const options = {
-                  //   headers: {
-                  //     "Content-Type": mimes,
-                  //     "Content-Length":
-                  //       Buffer.byteLength(cssContent).toString(),
-                  //   },
-                  // };
-                  return c.body(...getExistFile(fname, route, fpath));
-                },
-              })
-            );
+            registration([route, fpath], obj);
           }
         }
       }
@@ -121,7 +131,6 @@ module.exports = (...args) => {
     const assets = (...args) => {
       const [params, obj] = args;
       const [share, enginetype] = params;
-      const { serveStatic, register } = obj;
 
       for (let [pubkey, pubval] of Object.entries(share)) {
         if (pubkey.indexOf(`${enginetype}_`) > -1) {
@@ -129,97 +138,62 @@ module.exports = (...args) => {
             let route = `${key}/*`;
             let fpath = val.filepath;
             if (datatype(val) == "object") {
-              register(
-                route,
-                serveStatic({
-                  root: fpath,
-                  getContent: async (path, c) => {
-                    console.log(path);
-                    let pattern = `${fpath}${route}`.slice(0, -1);
-                    let filePath = path.replace(pattern, fpath);
-
-                    // let filePath = `${path.replace(`${key}`, "")}`;
-                    // let filePath2 = `${path.replace(`${route}${key}`, "")}`;
-
-                    // Check if the file exists
-                    if (fs.existsSync(filePath)) {
-                      // Get the mimes type
-                      const mimes = getContentType(filePath);
-
-                      // Serve the file with the correct content-length header
-                      if (mimes) {
-                        const cssContent = await minify(
-                          val.content.concat(" ", readFileSync(filePath)),
-                          {
-                            collapseWhitespace: true,
-                          }
-                        );
-                        const options = {
-                          headers: {
-                            "Content-Type": mimes,
-                            "Content-Length":
-                              Buffer.byteLength(cssContent).toString(),
-                          },
-                        };
-                        return c.body(cssContent, options);
-                      }
-                    }
-                  },
-                })
-              );
+              registration([route, fpath], obj);
             } else {
               fpath = val;
-              register(
-                route,
-                serveStatic({
-                  root: fpath,
-                  getContent: (fname, c) => {
-                    // let mimes = getContentType(fname);
-                    // let name = getExistFile(fname, route, fpath);
-                    // let cssContent = Buffer.from("");
-                    // if (name) cssContent = readFileSync(filePath);
-                    // if (!mimes) mimes = "text/plain";
-
-                    // const options = {
-                    //   headers: {
-                    //     "Content-Type": mimes,
-                    //     "Content-Length":
-                    //       Buffer.byteLength(cssContent).toString(),
-                    //   },
-                    // };
-                    return c.body(...getExistFile(fname, route, fpath));
-                  },
-                  // getContent: (path, c) => {
-                  //   console.log(path);
-                  //   let pattern = `${fpath}${route}`.slice(0, -1);
-                  //   let filePath = path.replace(pattern, fpath);
-                  //   console.log(path.replace(pattern, ""));
-
-                  //   // let filePath = `${path.replace(`${key}`, "")}`;
-                  //   // Check if the file exists
-                  //   if (fs.existsSync(filePath)) {
-                  //     // Get the mimes type
-                  //     const mimes = getContentType(filePath);
-
-                  //     // Serve the file with the correct content-length header
-                  //     if (mimes) {
-                  //       const cssContent = readFileSync(filePath);
-                  //       const options = {
-                  //         headers: {
-                  //           "Content-Type": mimes,
-                  //           "Content-Length":
-                  //             Buffer.byteLength(cssContent).toString(),
-                  //         },
-                  //       };
-                  //       return c.body(cssContent, options);
-                  //     }
-                  //   }
-                  // },
-                })
-              );
+              registration([route, fpath], obj);
             }
           }
         }
+      }
+    };
+
+    /**
+     * Replace specific character from text base on object key name
+     * Keyword <-{name}>
+     * @alias module:utils_html.str_inject
+     * @param {...Object} args - 2 parameters
+     * @param {String} args[0] - text is a statement in string value
+     * @param {Object} args[1] - params a sets of values for change
+     * @returns {String} - Return unchange or changed text
+     */
+    const str_inject = (...args) => {
+      let [text, params] = args;
+      let output = text;
+      for (let [key, val] of Object.entries(params)) {
+        let pattern = [`<-{${key}}>`, `{{${key}}}`];
+        for (let name of pattern) {
+          while (output.indexOf(name) > -1) {
+            let idx = output.indexOf(name);
+            output =
+              output.substring(0, idx) +
+              val +
+              output.substring(idx + name.length);
+          }
+        }
+      }
+      return output;
+    };
+
+    /**
+     * The main objective is indentify the string in html tag format
+     * https://github.com/sindresorhus/is-html
+     * @alias module:utils_html.identify_htmltag
+     * @param {...Object} args - 1 parameters
+     * @param {String} args[0] - params is a string for checking valid in html tag format
+     * @returns {Object} - Return valid stting | null
+     */
+    const identify_htmltag = (...args) => {
+      const [params] = args;
+      let output = params;
+      try {
+        let html = params.trim().slice(0, 1000);
+        let result = basic.test(html) || full.test(html);
+        if (!result) output = null;
+      } catch (error) {
+        output = null;
+      } finally {
+        return output;
       }
     };
 
@@ -286,8 +260,7 @@ module.exports = (...args) => {
       );
     };
 
-    // lib.share = () => {};
-    lib = { atomic, assets };
+    lib = { atomic, assets, identify_htmltag, mimes, str_inject };
   } catch (error) {
     lib = errhandler(error);
   } finally {

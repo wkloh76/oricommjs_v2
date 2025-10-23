@@ -32,7 +32,8 @@ module.exports = (...args) => {
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
-      let lib = {};
+      let lib = {},
+        OEM = {};
       let components = { defaulturl: "" };
 
       /**
@@ -968,10 +969,16 @@ module.exports = (...args) => {
         }
       };
 
+      const plugin = (...args) => {
+        const [obj] = args;
+        OEM = { ...OEM, ...obj };
+      };
+
       resolve({
         ...lib,
         onrequest,
         register,
+        plugin,
         get guiapi() {
           return components;
         },

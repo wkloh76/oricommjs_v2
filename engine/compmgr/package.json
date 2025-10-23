@@ -1,6 +1,8 @@
 {
   "name": "compmgr",
   "dependencies": {
-    "js-beautify": "1.15.4"
+    "html-minifier-terser": "7.2.0",
+    "js-beautify": "1.15.4",
+    "jsdom": "27.0.0 "
   }
 }
