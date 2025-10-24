@@ -169,6 +169,12 @@ module.exports = (...args) => {
             serveStatic,
           });
 
+          await honoassist.utilities(["utils"], {
+            register: app.use,
+            serveStatic,
+            library,
+          });
+
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));
           app.use(

@@ -32,6 +32,14 @@ module.exports = (...args) => {
       library.utils["intercomm"] = require("./intercomm")(params, obj);
       library.utils["sqlitesession"] = require("./sqlitesession");
       library.utils["html"] = require("./html")(params, obj);
+      library.utils["excluded"] = [
+        "powershell",
+        "intercomm",
+        "sqlitesession",
+        "html",
+        "io",
+        "excluded",
+      ];
 
       resolve(library.utils);
     } catch (error) {

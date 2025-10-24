@@ -43,6 +43,8 @@ module.exports = (...args) => {
 
   let lib = {};
   try {
+    let objmodule = {};
+
     const getContentType = (path) => {
       return mimes[path.split(".").pop()];
     };
@@ -92,6 +94,149 @@ module.exports = (...args) => {
         })
       );
     };
+
+    const regutils = (...args) => {
+      const [params, obj] = args;
+      const [route] = params;
+      const { serveStatic, register } = obj;
+      register(
+        route,
+        serveStatic({
+          getContent: async (fname, c) => {
+            let pattern = route.slice(0, -1);
+            let filePath = `${fname.replace(pattern, "")}`;
+            let name = path.parse(filePath).name;
+            let mimes = getContentType(filePath);
+            let cssContent = Buffer.from("");
+            let options = {};
+
+            if (!mimes) mimes = "text/plain";
+            if (library.mode != "Production")
+              cssContent = Buffer.from(beautify(objmodule[name]));
+            else
+              cssContent = Buffer.from(
+                await minify(objmodule[name], {
+                  collapseWhitespace: true,
+                })
+              );
+
+            options = {
+              headers: {
+                "Content-Type": mimes,
+                "Content-Length": Buffer.byteLength(cssContent).toString(),
+              },
+            };
+            return c.body(cssContent, options);
+          },
+        })
+      );
+    };
+
+    // // Convert module object to string
+    const moduleToString = (module) => {
+      const exports = [];
+      const lib = [];
+
+      // Handle named exports
+      // `export default () => { ${moduleToString(temp)} };
+
+      let master = [];
+      for (const [key, value] of Object.entries(module)) {
+        lib.push(key);
+        let [d, n] = valueToString(value);
+        if (n) master.push(`export const ${key} =() => { ${n} }`);
+        else exports.push(`const ${key} = ${d}`);
+        // else exports.push(`const ${key} = ${valueToString(value)}`);
+      }
+
+      // return `try { let lib = {}; ${exports.join("\n")}; lib={${lib.join(
+      //   ","
+      // )}};return lib;} catch (error) {return error;}`;
+      let data = `export default () => { try { let lib = {}; ${exports.join(
+        "\n"
+      )}; lib={${lib.join(",")}};return lib;} catch (error) {return error;}}`;
+      master.push(data);
+      return master.join(" ");
+    };
+
+    // Convert value to string representation
+    const valueToString = (value) => {
+      let info = typeof value;
+      if (typeof value === "function") {
+        return [value.toString()];
+      } else if (typeof value === "object" && value !== null) {
+        let ismodule = false;
+        let obfunc = [],
+          objson = {};
+        let temp;
+
+        // let temp = stringifyWithAccessors(value, 2);
+        for (let key in value) {
+          const descriptor = Object.getOwnPropertyDescriptor(value, key);
+          if (typeof value[key] === "function") {
+            ismodule = true;
+            obfunc.push(`const ${key} = ${value[key].toString()}`);
+          } else if (typeof value[key] === "object") {
+            objson[key] = value[key];
+          }
+        }
+        if (ismodule) {
+          return [null, temp];
+        } else return [JSON.stringify(value, null, 2)];
+      } else if (typeof value === "string") {
+        return [JSON.stringify(value)];
+      } else {
+        return [String(value)];
+      }
+    };
+
+    // 自定义序列化函数，支持getter/setter
+    const stringifyWithAccessors = (() => {
+      const replacer = (key, val) => {
+        // 处理Symbol类型
+        if (typeof val === "symbol") {
+          return val.toString();
+        }
+
+        // 处理Set类型
+        if (val instanceof Set) {
+          return Array.from(val);
+        }
+
+        // 处理Map类型
+        if (val instanceof Map) {
+          return Array.from(val.entries());
+        }
+
+        // 处理函数类型
+        if (typeof val === "function") {
+          return val.toString();
+        }
+
+        // 处理getter/setter属性
+        if (val && typeof val === "object") {
+          const descriptors = Object.getOwnPropertyDescriptors(val);
+          const result = {};
+
+          for (const [prop, descriptor] of Object.entries(descriptors)) {
+            if (descriptor.get) {
+              result[`get ${prop}`] = descriptor.get.toString();
+            }
+            if (descriptor.set) {
+              result[`set ${prop}`] = descriptor.set.toString();
+            }
+            if (descriptor.value !== undefined) {
+              result[prop] = descriptor.value;
+            }
+          }
+          return result;
+        }
+
+        return val;
+      };
+
+      return (obj, spaces = 2) => JSON.stringify(obj, replacer, spaces);
+    })();
 
     /**
      * Loading atomic public share modules for frontend use
@@ -148,6 +293,127 @@ module.exports = (...args) => {
       }
     };
 
+    const esm2strMaker = (...args) => {
+      const [params, obj] = args;
+      let output;
+      try {
+        let buff = {};
+        const maker = (...args) => {
+          const [name, obj] = args;
+          return `const ${name} = ${obj}`;
+        };
+        const decode_descriptor = (...args) => {
+          const [name, obj] = args;
+          let rtn = "";
+          const { get, set, value } = obj;
+          if (get) rtn += `const ${name} = ${get}`;
+          if (set) rtn += `const ${name} = ${set}`;
+          if (value) {
+            if (typeof value == "function") rtn += `const ${name} = ${value}`;
+            else rtn += JSON.stringify(value);
+          }
+          return rtn;
+        };
+        const export_proc = (...args) => {
+          const [params, obj] = args;
+          let output = "";
+          if (params == "default")
+            output = `export default ()=>{try{${Object.values(obj).join(
+              "\n"
+            )}; return {${Object.keys(obj).join(
+              ","
+            )}};} catch (error) {return error;}}`;
+          else
+            output = `const ${params} = (module.exports = ()=>{try{${Object.values(
+              obj
+            ).join("\n")}; return {${Object.keys(obj).join(
+              ","
+            )}};} catch (error) {return error;}})()`;
+          return output;
+        };
+
+        const investigation = (...args) => {
+          const [obj] = args;
+          let buff = {};
+          for (let [key, val] of Object.entries(obj)) {
+            let dtype = typeof val;
+            if (dtype == "object") {
+              let descriptor = Object.getOwnPropertyDescriptor(val, key);
+              if (!descriptor) {
+                buff[key] = investigation(val);
+              } else buff[key] = JSON.stringify(val);
+            } else if (dtype == "function") {
+              buff[key] = maker(key, val);
+            }
+          }
+          return buff;
+        };
+
+        let { excluded } = obj;
+        for (let [key, val] of Object.entries(obj)) {
+          if (!excluded.includes(key)) {
+            let dtype = typeof val;
+            if (dtype == "object") {
+              let data = investigation(val);
+              if (!data) {
+              } else {
+                buff[key] = export_proc(key, data);
+              }
+            } else if (dtype == "function") {
+              buff[key] = maker(key, val);
+            }
+          }
+        }
+
+        if (Object.keys(buff).length > 0) {
+          objmodule[params] = `export default ()=>{try{${Object.values(
+            buff
+          ).join("\n")}; return {${Object.keys(buff).join(
+            ","
+          )}};} catch (error) {return error;}}`;
+        }
+
+        // if (pubval.excluded) {
+        //   let temp = pubval;
+        //   pubval.excluded.map((value) => {
+        //     let { [value]: noused, ...other } = temp;
+        //     temp = other;
+        //   });
+        //   let statement = moduleToString(temp);
+        //   objmodule[pubkey] = statement;
+        // }
+      } catch (error) {
+        output = errhandler(error);
+      } finally {
+        return output;
+      }
+    };
+
+    const utilities = async (...args) => {
+      const [params, obj] = args;
+      const [name] = params;
+      let { library: share, ...otherobj } = obj;
+      esm2strMaker(name, share[name]);
+      for (let [pubkey, pubval] of Object.entries(share[name])) {
+        if (pubval.excluded) {
+          let temp = pubval;
+          pubval.excluded.map((value) => {
+            let { [value]: noused, ...other } = temp;
+            temp = other;
+          });
+
+          // let statement = `export default () => { ${moduleToString(temp)} };`;
+          let statement = moduleToString(temp);
+          objmodule[pubkey] = statement;
+          // objmodule[pubkey] = await minify(statement, {
+          //   collapseWhitespace: true,
+          // });
+        }
+      }
+
+      regutils(["/library/*"], otherobj);
+    };
+
     /**
      * Replace specific character from text base on object key name
      * Keyword <-{name}>
@@ -197,70 +463,14 @@ module.exports = (...args) => {
       }
     };
 
-    // Convert module object to string
-    const moduleToString = (module) => {
-      const exports = [];
-      const lib = [];
-
-      // Handle named exports
-      for (const [key, value] of Object.entries(module)) {
-        lib.push(key);
-        exports.push(`const ${key} = ${value.toString()}`);
-      }
-
-      return `try { let lib = {}; ${exports.join("\n")}; lib={${lib.join(
-        ","
-      )}};return lib;} catch (error) {return error;}`;
+    lib = {
+      atomic,
+      assets,
+      identify_htmltag,
+      mimes,
+      str_inject,
+      utilities,
     };
-
-    const load_utilsshare = (...args) => {
-      let [share, enginetype, obj] = args;
-      let key = "/library/*";
-      obj.app.use(
-        `${key}`,
-        serveStatic({
-          // root: `${val}`,
-          getContent: (urlpath, c) => {
-            let filePath = `${urlpath.replace(`${key}`, "")}`;
-            let {
-              handler,
-              powershell,
-              intercomm,
-              sqlitesession,
-              html,
-              io,
-              ...utils
-            } = library.utils;
-
-            let result = jsbeautify(
-              `export default () => { ${moduleToString(utils)} };`,
-              {
-                indent_size: 2, // Indent with 2 spaces
-                space_in_empty_paren: true, // Add space in empty parentheses
-                // Many other options are available for customization
-              }
-            );
-
-            // Get the mimes type
-            const mimes = getContentType(filePath);
-
-            // Serve the file with the correct content-length header
-            if (mimes) {
-              const cssContent = Buffer.from(result, "utf8");
-              const options = {
-                headers: {
-                  "Content-Type": mimes,
-                  "Content-Length": Buffer.byteLength(cssContent).toString(),
-                },
-              };
-              return c.body(cssContent, options);
-            }
-          },
-        })
-      );
-    };
-
-    lib = { atomic, assets, identify_htmltag, mimes, str_inject };
   } catch (error) {
     lib = errhandler(error);
   } finally {

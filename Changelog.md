@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `rtn["compname"] = compname` into compmgr engine to declare the function binding from which components. Completed on 2025-10-21
 - Add `jpointer.js` to utils which is part of utils function (jptr) instead `@sagold/json-pointer` module. Completed on 2025-10-22
 - Add feature at compmgr engine which provide static server route to support honojs. Done 2025-10-22
+- Add module loading method which support both frontend and backend. Inprogress 2025-10-22
 
 ### Changed
 
