@@ -132,112 +132,6 @@ module.exports = (...args) => {
       );
     };
 
-    // // Convert module object to string
-    const moduleToString = (module) => {
-      const exports = [];
-      const lib = [];
-
-      // Handle named exports
-      // `export default () => { ${moduleToString(temp)} };
-
-      let master = [];
-      for (const [key, value] of Object.entries(module)) {
-        lib.push(key);
-        let [d, n] = valueToString(value);
-        if (n) master.push(`export const ${key} =() => { ${n} }`);
-        else exports.push(`const ${key} = ${d}`);
-        // else exports.push(`const ${key} = ${valueToString(value)}`);
-      }
-
-      // return `try { let lib = {}; ${exports.join("\n")}; lib={${lib.join(
-      //   ","
-      // )}};return lib;} catch (error) {return error;}`;
-      let data = `export default () => { try { let lib = {}; ${exports.join(
-        "\n"
-      )}; lib={${lib.join(",")}};return lib;} catch (error) {return error;}}`;
-      master.push(data);
-      return master.join(" ");
-    };
-
-    // Convert value to string representation
-    const valueToString = (value) => {
-      let info = typeof value;
-      if (typeof value === "function") {
-        return [value.toString()];
-      } else if (typeof value === "object" && value !== null) {
-        let ismodule = false;
-        let obfunc = [],
-          objson = {};
-        let temp;
-
-        // let temp = stringifyWithAccessors(value, 2);
-        for (let key in value) {
-          const descriptor = Object.getOwnPropertyDescriptor(value, key);
-          if (typeof value[key] === "function") {
-            ismodule = true;
-            obfunc.push(`const ${key} = ${value[key].toString()}`);
-          } else if (typeof value[key] === "object") {
-            objson[key] = value[key];
-          }
-        }
-        if (ismodule) {
-          return [null, temp];
-        } else return [JSON.stringify(value, null, 2)];
-      } else if (typeof value === "string") {
-        return [JSON.stringify(value)];
-      } else {
-        return [String(value)];
-      }
-    };
-
-    // 自定义序列化函数，支持getter/setter
-    const stringifyWithAccessors = (() => {
-      const replacer = (key, val) => {
-        // 处理Symbol类型
-        if (typeof val === "symbol") {
-          return val.toString();
-        }
-
-        // 处理Set类型
-        if (val instanceof Set) {
-          return Array.from(val);
-        }
-
-        // 处理Map类型
-        if (val instanceof Map) {
-          return Array.from(val.entries());
-        }
-
-        // 处理函数类型
-        if (typeof val === "function") {
-          return val.toString();
-        }
-
-        // 处理getter/setter属性
-        if (val && typeof val === "object") {
-          const descriptors = Object.getOwnPropertyDescriptors(val);
-          const result = {};
-
-          for (const [prop, descriptor] of Object.entries(descriptors)) {
-            if (descriptor.get) {
-              result[`get ${prop}`] = descriptor.get.toString();
-            }
-            if (descriptor.set) {
-              result[`set ${prop}`] = descriptor.set.toString();
-            }
-            if (descriptor.value !== undefined) {
-              result[prop] = descriptor.value;
-            }
-          }
-          return result;
-        }
-
-        return val;
-      };
-
-      return (obj, spaces = 2) => JSON.stringify(obj, replacer, spaces);
-    })();
-
     /**
      * Loading atomic public share modules for frontend use
      * @alias module:webserver.load_atomic
@@ -297,55 +191,80 @@ module.exports = (...args) => {
       const [params, obj] = args;
       let output;
       try {
-        let buff = {};
+        let buff = [],
+          df = {};
         const maker = (...args) => {
           const [name, obj] = args;
           return `const ${name} = ${obj}`;
         };
         const decode_descriptor = (...args) => {
-          const [name, obj] = args;
-          let rtn = "";
+          const [name, obj, callback] = args;
+          let { ownfunc, ownproperty } = callback;
           const { get, set, value } = obj;
-          if (get) rtn += `const ${name} = ${get}`;
-          if (set) rtn += `const ${name} = ${set}`;
+          if (get) ownproperty.push(`${get}`);
+          if (set) ownproperty.push(`${set}`);
           if (value) {
-            if (typeof value == "function") rtn += `const ${name} = ${value}`;
-            else rtn += JSON.stringify(value);
+            if (typeof value == "function")
+              ownfunc.push(`const ${name} = ${value}`);
+            else ownfunc.push(`const ${name} = ${JSON.stringify(value)}`);
           }
-          return rtn;
+          return;
         };
         const export_proc = (...args) => {
           const [params, obj] = args;
+          const [cond, name] = params;
           let output = "";
-          if (params == "default")
+          if (cond == "default")
             output = `export default ()=>{try{${Object.values(obj).join(
               "\n"
             )}; return {${Object.keys(obj).join(
               ","
             )}};} catch (error) {return error;}}`;
-          else
-            output = `const ${params} = (module.exports = ()=>{try{${Object.values(
-              obj
-            ).join("\n")}; return {${Object.keys(obj).join(
+          else if (cond == "descriptor") {
+            let { ownfunc = [], ownproperty = [] } = obj.descriptor;
+            let func = "",
+              funckey = "",
+              properties = "";
+            if (ownfunc.length > 0) {
+              let { descriptor, ...otherobj } = obj;
+              func = Object.values(otherobj).join("\n");
+              funckey = Object.keys(otherobj).join(",");
+            }
+            if (ownproperty.length > 0) {
+              funckey = ownproperty.join(",") + "," + funckey;
+            }
+            output = `export const ${name}=()=>{try{${func}; return {${funckey}};} catch (error) {return error;}}`;
+          } else if (cond == "export") {
+            delete obj.descriptor;
+            output = `export const ${name}=()=>{try{${Object.values(obj).join(
+              "\n"
+            )}; return {${Object.keys(obj).join(
               ","
-            )}};} catch (error) {return error;}})()`;
+            )}};} catch (error) {return error;}}`;
+          }
           return output;
         };
 
         const investigation = (...args) => {
           const [obj] = args;
-          let buff = {};
+          let buff = { descriptor: { ownfunc: [], ownproperty: [] } };
           for (let [key, val] of Object.entries(obj)) {
             let dtype = typeof val;
             if (dtype == "object") {
-              let descriptor = Object.getOwnPropertyDescriptor(val, key);
+              let descriptor = Object.getOwnPropertyDescriptor(obj, key);
               if (!descriptor) {
-                buff[key] = investigation(val);
-              } else buff[key] = JSON.stringify(val);
+                buff[key] = JSON.stringify(val, null, 2);
+              } else {
+                decode_descriptor(key, descriptor, buff.descriptor);
+              }
             } else if (dtype == "function") {
               buff[key] = maker(key, val);
             }
           }
+          if (buff.descriptor.ownfunc.length == 0)
+            delete buff.descriptor.ownfunc;
+          if (buff.descriptor.ownproperty.length == 0)
+            delete buff.descriptor.ownproperty;
           return buff;
         };
 
@@ -355,33 +274,22 @@ module.exports = (...args) => {
             let dtype = typeof val;
             if (dtype == "object") {
               let data = investigation(val);
-              if (!data) {
-              } else {
-                buff[key] = export_proc(key, data);
+              if (data) {
+                let keyname = "export";
+                if (Object.keys(data.descriptor).length > 0)
+                  keyname = "descriptor";
+                buff.push(export_proc([keyname, key], data));
               }
             } else if (dtype == "function") {
-              buff[key] = maker(key, val);
+              df[key] = maker(key, val);
             }
           }
         }
 
-        if (Object.keys(buff).length > 0) {
-          objmodule[params] = `export default ()=>{try{${Object.values(
-            buff
-          ).join("\n")}; return {${Object.keys(buff).join(
-            ","
-          )}};} catch (error) {return error;}}`;
+        if (Object.keys(df).length > 0) {
+          buff.push(export_proc(["default"], df));
         }
-
-        // if (pubval.excluded) {
-        //   let temp = pubval;
-        //   pubval.excluded.map((value) => {
-        //     let { [value]: noused, ...other } = temp;
-        //     temp = other;
-        //   });
-        //   let statement = moduleToString(temp);
-        //   objmodule[pubkey] = statement;
-        // }
+        output = buff.join("\n");
       } catch (error) {
         output = errhandler(error);
       } finally {
@@ -393,25 +301,9 @@ module.exports = (...args) => {
       const [params, obj] = args;
       const [name] = params;
       let { library: share, ...otherobj } = obj;
-      esm2strMaker(name, share[name]);
-      for (let [pubkey, pubval] of Object.entries(share[name])) {
-        if (pubval.excluded) {
-          let temp = pubval;
-          pubval.excluded.map((value) => {
-            let { [value]: noused, ...other } = temp;
-            temp = other;
-          });
+      objmodule[name] = esm2strMaker(name, share[name]);
 
-          // let statement = `export default () => { ${moduleToString(temp)} };`;
-          let statement = moduleToString(temp);
-          objmodule[pubkey] = statement;
-          // objmodule[pubkey] = await minify(statement, {
-          //   collapseWhitespace: true,
-          // });
-        }
-      }
-
-      regutils(["/library/*"], otherobj);
+      regutils(["/library/*"], obj);
     };
 
     /**
