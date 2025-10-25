@@ -28,17 +28,11 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, getNestedObject, sanbox } = library.utils;
-    const { htmlTags, mimes } = handler;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
-      const basic =
-        /\s?<!doctype html>|(<html\b[^>]*>|<body\b[^>]*>|<x-[^>]+>)+/i;
-      const full = new RegExp(
-        htmlTags.map((tag) => `<${tag}\\b[^>]*>`).join("|"),
-        "i"
-      );
-      let lib = {};
+      let lib = {},
+        OEM = {};
       let components = { defaulturl: "" };
 
       /**
@@ -207,53 +201,6 @@ module.exports = (...args) => {
       };
 
       /**
-       * Replace specific character from text base on object key name
-       * Keyword <-{name}>
-       * @alias module:reaction.str_replace
-       * @param {...Object} args - 2 parameters
-       * @param {String} args[0] - text is a statement in string value
-       * @param {Object} args[1] - params a sets of values for change
-       * @returns {String} - Return unchange or changed text
-       */
-      const str_replace = (...args) => {
-        let [text, params] = args;
-        let output = text;
-        for (let [key, val] of Object.entries(params)) {
-          let name = `<-{${key}}>`;
-          while (output.indexOf(name) > -1) {
-            let idx = output.indexOf(name);
-            output =
-              output.substring(0, idx) +
-              val +
-              output.substring(idx + name.length);
-          }
-        }
-        return output;
-      };
-
-      /**
-       * The main objective is indentify the string in html tag format
-       * https://github.com/sindresorhus/is-html
-       * @alias module:reaction.moleculde.indentify_html
-       * @param {...Object} args - 1 parameters
-       * @param {String} args[0] - buffhtml is a string for checking valid in html tag format
-       * @returns {Object} - Return valid stting | null
-       */
-      const indentify_html = (...args) => {
-        let [buffhtml] = args;
-        let output = buffhtml;
-        try {
-          let html = buffhtml.trim().slice(0, 1000);
-          let result = basic.test(html) || full.test(html);
-          if (!result) output = null;
-        } catch (error) {
-          output = null;
-        } finally {
-          return output;
-        }
-      };
-
-      /**
        * The main objective is read a list of file content and minify become one row
        * @alias module:reaction.moleculde.get_filenames
        * @param {...Object} args - 1 parameters
@@ -263,6 +210,7 @@ module.exports = (...args) => {
        */
       const get_filenames = async (...args) => {
         const [node, included = []] = args;
+        const { identify_htmltag } = OEM;
         let files = await fs
           .readdirSync(path.join(node.path))
           .filter((filename) => {
@@ -282,14 +230,14 @@ module.exports = (...args) => {
         }
         if (node.external) {
           for (let val of node.external) {
-            let htmlstr = indentify_html(val);
+            let htmlstr = identify_htmltag(val);
             if (htmlstr) docs.push(val);
             else if (fs.existsSync(val)) docs.push(get_domhtml(val));
           }
         }
         if (node.htmlstr) {
           for (let val of node.htmlstr) {
-            let htmlstr = indentify_html(val);
+            let htmlstr = identify_htmltag(val);
             if (htmlstr) docs.push(val);
           }
         }
@@ -307,13 +255,14 @@ module.exports = (...args) => {
       const combine_layer = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
+          const { identify_htmltag, str_inject } = OEM;
           const { JSDOM } = jsdom;
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom, master_doc;
             let conv;
 
-            if (indentify_html(layer.layouts)) conv = layer.layouts;
+            if (identify_htmltag(layer.layouts)) conv = layer.layouts;
             else conv = get_domhtml(layer.layouts);
             let [layouts, childlists] = await Promise.all([
               conv,
@@ -322,13 +271,13 @@ module.exports = (...args) => {
 
             let { message, stack } = layouts;
             if (!message && !stack) {
-              master_dom = new JSDOM(str_replace(layouts, params));
+              master_dom = new JSDOM(str_inject(layouts, params));
               master_doc = master_dom.window.document;
 
               for (let childlist of childlists) {
                 let child_doc = new JSDOM().window.document;
                 let body = child_doc.querySelector("body");
-                body.innerHTML = str_replace(childlist, params);
+                body.innerHTML = str_inject(childlist, params);
                 let body_node = body.childNodes[0];
                 if (body_node && body_node.nodeName == "STATEMENT") {
                   let statement = body
@@ -384,15 +333,16 @@ module.exports = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
           const { JSDOM } = jsdom;
+          const { identify_htmltag, str_inject } = OEM;
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom;
-            let layouts = indentify_html(layer);
+            let layouts = identify_htmltag(layer);
             if (!layouts) layouts = await get_domhtml(layer);
 
             let { message, stack } = layouts;
             if (!message && !stack) {
-              master_dom = new JSDOM(str_replace(layouts, params));
+              master_dom = new JSDOM(str_inject(layouts, params));
               output.data = master_dom.serialize();
             } else {
               throw {
@@ -407,11 +357,6 @@ module.exports = (...args) => {
         });
       };
 
-      // Helper function to determine the content type
-      const getContentType = (path) => {
-        return { [path.split(".").pop()]: mimes[path.split(".").pop()] };
-      };
-
       /**
        * Download file base on buffer or physical file
        * @alias module:reaction.downloadproc
@@ -422,7 +367,7 @@ module.exports = (...args) => {
       const downloadproc = async (...args) => {
         let [c, file] = args;
         let { content, ctype, filename, save } = file;
-
+        let { getContentType, mimes } = OEM;
         let disposition,
           fname = "",
           content_type = {};
@@ -479,6 +424,7 @@ module.exports = (...args) => {
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
+          const { identify_htmltag } = OEM;
           let [cnt, orires] = args;
           try {
             let {
@@ -523,10 +469,10 @@ module.exports = (...args) => {
                 // else if (!islayer) isvalid = path.extname(layer.layouts);
                 if (!isview) {
                   if (path.extname(view) == ".html") isvalid = true;
-                  else isvalid = indentify_html(view);
+                  else isvalid = identify_htmltag(view);
                 } else if (!islayer) {
                   if (path.extname(layer.layouts) == ".html") isvalid = true;
-                  else isvalid = indentify_html(layer.layouts);
+                  else isvalid = identify_htmltag(layer.layouts);
                 }
                 if (isvalid) {
                   if (!islayer) {
@@ -1021,10 +967,16 @@ module.exports = (...args) => {
         }
       };
 
+      const plugin = (...args) => {
+        const [obj] = args;
+        OEM = { ...OEM, ...obj };
+      };
+
       resolve({
         ...lib,
         onrequest,
         register,
+        plugin,
         get guiapi() {
           return components;
         },

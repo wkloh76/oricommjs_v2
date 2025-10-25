@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `jpointer.js` to utils which is part of utils function (jptr) instead `@sagold/json-pointer` module. Completed on 2025-10-22
 - Add feature at compmgr engine which provide static server route to support honojs. Completed 2025-10-22
 - Add module loading method which support both frontend and backend. Utils selected modules will apply it. Completed 2025-10-25
+- Implement `honoassist` module to webnodehonojs engine instead curent render method. COmpleted on 2025-10-26
 
 ### Changed
 

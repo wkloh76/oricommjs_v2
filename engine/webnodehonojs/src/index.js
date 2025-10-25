@@ -35,9 +35,9 @@ module.exports = (...args) => {
       };
 
       lib["start"] = async (...args) => {
-        let [setting] = args;
+        let [setting, manager] = args;
         try {
-          let rtn = await webserver.start(setting, reaction);
+          let rtn = await webserver.start([setting, reaction], manager);
           if (rtn) throw rtn;
           return;
         } catch (error) {
