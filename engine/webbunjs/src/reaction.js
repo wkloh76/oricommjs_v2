@@ -27,7 +27,7 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { handler, html, getNestedObject, sanbox } = library.utils;
+    const { handler, getNestedObject, sanbox } = library.utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
@@ -355,11 +355,6 @@ module.exports = (...args) => {
             resolve({ msg: error.message, data: error.stack });
           }
         });
-      };
-
-      // Helper function to determine the content type
-      const getContentType = (path) => {
-        return { [path.split(".").pop()]: mimes[path.split(".").pop()] };
       };
 
       /**

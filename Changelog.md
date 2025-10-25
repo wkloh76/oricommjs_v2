@@ -33,8 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove duplicate code from onrequest function as `reaction.js` in webbunjs and webnodehonojs engine. Completed on 2025-10-22
 - Remove `@sagold/json-pointer` dependencies from main package.json. Completed on 2025-10-22
 - Remove `jptr` the module from global sysmodule at `app.js`. Completed on 2025-10-22
+- Renove unused function and code from webbunjs engine. Completed on 2025-10-26
 
 ### Fixed
+
+- Fix inproper define module exports method in `jpointer.js` at utils. Completed on 2025-10-26
 
 ### Security
 

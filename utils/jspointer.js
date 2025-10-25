@@ -27,15 +27,14 @@ module.exports = (() => {
   }
   t.r(e);
   t.d(e, {
-    default: () => _,
-    get: () => s,
-    isRoot: () => n,
-    join: () => P,
-    remove: () => m,
-    removeUndefinedItems: () => v,
-    set: () => g,
-    split: () => f,
-    splitLast: () => O,
+    get: () => get,
+    isRoot: () => isRoot,
+    join: () => join,
+    remove: () => remove,
+    removeUndefinedItems: () => removeUndefinedItems,
+    set: () => set,
+    split: () => split,
+    splitLast: () => splitLast,
   });
 
   function split(t) {
