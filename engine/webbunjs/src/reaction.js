@@ -28,7 +28,6 @@ module.exports = (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { handler, html, getNestedObject, sanbox } = library.utils;
-    const { identify_htmltag, mimes, str_inject } = html;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
@@ -211,6 +210,7 @@ module.exports = (...args) => {
        */
       const get_filenames = async (...args) => {
         const [node, included = []] = args;
+        const { identify_htmltag } = OEM;
         let files = await fs
           .readdirSync(path.join(node.path))
           .filter((filename) => {
@@ -255,6 +255,7 @@ module.exports = (...args) => {
       const combine_layer = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
+          const { identify_htmltag, str_inject } = OEM;
           const { JSDOM } = jsdom;
           try {
             let output = { code: 0, msg: "", data: null };
@@ -332,6 +333,7 @@ module.exports = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
           const { JSDOM } = jsdom;
+          const { identify_htmltag, str_inject } = OEM;
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom;
@@ -370,7 +372,7 @@ module.exports = (...args) => {
       const downloadproc = async (...args) => {
         let [c, file] = args;
         let { content, ctype, filename, save } = file;
-
+        let { getContentType, mimes } = OEM;
         let disposition,
           fname = "",
           content_type = {};
@@ -427,6 +429,7 @@ module.exports = (...args) => {
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
+          const { identify_htmltag } = OEM;
           let [cnt, orires] = args;
           try {
             let {

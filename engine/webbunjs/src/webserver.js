@@ -175,6 +175,8 @@ module.exports = (...args) => {
             library,
           });
 
+          reaction["plugin"](honoassist);
+
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));
           app.use(

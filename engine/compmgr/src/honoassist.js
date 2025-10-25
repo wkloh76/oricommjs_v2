@@ -358,6 +358,7 @@ module.exports = (...args) => {
     lib = {
       atomic,
       assets,
+      getContentType,
       identify_htmltag,
       mimes,
       str_inject,
