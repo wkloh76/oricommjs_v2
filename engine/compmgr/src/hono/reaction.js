@@ -20,7 +20,7 @@ const jsdom = require("jsdom");
 
 /**
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
- * @module utils_reaction
+ * @module hono_reaction
  */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -38,7 +38,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert css data in object type to jsdom format and append to parent
-       * @alias module:utils_reaction.import_css
+       * @alias module:hono_reaction.import_css
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing css link source
@@ -73,7 +73,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert js data in object type to jsdom format and append to parent
-       * @alias module:utils_reaction.import_js
+       * @alias module:hono_reaction.import_js
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing js link source
@@ -108,7 +108,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is concat string become complete url for ES Module
-       * @alias module:utils_reaction.import_mjs
+       * @alias module:hono_reaction.import_mjs
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing js link source
@@ -139,7 +139,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert less.js data in object type to jsdom format and append to parent
-       * @alias module:utils_reaction.import_less
+       * @alias module:hono_reaction.import_less
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing less.js link source
@@ -183,7 +183,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is read a file content and minify become one row
-       * @alias module:utils_reaction.get_domhtml
+       * @alias module:hono_reaction.get_domhtml
        * @param {...Object} args - 1 parameters
        * @param {String} args[0] - file is file name which emebed absolute path
        * @returns {String} - Return undefined|text
@@ -455,8 +455,6 @@ module.exports = (...args) => {
               else resolve(cnt.redirect(redirect, 301));
             } else if (!isjson) {
               resolve(cnt.json(json, status));
-              // } else if (!iscss) {
-              //   await mergecss(.css);
             } else if (!islayer || !isview || !ishtml) {
               let dom, isvalid, layouts;
               if (!ishtml) dom = new JSDOM(html);
