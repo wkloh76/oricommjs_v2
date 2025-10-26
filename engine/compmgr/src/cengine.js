@@ -25,7 +25,7 @@ module.exports = class {
     const [params, obj] = args;
     [this.prjsrc, this.compname] = params;
     [this.library, this.sys, this.cosetting] = obj;
-    
+
     try {
       return new Promise(async (resolve) => {
         let rtninit = await this.init(this.cosetting);
@@ -450,6 +450,7 @@ module.exports = class {
    */
   init = async () => {
     const { dir, components, engine, utils } = this.library;
+    const { reaction } = engine.compmgr.honoassist;
     const { errhandler, handler, mergeDeep } = utils;
     const { fs, path, toml } = this.sys;
     const { existsSync, readFileSync } = fs;
@@ -559,8 +560,10 @@ module.exports = class {
       ] = `/${compname}/public/assets`;
 
       dataset[compname].defaulturl = setting.ongoing[compname].defaulturl;
-      comp_engine.register(dataset, compname, setting.general.engine);
-
+      if (compname.indexOf(`${setting.general.engine.type}_`) > -1) {
+        reaction["register"](dataset);
+      }
+      
       components.done.push(setting.general.engine);
       if (!components.start) components.start = comp_engine.start;
 

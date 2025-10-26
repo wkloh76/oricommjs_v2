@@ -29,7 +29,7 @@ module.exports = (...args) => {
       let dir = join(mpath, "src");
       let lib = {
         cengine: require(join(dir, "cengine")),
-        honoassist: require(join(dir, "honoassist"))(params, obj),
+        honoassist: await require(join(dir, "honoassist"))(params, obj),
       };
       resolve(lib);
     } catch (error) {

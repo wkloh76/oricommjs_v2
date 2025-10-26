@@ -20,11 +20,11 @@
  * @module src_honoassist
  */
 
-module.exports = (...args) => {
+module.exports = async (...args) => {
   const beautify = require("js-beautify/js");
   const { minify } = require("html-minifier-terser");
   const jsdom = require("jsdom");
-  const { htmlTags, mimes } = require("./hono/htmldata.json");
+  const { htmlTags, mimes } = require("./data/htmldata.json");
 
   const [params, obj] = args;
   const [pathname, curdir] = params;
@@ -363,6 +363,14 @@ module.exports = (...args) => {
       mimes,
       str_inject,
       utilities,
+      reaction: await require("./hono/reaction")(params, [
+        {
+          ...library,
+          honoassist: { getContentType, identify_htmltag, mimes, str_inject },
+        },
+        sys,
+        cosetting,
+      ]),
     };
   } catch (error) {
     lib = errhandler(error);

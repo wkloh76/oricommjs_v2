@@ -38,7 +38,7 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const {  sqlitesession } = library.utils;
+    const { sqlitesession } = library.utils;
     const { SqliteStore } = sqlitesession;
     const { dayjs, fs, path, pino } = sys;
     const { join } = path;
@@ -124,7 +124,6 @@ module.exports = (...args) => {
               return output;
             }
           };
-          //   app.on("error", onError);
 
           let rtn = webservice();
           if (rtn)
@@ -149,29 +148,29 @@ module.exports = (...args) => {
        * @returns {Object} - Return null | error object
        */
       lib["start"] = async (...args) => {
-        const [[setting, reaction], compmgr] = args;
+        const [[setting], compmgr] = args;
         const { general, genernalexcludefile, share, webbunjs } = setting;
         const { honoassist } = compmgr;
+        const { assets, atomic, reaction, utilities } = honoassist;
+
         try {
           let rtnestablish = await establish(setting);
           if (rtnestablish) throw rtnestablish;
-          honoassist.atomic([share.atomic, genernalexcludefile], {
+          atomic([share.atomic, genernalexcludefile], {
             register: app.use,
             serveStatic,
           });
 
-          honoassist.assets([share.public, general.engine.type], {
+          assets([share.public, general.engine.type], {
             register: app.use,
             serveStatic,
           });
 
-          await honoassist.utilities(["utils"], {
+          await utilities(["utils"], {
             register: app.use,
             serveStatic,
             library,
           });
-
-          reaction["plugin"](honoassist);
 
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));

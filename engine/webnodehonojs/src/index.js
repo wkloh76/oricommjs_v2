@@ -23,29 +23,18 @@ module.exports = (...args) => {
     const [params, obj] = args;
     try {
       let webserver = await require("./webserver")(params, obj);
-      let reaction = await require("./reaction")(params, obj);
-
-      let lib = {};
-
-      lib["register"] = (...args) => {
-        let [oncomponents, compname, engine] = args;
-        if (compname.indexOf(`${engine.type}_`) > -1) {
-          reaction["register"](oncomponents);
-        }
-      };
-
-      lib["start"] = async (...args) => {
-        let [setting, manager] = args;
-        try {
-          let rtn = await webserver.start([setting, reaction], manager);
-          if (rtn) throw rtn;
-          return;
-        } catch (error) {
-          return error;
-        }
-      };
-
-      resolve(lib);
+      resolve({
+        start: async (...args) => {
+          let [setting, manager] = args;
+          try {
+            let rtn = await webserver.start([setting], manager);
+            if (rtn) throw rtn;
+            return;
+          } catch (error) {
+            return error;
+          }
+        },
+      });
     } catch (error) {
       reject(error);
     }

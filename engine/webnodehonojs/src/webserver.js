@@ -124,7 +124,6 @@ module.exports = (...args) => {
               return output;
             }
           };
-          //   app.on("error", onError);
 
           let rtn = webservice();
           if (rtn)
@@ -140,143 +139,6 @@ module.exports = (...args) => {
         }
       };
 
-      // // Helper function to determine the content type
-      // const getContentType = (path) => {
-      //   return mimes[path.split(".").pop()];
-      // };
-
-      // /**
-      //  * Loading atomic public share modules for frontend use
-      //  * @alias module:webserver.load_atomic
-      //  * @param {...Object} args - 3 parameters
-      //  * @param {Object} args[0] - share is an object
-      //  * @param {Array} args[1] - excludefile content a list of data for ignore purpose
-      //  * @param {Object} args[2] - obj is an object of module which content app module
-      //  * @returns {Object} - Return null | error object
-      //  */
-      // const load_atomic = (...args) => {
-      //   let [share, excludefile, obj] = args;
-      //   let atomic = dir_module(share, excludefile);
-      //   for (let atomic_items of atomic) {
-      //     let units = dir_module(join(share, atomic_items), excludefile);
-      //     for (let unit of units) {
-      //       let sharepath = join(share, atomic_items, unit, "src", "browser");
-      //       if (existsSync(sharepath)) {
-      //         let key = `/atomic/${atomic_items}/${unit}`;
-      //         obj.app.use(
-      //           `${key}/*`,
-      //           serveStatic({
-      //             root: `${sharepath}`,
-      //             getContent: (path, c) => {
-      //               let filePath = str_replacelast(path, key, "");
-      //               // Check if the file exists
-      //               if (fs.existsSync(filePath)) {
-      //                 // Get the mimes type
-      //                 const mimes = getContentType(filePath);
-
-      //                 // Serve the file with the correct content-length header
-      //                 if (mimes) {
-      //                   const cssContent = readFileSync(filePath);
-      //                   const options = {
-      //                     headers: {
-      //                       "Content-Type": mimes,
-      //                       "Content-Length":
-      //                         Buffer.byteLength(cssContent).toString(),
-      //                     },
-      //                   };
-      //                   return c.body(cssContent, options);
-      //                 }
-      //               }
-      //             },
-      //           })
-      //         );
-      //       }
-      //     }
-      //   }
-      // };
-
-      // /**
-      //  * Allocate public static files share
-      //  * @alias module:webserver.load_pubshare
-      //  * @param {...Object} args - 3 parameters
-      //  * @param {Object} args[0] - share is an object
-      //  * @param {String} args[1] - enginetype is value which content the engine type
-      //  * @param {Object} args[2] - obj is an object of module which content reaction and app modules
-      //  * @returns {Object} - Return null | error object
-      //  */
-      // const load_pubshare = (...args) => {
-      //   let [share, enginetype, obj] = args;
-      //   for (let [pubkey, pubval] of Object.entries(share)) {
-      //     if (pubkey.indexOf(`${enginetype}_`) > -1) {
-      //       for (let [key, val] of Object.entries(pubval)) {
-      //         if (datatype(val) == "object")
-      //           obj.app.use(
-      //             `${key}/*`,
-      //             serveStatic({
-      //               root: `${val.filepath}`,
-      //               getContent: async (path, c) => {
-      //                 let filePath = `${path.replace(`${key}`, "")}`;
-
-      //                 // Check if the file exists
-      //                 if (fs.existsSync(filePath)) {
-      //                   // Get the mimes type
-      //                   const mimes = getContentType(filePath);
-
-      //                   // Serve the file with the correct content-length header
-      //                   if (mimes) {
-      //                     const cssContent = await minify(
-      //                       val.content.concat(" ", readFileSync(filePath)),
-      //                       {
-      //                         collapseWhitespace: true,
-      //                       }
-      //                     );
-      //                     const options = {
-      //                       headers: {
-      //                         "Content-Type": mimes,
-      //                         "Content-Length":
-      //                           Buffer.byteLength(cssContent).toString(),
-      //                       },
-      //                     };
-      //                     return c.body(cssContent, options);
-      //                   }
-      //                 }
-      //               },
-      //             })
-      //           );
-      //         else {
-      //           obj.app.use(
-      //             `${key}/*`,
-      //             serveStatic({
-      //               root: `${val}`,
-      //               getContent: (path, c) => {
-      //                 let filePath = `${path.replace(`${key}`, "")}`;
-      //                 // Check if the file exists
-      //                 if (fs.existsSync(filePath)) {
-      //                   // Get the mimes type
-      //                   const mimes = getContentType(filePath);
-
-      //                   // Serve the file with the correct content-length header
-      //                   if (mimes) {
-      //                     const cssContent = readFileSync(filePath);
-      //                     const options = {
-      //                       headers: {
-      //                         "Content-Type": mimes,
-      //                         "Content-Length":
-      //                           Buffer.byteLength(cssContent).toString(),
-      //                       },
-      //                     };
-      //                     return c.body(cssContent, options);
-      //                   }
-      //                 }
-      //               },
-      //             })
-      //           );
-      //         }
-      //       }
-      //     }
-      //   }
-      // };
-
       /**
        * Loading atomic, public static files share and establish web server service
        * @alias module:webserver.start
@@ -286,35 +148,35 @@ module.exports = (...args) => {
        * @returns {Object} - Return null | error object
        */
       lib["start"] = async (...args) => {
-        const [[setting, reaction], compmgr] = args;
-        const { general, genernalexcludefile, share, webbunjs } = setting;
+        const [[setting], compmgr] = args;
+        const { general, genernalexcludefile, share, webnodehonojs } = setting;
         const { honoassist } = compmgr;
+        const { assets, atomic, reaction, utilities } = honoassist;
+
         try {
           let rtnestablish = await establish(setting);
           if (rtnestablish) throw rtnestablish;
-          honoassist.atomic([share.atomic, genernalexcludefile], {
+          atomic([share.atomic, genernalexcludefile], {
             register: app.use,
             serveStatic,
           });
 
-          honoassist.assets([share.public, general.engine.type], {
+          assets([share.public, general.engine.type], {
             register: app.use,
             serveStatic,
           });
 
-          await honoassist.utilities(["utils"], {
+          await utilities(["utils"], {
             register: app.use,
             serveStatic,
             library,
           });
 
-          reaction["plugin"](honoassist);
-
           // Session in the middleware
           app.use("*", sessionMiddleware(sessionval));
           app.use(
             bodyLimit({
-              maxSize: setting.webnodehonojs.parser.maxSize,
+              maxSize: webnodehonojs.parser.maxSize,
               onError: (cnt) => {
                 return cnt.text("overflow :(", 413);
               },

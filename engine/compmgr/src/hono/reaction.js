@@ -27,12 +27,13 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { handler, getNestedObject, sanbox } = library.utils;
+    const { honoassist, utils } = library;
+    const { getContentType, identify_htmltag, mimes, str_inject } = honoassist;
+    const { handler, getNestedObject, sanbox } = utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
-      let lib = {},
-        OEM = {};
+      let lib = {};
       let components = { defaulturl: "" };
 
       /**
@@ -210,7 +211,6 @@ module.exports = (...args) => {
        */
       const get_filenames = async (...args) => {
         const [node, included = []] = args;
-        const { identify_htmltag } = OEM;
         let files = await fs
           .readdirSync(path.join(node.path))
           .filter((filename) => {
@@ -255,7 +255,6 @@ module.exports = (...args) => {
       const combine_layer = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
-          const { identify_htmltag, str_inject } = OEM;
           const { JSDOM } = jsdom;
           try {
             let output = { code: 0, msg: "", data: null };
@@ -333,7 +332,6 @@ module.exports = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
           const { JSDOM } = jsdom;
-          const { identify_htmltag, str_inject } = OEM;
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom;
@@ -367,7 +365,6 @@ module.exports = (...args) => {
       const downloadproc = async (...args) => {
         let [c, file] = args;
         let { content, ctype, filename, save } = file;
-        let { getContentType, mimes } = OEM;
         let disposition,
           fname = "",
           content_type = {};
@@ -424,7 +421,6 @@ module.exports = (...args) => {
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
-          const { identify_htmltag } = OEM;
           let [cnt, orires] = args;
           try {
             let {
@@ -511,7 +507,7 @@ module.exports = (...args) => {
               }
 
               let preload = await get_domhtml(
-                path.join(pathname, "data", "preload.html")
+                path.join(pathname, "src", "hono", "data", "preload.html")
               );
               document.querySelector("body").innerHTML += preload;
               let script = document.createElement("script");
@@ -928,8 +924,22 @@ module.exports = (...args) => {
             };
           } else {
             err["status"] = errcode;
-            if (errcode >= 500) err["view"] = `${pathname}/data/error/500.html`;
-            else err["view"] = `${pathname}/data/error/404.html`;
+            if (errcode >= 500)
+              err["view"] = path.join(
+                pathname,
+                "src",
+                "hono",
+                "data",
+                "500.html"
+              );
+            else
+              err["view"] = path.join(
+                pathname,
+                "src",
+                "hono",
+                "data",
+                "404.html"
+              );
             let msg;
             if (typeof errmessage == "string") msg = errmessage;
             else msg = JSON.stringify(errmessage);
@@ -967,16 +977,10 @@ module.exports = (...args) => {
         }
       };
 
-      const plugin = (...args) => {
-        const [obj] = args;
-        OEM = { ...OEM, ...obj };
-      };
-
       resolve({
         ...lib,
         onrequest,
         register,
-        plugin,
         get guiapi() {
           return components;
         },
