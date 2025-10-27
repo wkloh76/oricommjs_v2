@@ -20,7 +20,7 @@ const jsdom = require("jsdom");
 
 /**
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
- * @module hono_reaction
+ * @module web_reaction
  */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
@@ -38,7 +38,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert css data in object type to jsdom format and append to parent
-       * @alias module:hono_reaction.import_css
+       * @alias module:web_reaction.import_css
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing css link source
@@ -73,7 +73,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert js data in object type to jsdom format and append to parent
-       * @alias module:hono_reaction.import_js
+       * @alias module:web_reaction.import_js
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing js link source
@@ -108,7 +108,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is concat string become complete url for ES Module
-       * @alias module:hono_reaction.import_mjs
+       * @alias module:web_reaction.import_mjs
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing js link source
@@ -139,7 +139,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is convert less.js data in object type to jsdom format and append to parent
-       * @alias module:hono_reaction.import_less
+       * @alias module:web_reaction.import_less
        * @param {...Object} args - 3 parameters
        * @param {Object} args[0] - doc is an object of jsdom window.document
        * @param {Object} args[1] - data is an object which listing less.js link source
@@ -183,7 +183,7 @@ module.exports = (...args) => {
 
       /**
        * The main objective is read a file content and minify become one row
-       * @alias module:hono_reaction.get_domhtml
+       * @alias module:web_reaction.get_domhtml
        * @param {...Object} args - 1 parameters
        * @param {String} args[0] - file is file name which emebed absolute path
        * @returns {String} - Return undefined|text
@@ -505,14 +505,7 @@ module.exports = (...args) => {
               }
 
               let preload = await get_domhtml(
-                path.join(
-                  pathname,
-                  "src",
-                  "assist",
-                  "hono",
-                  "data",
-                  "preload.html"
-                )
+                path.join(pathname, curdir, "data", "preload.html")
               );
               document.querySelector("body").innerHTML += preload;
               let script = document.createElement("script");
@@ -930,23 +923,8 @@ module.exports = (...args) => {
           } else {
             err["status"] = errcode;
             if (errcode >= 500)
-              err["view"] = path.join(
-                pathname,
-                "src",
-                "assist",
-                "hono",
-                "data",
-                "500.html"
-              );
-            else
-              err["view"] = path.join(
-                pathname,
-                "src",
-                "assist",
-                "hono",
-                "data",
-                "404.html"
-              );
+              err["view"] = path.join(pathname, curdir, "data", "500.html");
+            else err["view"] = path.join(pathname, curdir, "data", "404.html");
             let msg;
             if (typeof errmessage == "string") msg = errmessage;
             else msg = JSON.stringify(errmessage);

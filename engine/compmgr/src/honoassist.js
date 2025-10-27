@@ -17,7 +17,7 @@
 
 /**
  * The asistant of src_index module which is handle relavent web design.
- * @module src_assist
+ * @module src_honoassist
  */
 
 module.exports = async (...args) => {
@@ -363,17 +363,14 @@ module.exports = async (...args) => {
       mimes,
       str_inject,
       utilities,
-      reaction: await require("./assist/web/reaction")(
-        [join(params[0],"src", "assist"), "web"],
-        [
-          {
-            ...library,
-            assist: { getContentType, identify_htmltag, mimes, str_inject },
-          },
-          sys,
-          cosetting,
-        ]
-      ),
+      reaction: await require("./assist/web/reaction")([params], [
+        {
+          ...library,
+          honoassist: { getContentType, identify_htmltag, mimes, str_inject },
+        },
+        sys,
+        cosetting,
+      ]),
     };
   } catch (error) {
     lib = errhandler(error);
