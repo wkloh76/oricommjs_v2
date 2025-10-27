@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change webbunjs engine dependencies `utils\html.js` to `compmgr\honoassist.js`. Completed on 2025-10-25
 - Rename `honoassist.js` to `assist.js` and The `assist` folder becomes the parent folder of the `hono`. Completed on 2025-10-27
 - Rename `hono` folder to `web`. Completed on 2025-10-27
+- Rename `webserver.js` to `server.js` in both webbunjs and webnodehonojs engine. Completed on 2025-10-27
 
 ### Deprecated
 
