@@ -27,8 +27,8 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { honoassist, utils } = library;
-    const { getContentType, identify_htmltag, mimes, str_inject } = honoassist;
+    const { assist, utils } = library;
+    const { getContentType, identify_htmltag, mimes, str_inject } = assist;
     const { handler, getNestedObject, sanbox } = utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
@@ -505,7 +505,14 @@ module.exports = (...args) => {
               }
 
               let preload = await get_domhtml(
-                path.join(pathname, "src", "hono", "data", "preload.html")
+                path.join(
+                  pathname,
+                  "src",
+                  "assist",
+                  "hono",
+                  "data",
+                  "preload.html"
+                )
               );
               document.querySelector("body").innerHTML += preload;
               let script = document.createElement("script");
@@ -926,6 +933,7 @@ module.exports = (...args) => {
               err["view"] = path.join(
                 pathname,
                 "src",
+                "assist",
                 "hono",
                 "data",
                 "500.html"
@@ -934,6 +942,7 @@ module.exports = (...args) => {
               err["view"] = path.join(
                 pathname,
                 "src",
+                "assist",
                 "hono",
                 "data",
                 "404.html"

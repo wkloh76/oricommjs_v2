@@ -450,7 +450,7 @@ module.exports = class {
    */
   init = async () => {
     const { dir, components, engine, utils } = this.library;
-    const { reaction } = engine.compmgr.honoassist;
+    const { reaction } = engine.compmgr.assist;
     const { errhandler, handler, mergeDeep } = utils;
     const { fs, path, toml } = this.sys;
     const { existsSync, readFileSync } = fs;

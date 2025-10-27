@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove entires module export promise base from utils. Completed on 2025-10-20
 - Split some functions from `utils.js` which will direct access system I/O. Completed on 2025-10-22
 - Change webbunjs engine dependencies `utils\html.js` to `compmgr\honoassist.js`. Completed on 2025-10-25
+- Rename `honoassist.js` to `assist.js` and The `assist` folder becomes the parent folder of the `hono`. Completed on 2025-10-27
 
 ### Deprecated
 

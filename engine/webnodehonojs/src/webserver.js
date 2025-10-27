@@ -150,8 +150,8 @@ module.exports = (...args) => {
       lib["start"] = async (...args) => {
         const [[setting], compmgr] = args;
         const { general, genernalexcludefile, share, webnodehonojs } = setting;
-        const { honoassist } = compmgr;
-        const { assets, atomic, reaction, utilities } = honoassist;
+        const { assist } = compmgr;
+        const { assets, atomic, reaction, utilities } = assist;
 
         try {
           let rtnestablish = await establish(setting);
