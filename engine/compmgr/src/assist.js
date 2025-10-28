@@ -33,7 +33,7 @@ module.exports = async (...args) => {
   const { dir_module } = io;
   const { fs, logerr: logerror, path } = sys;
   const { existsSync, readFileSync } = fs;
-  const { join, basename } = path;
+  const { basename, extname, join } = path;
 
   const basic = /\s?<!doctype html>|(<html\b[^>]*>|<body\b[^>]*>|<x-[^>]+>)+/i;
   const full = new RegExp(
@@ -50,11 +50,12 @@ module.exports = async (...args) => {
     };
 
     const getExistFile = async (...args) => {
-      let [name, route, fpath] = args;
-      let bname, fname, filePath, mimes, cssContent, options;
+      let [[name, route, fpath], optional] = args;
+      let bname, extension, fname, filePath, mimes, cssContent, options;
 
       route = route.slice(0, -1);
       bname = basename(name);
+      extension = extname(name);
       fname = name.substring(name.lastIndexOf(route)).replace(route, "");
       filePath = join(fpath, fname);
       mimes = getContentType(filePath);
@@ -62,13 +63,14 @@ module.exports = async (...args) => {
 
       if (!mimes) mimes = "text/plain";
       if (fs.existsSync(filePath)) {
-        if (library.mode != "Production") cssContent = readFileSync(filePath);
-        else
-          cssContent = Buffer.from(
-            await minify(readFileSync(filePath).toString(), {
-              collapseWhitespace: true,
-            })
-          );
+        cssContent = readFileSync(filePath).toString();
+        if (extension == ".less") {
+          cssContent = optional.content.concat(" ", cssContent);
+        }
+        if (library.mode == "Production")
+          cssContent = await minify(cssContent, {
+            collapseWhitespace: true,
+          });
       }
 
       options = {
@@ -77,19 +79,21 @@ module.exports = async (...args) => {
           "Content-Length": Buffer.byteLength(cssContent).toString(),
         },
       };
-      return [cssContent, options];
+      return [Buffer.from(cssContent), options];
     };
 
     const registration = (...args) => {
       const [params, obj] = args;
-      const [route, fpath] = params;
+      const [route, fpath, optional] = params;
       const { serveStatic, register } = obj;
       register(
         route,
         serveStatic({
           root: fpath,
           getContent: async (fname, c) => {
-            return c.body(...(await getExistFile(fname, route, fpath)));
+            return c.body(
+              ...(await getExistFile([fname, route, fpath], optional))
+            );
           },
         })
       );
@@ -177,7 +181,7 @@ module.exports = async (...args) => {
             let route = `${key}/*`;
             let fpath = val.filepath;
             if (datatype(val) == "object") {
-              registration([route, fpath], obj);
+              registration([route, fpath, val], obj);
             } else {
               fpath = val;
               registration([route, fpath], obj);
@@ -364,7 +368,7 @@ module.exports = async (...args) => {
       str_inject,
       utilities,
       reaction: await require("./assist/web/reaction")(
-        [join(params[0],"src", "assist"), "web"],
+        [join(params[0], "src", "assist"), "web"],
         [
           {
             ...library,

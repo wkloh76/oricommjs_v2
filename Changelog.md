@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix inproper define module exports method in `jpointer.js` at utils. Completed on 2025-10-26
+- Fix less unaable import js variable issue. Completed on 2025-10-28
 
 ### Security
 
