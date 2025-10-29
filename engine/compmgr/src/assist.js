@@ -23,7 +23,7 @@
 module.exports = async (...args) => {
   const beautify = require("js-beautify/js");
   const { minify } = require("html-minifier-terser");
-  const jsdom = require("jsdom");
+  const less = require("less");
   const { htmlTags, mimes } = require("./data/htmldata.json");
 
   const [params, obj] = args;
@@ -52,6 +52,8 @@ module.exports = async (...args) => {
     const getExistFile = async (...args) => {
       let [[name, route, fpath], optional] = args;
       let bname, extension, fname, filePath, mimes, cssContent, options;
+      let output = [],
+        cmd = "body";
 
       route = route.slice(0, -1);
       bname = basename(name);
@@ -63,23 +65,57 @@ module.exports = async (...args) => {
 
       if (!mimes) mimes = "text/plain";
       if (fs.existsSync(filePath)) {
-        cssContent = readFileSync(filePath).toString();
-        if (extension == ".less") {
-          cssContent = optional.content.concat(" ", cssContent);
-        }
-        if (library.mode == "Production")
-          cssContent = await minify(cssContent, {
-            collapseWhitespace: true,
-          });
-      }
+        if (mimes.indexOf("text") > -1) {
+          cssContent = readFileSync(filePath).toString();
+          if (extension == ".less") {
+            let lessContent = await less.render(cssContent, {
+              filename: filePath,
+              modifyVars: JSON.parse(optional.content),
+              // sourceMap: { sourceMapFileInline: true },
+              // compress: true, // 生产环境压缩
+              paths: [fpath], // 包含路径配置
+              rewriteUrls: "all", // URL重写选项
+            });
+            cssContent = lessContent.css;
+            cmd = "text";
+          }
+          if (library.mode == "Production")
+            cssContent = await minify(cssContent, {
+              collapseWhitespace: true,
+            });
 
-      options = {
-        headers: {
-          "Content-Type": mimes,
-          "Content-Length": Buffer.byteLength(cssContent).toString(),
-        },
-      };
-      return [Buffer.from(cssContent), options];
+          options = {
+            headers: {
+              "Content-Type": mimes,
+              "Content-Length": Buffer.byteLength(cssContent).toString(),
+            },
+          };
+          if (cmd == "text")
+            options = {
+              headers: {
+                "Content-Type": "text/css; charset=utf-8",
+                "Cache-Control": "no-cache", // 开发时禁用缓存
+              },
+            };
+
+          output.push(Buffer.from(cssContent));
+          output.push(options);
+          output.push(cmd);
+        } else {
+          cssContent = readFileSync(filePath);
+          output.push(cssContent);
+          output.push(
+            (options = {
+              headers: {
+                "Content-Type": mimes,
+                // "Cross-Origin-Resource-Policy": "cross-origin",
+              },
+            })
+          );
+          output.push(cmd);
+        }
+      }
+      return output;
     };
 
     const registration = (...args) => {
@@ -91,9 +127,11 @@ module.exports = async (...args) => {
         serveStatic({
           root: fpath,
           getContent: async (fname, c) => {
-            return c.body(
-              ...(await getExistFile([fname, route, fpath], optional))
+            let [content, options, cmd] = await getExistFile(
+              [fname, route, fpath],
+              optional
             );
+            return c[cmd](content, options);
           },
         })
       );

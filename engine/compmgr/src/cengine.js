@@ -478,7 +478,7 @@ module.exports = class {
       if (Object.keys(setting.share.atomic).length == 0)
         setting.share.atomic = join(dir, "atomic");
 
-      let less = `@remote: "${setting.ongoing[compname].remote.cdn}";@internal: "/${compname}/less";@internalcss: "/${compname}/public/assets";`;
+      let less = `{"remote": "${setting.ongoing[compname].remote.cdn}","internal": "/${compname}/less","internalcss": "/${compname}/public/assets"}`;
 
       let share = {};
       share[`/${compname}/public`] = join(prjsrc, "src", "public");
@@ -563,7 +563,7 @@ module.exports = class {
       if (compname.indexOf(`${setting.general.engine.type}_`) > -1) {
         reaction["register"](dataset);
       }
-      
+
       components.done.push(setting.general.engine);
       if (!components.start) components.start = comp_engine.start;
 

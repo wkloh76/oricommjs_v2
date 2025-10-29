@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-10-29
+
+### Summary
+
+- Focus on developing workflow engine for frontend and backend.
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- Bug fix from compmgr engine which is file handler inproper cause the request from frontend html no responding. File type which in binary like png and so on. Completed on 2025-10-29
+
+- Bug fix from compmgr which is `less.js` embeded the url no respoding during from frontend request. Completed on 2025-10-29
+
+### Security
+
+[1.1.0]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.0
+
 ## [1.0.9] - 2025-10-20
 
 ### Summary
