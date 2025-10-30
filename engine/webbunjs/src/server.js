@@ -26,7 +26,6 @@ const { cors } = require("hono/cors");
 const { secureHeaders } = require("hono/secure-headers");
 const { serveStatic } = require("hono/serve-static");
 const { sessionMiddleware } = require("hono-sessions");
-const { minify } = require("html-minifier-terser");
 const util = require("util");
 
 /**
@@ -38,7 +37,7 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { sqlitesession } = library.utils;
+    const { sqlitesession, sanbox } = library.utils;
     const { SqliteStore } = sqlitesession;
     const { dayjs, fs, path, pino } = sys;
     const { join } = path;
@@ -50,8 +49,6 @@ module.exports = (...args) => {
       let lib = {};
       // let app = new OpenAPIHono();
       let app = new Hono();
-      let sessionval;
-      let logger;
 
       /**
        * Web server establish and session log
@@ -61,37 +58,17 @@ module.exports = (...args) => {
        * @returns {Object} - Return null | error object
        */
       const establish = async (...args) => {
-        let [setting] = args;
+        const [setting, compmgr] = args;
+        const { general, genernalexcludefile, logpath, share, webbunjs } =
+          setting;
+        const { savestore, store, verbose, ...setsession } =
+          setting[setting.args.engine].session;
+        const { assets, atomic, reaction, utilities } = compmgr.assist;
+
         try {
-          let { logpath, general } = setting;
-          let { savestore, store, verbose, ...setsession } =
-            setting[setting.args.engine].session;
-
-          //set up our express application
-          app.use(cors());
-          app.use(secureHeaders());
-
-          let dbfile;
-          let mkdir = util.promisify(fs.mkdir);
-          await mkdir(join(logpath, curdir), { recursive: true });
-          if (savestore) {
-            if (store.path == "") {
-              dbfile = join(logpath, "./sessions.db3");
-            } else {
-              await mkdir(store.path, { recursive: true });
-              dbfile = join(store.path, "./sessions.db3");
-            }
-            console.log("Session db run in file!");
-          } else {
-            dbfile = ":memory:";
-            console.log("Session db run silently!");
-          }
-          store.client = new sqlite3(dbfile, { strict: true });
-          setsession.store = new SqliteStore(store.client);
-
           // Setup server log
           // 创建 Pino 日志记录器并配置轮转
-          logger = pino({
+          let logger = pino({
             level: "info",
             transport: {
               target: "pino-roll",
@@ -111,51 +88,24 @@ module.exports = (...args) => {
             },
           });
 
-          sessionval = setsession;
-
-          const webservice = () => {
-            let output;
-            try {
-              serve({ fetch: app.fetch, port: general.portlistener });
-              return;
-            } catch (error) {
-              output = error;
-            } finally {
-              return output;
+          let dbfile;
+          let mkdir = util.promisify(fs.mkdir);
+          await mkdir(join(logpath, curdir), { recursive: true });
+          if (savestore) {
+            if (store.path == "") {
+              dbfile = join(logpath, "./sessions.db3");
+            } else {
+              await mkdir(store.path, { recursive: true });
+              dbfile = join(store.path, "./sessions.db3");
             }
-          };
+            console.log("Session db run in file!");
+          } else {
+            dbfile = ":memory:";
+            console.log("Session db run silently!");
+          }
+          store.client = new sqlite3(dbfile, { strict: true });
+          setsession.store = new SqliteStore(store.client);
 
-          let rtn = webservice();
-          if (rtn)
-            throw {
-              errno: -4,
-              message: `address already in use :::${general.portlistener}`,
-              stack: `The port number ${general.portlistener} occupied by other service!`,
-            };
-
-          return;
-        } catch (error) {
-          return error;
-        }
-      };
-
-      /**
-       * Loading atomic, public static files share and establish web server service
-       * @alias module:webserver.start
-       * @param {...Object} args - 2 parameters
-       * @param {Object} args[0] - setting is coresetting object value
-       * @param {Object} args[1] - reaction is an module for responding when http client request
-       * @returns {Object} - Return null | error object
-       */
-      lib["start"] = async (...args) => {
-        const [[setting], compmgr] = args;
-        const { general, genernalexcludefile, share, webbunjs } = setting;
-        const { assist } = compmgr;
-        const { assets, atomic, reaction, utilities } = assist;
-
-        try {
-          let rtnestablish = await establish(setting);
-          if (rtnestablish) throw rtnestablish;
           atomic([share.atomic, genernalexcludefile], {
             register: app.use,
             serveStatic,
@@ -172,8 +122,12 @@ module.exports = (...args) => {
             library,
           });
 
+          //set up our express application
+          app.use(cors());
+          app.use(secureHeaders());
           // Session in the middleware
-          app.use("*", sessionMiddleware(sessionval));
+          app.use("*", sessionMiddleware(setsession));
+
           app.use(
             bodyLimit({
               maxSize: webbunjs.parser.maxSize,
@@ -210,6 +164,39 @@ module.exports = (...args) => {
             },
             reaction["onrequest"]
           );
+
+          return;
+        } catch (error) {
+          return error;
+        }
+      };
+
+      /**
+       * Loading atomic, public static files share and establish web server service
+       * @alias module:webserver.start
+       * @param {...Object} args - 2 parameters
+       * @param {Object} args[0] - setting is coresetting object value
+       * @param {Object} args[1] - reaction is an module for responding when http client request
+       * @returns {Object} - Return null | error object
+       */
+      lib["start"] = async (...args) => {
+        const [[setting], compmgr] = args;
+        const { general } = setting;
+
+        try {
+          let rtnestablish = await establish(setting, compmgr);
+          if (rtnestablish) throw rtnestablish;
+
+          let rtn = await sanbox(serve, [
+            { fetch: app.fetch, port: general.portlistener },
+          ]);
+
+          if (rtn.code)
+            throw {
+              errno: -4,
+              message: `address already in use :::${general.portlistener}`,
+              stack: `The port number ${general.portlistener} occupied by other service!`,
+            };
 
           return;
         } catch (error) {
