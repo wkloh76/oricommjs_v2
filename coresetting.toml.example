@@ -8,6 +8,7 @@ algorithm = "aes-256-cbc"
 secretKey = "7a2b0184ba8d9bb1d4128bf8d2e377264183faf7f0e7a9f535d6e830f881f5af" # 32 bytes for aes-256
 iv = "0fbf5915a7658c12ab1bbf6d94c3830b" # 16 bytes for AES block size
 sudopwd = ""
+primary=""
 
 [log]
 [log.success]

@@ -450,7 +450,7 @@ module.exports = class {
    */
   init = async () => {
     const { dir, components, engine, utils } = this.library;
-    const { reaction } = engine.compmgr.assist;
+    const { appaction, deskaction, webaction } = engine.compmgr.assist;
     const { errhandler, handler, mergeDeep } = utils;
     const { fs, path, toml } = this.sys;
     const { existsSync, readFileSync } = fs;
@@ -462,6 +462,10 @@ module.exports = class {
       let [compsetting] = compname.split("_");
       let setting = this.cosetting;
       let tomlpath = join(prjsrc, `${compsetting}.toml`);
+      let reaction;
+      if (setting.general.engine.type == "desktop") reaction = deskaction;
+      else if (setting.general.engine.type == "web") reaction = webaction;
+      else if (setting.general.engine.type == "app") reaction = appaction;
 
       if (existsSync(tomlpath)) {
         let psetting = toml.parse(readFileSync(tomlpath), {

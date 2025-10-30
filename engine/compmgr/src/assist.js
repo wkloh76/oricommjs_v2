@@ -405,7 +405,7 @@ module.exports = async (...args) => {
       mimes,
       str_inject,
       utilities,
-      reaction: await require("./assist/web/reaction")(
+      webaction: await require("./assist/web/reaction")(
         [join(params[0], "src", "assist"), "web"],
         [
           {

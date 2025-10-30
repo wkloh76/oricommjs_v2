@@ -63,7 +63,12 @@ module.exports = (...args) => {
           setting;
         const { savestore, store, verbose, ...setsession } =
           setting[setting.args.engine].session;
-        const { assets, atomic, reaction, utilities } = compmgr.assist;
+        const {
+          assets,
+          atomic,
+          webaction: reaction,
+          utilities,
+        } = compmgr.assist;
 
         try {
           // Setup server log

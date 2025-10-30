@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Redefining the code structure and flow in the web server engine (webbunjs and webnodehonojs). Completed on 2025-10-30
+- In the compmgr engine, the reaction function is renamed to webaction for extension purposes. Completed on 2025-10-30
 
 ### Deprecated
 
