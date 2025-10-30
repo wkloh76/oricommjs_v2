@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-10-30
+
+### Summary
+
+- Focus on developing workflow engine for frontend and backend.
+
+### Added
+
+- Add check if `app.js` detect argument `sudopwd` exists whill no turn on inquirer prompt and will base on sudopwd value generate encrypt data to `conf.toml` file. Completed on 2025-10-30
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+[1.1.1]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.1
+
 ## [1.1.0] - 2025-10-29
 
 ### Summary

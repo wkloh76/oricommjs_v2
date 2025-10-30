@@ -622,7 +622,7 @@
     if (rtnconflog.code != 0) throw rtnconflog;
     else sysmodule = { ...sysmodule, ...rtnconflog.data };
 
-    let conftoml = sysmodule.path.join(coresetting.logpath, "conf.toml");
+    let conftoml = sysmodule.path.join(coresetting.homedir, "conf.toml");
     if (!sysmodule.fs.existsSync(conftoml)) {
       let question = [
         {
@@ -630,11 +630,16 @@
           message: chalk.whiteBright.bgBlue(
             "This is the first time setup!\nPlease provide your authorize password for some privileage setting:\n"
           ),
-          name: "sudopwd",
+          name: "ans",
           mask: chalk.yellow.bgBlue("*"),
         },
       ];
-      let { sudopwd } = await inquirer.prompt(question);
+      let sudopwd;
+      if (coresetting.args["sudopwd"]) sudopwd = coresetting.args["sudopwd"];
+      else {
+        let { ans } = await inquirer.prompt(question);
+        sudopwd = ans;
+      }
       if (sudopwd && sudopwd !== "") {
         let encodepwd = kernel.utils.io.encryptor(sudopwd, coresetting.general);
         let tomlString = sysmodule.toml.stringify(
