@@ -397,16 +397,44 @@ module.exports = async (...args) => {
       }
     };
 
+    // code from AI propose
+    const completeRelativeUrl = (
+      relativePath,
+      domain = "localhost",
+      protocol = "http"
+    ) => {
+      try {
+        // If it's already complete, return it
+        return new URL(relativePath).toString();
+      } catch {
+        // Complete it with default domain
+        return new URL(relativePath, `${protocol}://${domain}`).toString();
+      }
+    };
+
     lib = {
-      atomic,
       assets,
+      atomic,
+      completeRelativeUrl,
       getContentType,
       identify_htmltag,
       mimes,
       str_inject,
       utilities,
+      Path: join(params[0], "src", "assist", cosetting.general.engine.type),
       webaction: await require("./assist/web/reaction")(
         [join(params[0], "src", "assist"), "web"],
+        [
+          {
+            ...library,
+            assist: { getContentType, identify_htmltag, mimes, str_inject },
+          },
+          sys,
+          cosetting,
+        ]
+      ),
+      deskaction: await require("./assist/desktop/reaction")(
+        [join(params[0], "src", "assist"), "desktop"],
         [
           {
             ...library,

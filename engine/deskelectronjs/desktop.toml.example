@@ -1,5 +1,15 @@
 [deskelectronjs]
 
+[deskelectronjs.parser]
+maxSize = 10240000 # 10MB
+
+[deskelectronjs.session]
+encryptionKey = "string_at_least_32_characters_long"
+expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  86400 is 1 day
+cookieOptions= {sameSite= 'Lax', path= '/', httpOnly= true, domain="127.0.0.1", name = "session"}
+store = { path = ""}
+savestore = true
+
 [deskelectronjs.updater]
 silent = true
 cyclecheck = 3600
@@ -8,12 +18,6 @@ systemd = "user"
 auth =""
 #auth = "Basic dnNybmRzeXN0ZW06c3lzdGVtYWRtaW4="
 
-[deskelectronjs.session]
-encryptionKey = "string_at_least_32_characters_long"
-expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  86400 is 1 day
-cookieOptions= {sameSite= 'Lax', path= '/', httpOnly= true, domain="127.0.0.1", name = "session"}
-store = { path = ""}
-savestore = true
 
 [deskelectronjs.window]
 title = ""

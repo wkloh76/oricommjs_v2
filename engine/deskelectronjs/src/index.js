@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024   Loh Wah Kiang
+ * Copyright (c) 2025   Loh Wah Kiang
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -22,35 +22,19 @@ module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
     try {
-      let reaction = await require("./reaction")(params, obj);
-      let desktop = await require("./desktop")(params, obj);
-      let autoupdate = await require("./updater")(params, obj);
-
-      let lib = {},
-        defaulturl = "";
-
-      lib["register"] = (...args) => {
-        let [oncomponents, compname, engine] = args;
-        if (compname.indexOf(`${engine.type}_`) > -1) {
-          reaction["register"](oncomponents);
-          let [comp] = Object.values(oncomponents);
-          if (defaulturl == "" && comp.defaulturl != "")
-            defaulturl = comp.defaulturl;
-        }
-      };
-
-      lib["start"] = async (...args) => {
-        let [setting] = args;
-        try {
-          let rtn = await desktop.start(setting, { reaction, autoupdate });
-          if (rtn) throw rtn;
-          return;
-        } catch (error) {
-          return error;
-        }
-      };
-
-      resolve(lib);
+      let server = await require("./server")(params, obj);
+      resolve({
+        start: async (...args) => {
+          let [setting, manager] = args;
+          try {
+            let rtn = await server.start([setting], manager);
+            if (rtn) throw rtn;
+            return;
+          } catch (error) {
+            return error;
+          }
+        },
+      });
     } catch (error) {
       reject(error);
     }
