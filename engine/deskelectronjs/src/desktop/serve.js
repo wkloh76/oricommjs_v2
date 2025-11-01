@@ -146,7 +146,7 @@ module.exports = (...args) => {
                     enableRemoteModule: winopt.enableRemoteModule,
                     nodeIntegrationInWorker: true,
                     webSecurity: winopt.webSecurity,
-                    preload: join(pathname, "browser", "./init.js"),
+                    preload: join(assist.Path, "data", "./init.js"),
                   },
                 });
 
@@ -188,7 +188,7 @@ module.exports = (...args) => {
                     });
                     break;
                   default:
-                    win.loadFile(join(pathname, "browser", "./main.html"));
+                    win.loadFile(join(assist.Path, "data", "./main.html"));
                 }
 
                 win.on("close", async (e) => {

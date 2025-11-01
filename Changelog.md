@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove unused code and file from deskelectronjs engine. Completed on 2025-11-01
+
 ### Fixed
 
 ### Security
