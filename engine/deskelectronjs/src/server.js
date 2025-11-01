@@ -30,9 +30,8 @@ module.exports = (...args) => {
     const { dayjs, fs, path, pino } = sys;
     const { join } = path;
 
-    const { serve } = require("./desktop/serve")(params, obj);
+    const { serve, serveStatic } = require("./desktop/serve")(params, obj);
     const { Hono } = require("./desktop/electronjs")(params, obj);
-    const { serveStatic } = require("./desktop/serve-static")(params, obj);
     const { sessionMiddleware } = require("./desktop/session")(params, obj);
     const getConnInfo = (c) => {
       const bindings = c.env.server ? c.env.server : c.env;
@@ -146,7 +145,7 @@ module.exports = (...args) => {
               const [cnt, next] = args;
               const { req, res } = cnt;
               const start = Date.now();
-              await next();
+              let result = await next();
               let ms = Date.now() - start;
 
               let parsebody = {};
@@ -167,6 +166,8 @@ module.exports = (...args) => {
                 },
                 "request completed"
               );
+
+              return result;
             },
             reaction["onrequest"]
           );

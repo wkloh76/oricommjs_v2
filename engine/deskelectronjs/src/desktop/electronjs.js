@@ -66,7 +66,7 @@ module.exports = (...args) => {
             };
 
             let result = await sanbox(fn, params);
-            if (result.code) throw result;
+            if (result && result.code) throw result;
             output = result;
           } catch (error) {
             output = response;
@@ -85,13 +85,16 @@ module.exports = (...args) => {
             _procnum,
             _proc = [],
             _url = new URL(params.originalUrl),
-            _headers = params.headers ?? {};
+            _headers = params.headers ?? {},
+            _staticserve = {},
+            _result = [];
 
           let done = false;
 
           let cnt = {
             body: function (...args) {
-              
+              const [content, options, filePath] = args;
+              return { content, options, filePath };
             },
             req: { raw: { headers: {} } },
             res: {
@@ -189,16 +192,36 @@ module.exports = (...args) => {
           };
 
           const next = async () => {
+            let rtn = [];
             for (let i = _procnum + 1; i < _proc.length; i++) {
-              let result = await this.inspector(_proc[i], [cnt, next]);
-              if (result && result._session) _cachesess = result._session;
+              let result;
+              if (
+                i + 1 == _proc.length &&
+                Object.keys(_staticserve).length > 0
+              ) {
+                result = await this.inspector(_proc[i], _staticserve.value);
+              } else result = await this.inspector(_proc[i], [cnt, next]);
+              if (result) {
+                if (result._session) _cachesess = result._session;
+                rtn.push(result);
+              }
             }
             done = true;
+            return rtn;
           };
 
           _queue = Object.assign({}, this._useobj);
           for (let [key] of Object.entries(_queue)) {
             if (key != "*" && key != cnt.req.path) delete _queue[key];
+            if (Object.keys(_staticserve).length == 0 && key.length > 1) {
+              let fpath = key.replaceAll("*", "");
+              let idx = cnt.req.path.indexOf(fpath);
+              if (idx > -1)
+                _staticserve = {
+                  name: key,
+                  value: [cnt.req.path, cnt, { net }],
+                };
+            }
           }
           if (Object.keys(_queue).length > 0) {
             for (let [key, val] of Object.entries(_queue)) {
@@ -216,13 +239,21 @@ module.exports = (...args) => {
             else _proc = concatobj(_proc, _proc, val);
           });
 
+          if (Object.keys(_staticserve).length > 0) {
+            _proc.splice(-1, 1);
+            _proc = concatobj(_proc, _proc, this._useobj[_staticserve.name]);
+          }
+          let result;
           for (let i = 0; i < _proc.length; i++) {
             _procnum = i;
-            let result = await this.inspector(_proc[i], [cnt, next]);
-            if (result && result._session) _cachesess = result._session;
+            result = await this.inspector(_proc[i], [cnt, next]);
+            if (result) {
+              if (result._session) _cachesess = result._session;
+              _result.push(result);
+            }
             if (done) break;
           }
-          return;
+          return _result;
         };
 
         use = (...args) => {

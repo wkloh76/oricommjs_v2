@@ -100,7 +100,7 @@ module.exports = async (...args) => {
 
           output.push(Buffer.from(cssContent));
           output.push(options);
-          output.push(cmd);
+          // output.push(cmd);
         } else {
           cssContent = readFileSync(filePath);
           output.push(cssContent);
@@ -112,8 +112,8 @@ module.exports = async (...args) => {
               },
             })
           );
-          output.push(cmd);
         }
+        output.push({ cmd, filePath, extension });
       }
       return output;
     };
@@ -127,11 +127,12 @@ module.exports = async (...args) => {
         serveStatic({
           root: fpath,
           getContent: async (fname, c) => {
-            let [content, options, cmd] = await getExistFile(
+            let [content, options, action] = await getExistFile(
               [fname, route, fpath],
               optional
             );
-            return c[cmd](content, options);
+            let { cmd, filePath } = action;
+            return c[cmd](content, options, filePath);
           },
         })
       );
@@ -168,7 +169,7 @@ module.exports = async (...args) => {
                 "Content-Length": Buffer.byteLength(cssContent).toString(),
               },
             };
-            return c.body(cssContent, options);
+            return c.body(cssContent, options, filePath);
           },
         })
       );
