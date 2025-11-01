@@ -15,12 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add check if `app.js` detect argument `sudopwd` exists whill no turn on inquirer prompt and will base on sudopwd value generate encrypt data to `conf.toml` file. Completed on 2025-10-30
 - ~~Redefining the deskelctronjs engine code structure similiar to webbunjs and webnodehonojs. In progress...~~
-  Redefining the deskelctronjs engine code structure similiar to webbunjs and webnodehonojs. Completed on 2025-11-01
+- Redefining the deskelctronjs engine code structure similiar to webbunjs and webnodehonojs. Completed on 2025-11-01
 
 ### Changed
 
 - Redefining the code structure and flow in the web server engine (webbunjs and webnodehonojs). Completed on 2025-10-30
 - In the compmgr engine, the reaction function is renamed to webaction for extension purposes. Completed on 2025-10-30
+- Code optimization in both deskelectronjs and compmgr engine. Completed on 2025-11-01
 
 ### Deprecated
 

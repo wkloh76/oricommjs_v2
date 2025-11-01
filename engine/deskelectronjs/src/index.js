@@ -23,11 +23,12 @@ module.exports = (...args) => {
     const [params, obj] = args;
     try {
       let server = await require("./server")(params, obj);
+      let autoupdate = await require("./updater")(params, obj);
       resolve({
         start: async (...args) => {
           let [setting, manager] = args;
           try {
-            let rtn = await server.start([setting], manager);
+            let rtn = await server.start([setting], autoupdate, manager);
             if (rtn) throw rtn;
             return;
           } catch (error) {

@@ -93,8 +93,8 @@ module.exports = (...args) => {
 
           let cnt = {
             body: function (...args) {
-              const [content, options, filePath] = args;
-              return { content, options, filePath };
+              const [content, options] = args;
+              return { content, options };
             },
             req: { raw: { headers: {} } },
             res: {
@@ -192,7 +192,7 @@ module.exports = (...args) => {
           };
 
           const next = async () => {
-            let rtn = [];
+            let rtn = {};
             for (let i = _procnum + 1; i < _proc.length; i++) {
               let result;
               if (
@@ -203,7 +203,7 @@ module.exports = (...args) => {
               } else result = await this.inspector(_proc[i], [cnt, next]);
               if (result) {
                 if (result._session) _cachesess = result._session;
-                rtn.push(result);
+                rtn = result;
               }
             }
             done = true;

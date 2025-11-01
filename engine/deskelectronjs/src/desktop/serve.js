@@ -91,32 +91,24 @@ module.exports = (...args) => {
                     ),
                   };
 
-                  let result = await onfetch(options, null, "static-serve");
-                  if (result[1].length > 0) {
-                    let [{ content, options, filePath }] = result[1];
-                    // let ftype = options.headers["Content-Type"];
-                    // if (ftype == "text/less" || ftype == "text/css")
-                    //   return new Response(content);
-                    // else {
-                    //   // let api = url.pathToFileURL(filePath).toString();
-                    //   // if (filePath == "utils.js") {
-                    //   //   // return new Response(content, {
-                    //   //   //   status: 200,
-                    //   //   //   headers: {
-                    //   //   //     "Content-Type": "application/javascript",
-                    //   //   //     "Cache-Control": "no-cache",
-                    //   //   //   },
-                    //   //   // });
-                    //   //   return new Response(content, {
-                    //   //     ...options,
-                    //   //     status: 200,
-                    //   //   });
-                    //   // } else return await net.fetch(api);
-                    // }
-                    return new Response(content, {
-                      ...options,
-                      status: 200,
-                    });
+                  let results = await onfetch(options, null, "static-serve");
+                  if (results.length > 0) {
+                    let permit = false;
+                    let render = {};
+                    for (let result of results) {
+                      let { content, options } = result;
+                      if (content && options) {
+                        render = { content, options };
+                        permit = true;
+                      }
+                      if (permit) break;
+                    }
+                    if (permit) {
+                      return new Response(render.content, {
+                        ...render.options,
+                        status: 200,
+                      });
+                    }
                   }
                 } catch (error) {
                   console.log(error);

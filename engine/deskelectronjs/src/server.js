@@ -187,14 +187,14 @@ module.exports = (...args) => {
        * @returns {Object} - Return null | error object
        */
       lib["start"] = async (...args) => {
-        const [[setting], compmgr] = args;
+        const [[setting], autoupdate, compmgr] = args;
         const { general, ongoing } = setting;
         const { port, primary } = general;
 
         try {
           let rtnestablish = await establish(setting, compmgr);
           if (rtnestablish) throw rtnestablish;
-
+          await autoupdate.init(setting);
           let rtn = await sanbox(serve, [
             {
               assist: compmgr.assist,
