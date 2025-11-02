@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add check if `app.js` detect argument `sudopwd` exists whill no turn on inquirer prompt and will base on sudopwd value generate encrypt data to `conf.toml` file. Completed on 2025-10-30
 - ~~Redefining the deskelctronjs engine code structure similiar to webbunjs and webnodehonojs. In progress...~~
 - Redefining the deskelctronjs engine code structure similiar to webbunjs and webnodehonojs. Completed on 2025-11-01
+- Redirect page during render first tab in deskelectronjs engine done. Completed on 2025-11-02
 
 ### Changed
 

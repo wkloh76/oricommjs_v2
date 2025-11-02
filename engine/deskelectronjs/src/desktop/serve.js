@@ -61,6 +61,7 @@ module.exports = (...args) => {
         try {
           let winlist = [];
           let reglist = {};
+          let ready = false;
 
           const register = (...args) => {
             let [config, fn] = args;
@@ -91,7 +92,11 @@ module.exports = (...args) => {
                     ),
                   };
 
-                  let results = await onfetch(options, null, "static-serve");
+                  let results = await onfetch(
+                    options,
+                    { win: winlist[0], assist },
+                    "static-serve"
+                  );
                   if (results.length > 0) {
                     let permit = false;
                     let render = {};
@@ -280,11 +285,36 @@ module.exports = (...args) => {
             return await fetch(parms, obj, channel);
           };
 
-          register({ event: "on", channel: "deskredirect" }, onfetch);
           register({ event: "on", channel: "deskfetch" }, onfetch);
           register({ event: "handle", channel: "deskfetchsync" }, onfetch);
 
-          intercomm.register("deskinit", "once", async (render, data) => {
+          intercomm.register("deskredirect", "always", async (...args) => {
+            const [url, status] = args;
+            let cmd = "init";
+            if (ready) cmd = `${filepath}://resource/`;
+            let originalUrl = completeRelativeUrl(url);
+            await fetch(
+              {
+                method: "GET",
+                body: {},
+                originalUrl,
+                query: Object.fromEntries(
+                  new URL(originalUrl).searchParams.entries()
+                ),
+                headers: {
+                  Accept:
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                  "Sec-Fetch-Mode": "navigate",
+                  "X-Requested-With": null,
+                },
+              },
+              { win: winlist[0], assist },
+              cmd
+            );
+          });
+
+          intercomm.register("deskinit", "once", async (...args) => {
+            const [render, data] = args;
             try {
               window.render = render;
               window.html = data;
@@ -293,7 +323,7 @@ module.exports = (...args) => {
                 result = await result;
                 if (result instanceof ReferenceError) throw result;
               }
-
+              ready = true;
               return;
             } catch (error) {
               return error;
@@ -332,7 +362,7 @@ module.exports = (...args) => {
                 "X-Requested-With": null,
               },
             },
-            winlist,
+            { assist },
             "init"
           );
         } catch (error) {

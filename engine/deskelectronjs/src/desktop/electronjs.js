@@ -80,6 +80,7 @@ module.exports = (...args) => {
 
         fetch = async (...args) => {
           const [params, obj, channel] = args;
+          const { win, assist } = obj;
           let _cachesess,
             _queue,
             _procnum,
@@ -104,12 +105,6 @@ module.exports = (...args) => {
               },
               status: function (...args) {
                 return this;
-              },
-              redirect: async function (...args) {
-                const [req, res] = args;
-                const { htmlstr } = req;
-                intercomm.fire("deskredirect", ["data", htmlstr]);
-                return;
               },
               json: async function (data) {
                 ans = {
@@ -188,6 +183,64 @@ module.exports = (...args) => {
                 intercomm.fire("deskinit", ["data", html]);
                 break;
             }
+            return html;
+          };
+
+          cnt.redirect = async (...args) => {
+            const [url, status] = args;
+            let r_cnt = { ...cnt },
+              r_done = false,
+              r_proc = [],
+              r_procnum;
+            let originalUrl = assist.completeRelativeUrl(url);
+            let r_url = new URL(originalUrl);
+
+            r_cnt.req.path = r_url.pathname;
+            r_cnt.req.query = () => {
+              return Object.fromEntries(r_url.searchParams.entries()) ?? {};
+            };
+            r_cnt.req.method = "GET";
+
+            this._usearr.map((val) => {
+              if (r_proc.length == 0) r_proc = val;
+              else r_proc = concatobj(r_proc, r_proc, val);
+            });
+
+            const r_next = async () => {
+              let rtn = {};
+              for (let i = r_procnum + 1; i < r_proc.length; i++) {
+                let result = await this.inspector(r_proc[i], [r_cnt, r_next]);
+                if (result) rtn = result;
+              }
+              r_done = true;
+              return rtn;
+            };
+
+            let r_result;
+            for (let i = 0; i < r_proc.length; i++) {
+              r_procnum = i;
+              r_result = await this.inspector(r_proc[i], [r_cnt, r_next]);
+              // if (result) _result.push(result);
+              if (done) break;
+            }
+
+            switch (channel) {
+              case "init":
+                if (typeof r_result == "string")
+                  intercomm.fire("deskinit", ["data", r_result]);
+                break;
+              default:
+                if (typeof r_result == "string") {
+                  let htmlstring = `data:text/html;charset=UTF-8,${encodeURIComponent(
+                    r_result
+                  )}`;
+                  win.webContents.loadURL(htmlstring, {
+                    baseURLForDataURL: channel,
+                  });
+                }
+                break;
+            }
+
             return;
           };
 
