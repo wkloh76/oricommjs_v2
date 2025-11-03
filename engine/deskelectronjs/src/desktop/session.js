@@ -131,6 +131,7 @@ module.exports = (...args) => {
           cookiedata.value = JSON.stringify(value);
           await this.createSession(cookiedata);
           this._db.persistSessionData(this._id, value);
+          if (!req._checkSession) req._checkSession = this.checkSession;
           return { _session: value };
         } catch (error) {
           logerror.error(error);

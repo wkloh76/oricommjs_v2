@@ -93,10 +93,6 @@ module.exports = (...args) => {
           let done = false;
 
           let cnt = {
-            body: function (...args) {
-              const [content, options] = args;
-              return { content, options };
-            },
             req: { raw: { headers: {} } },
             res: {
               locals: {},
@@ -176,17 +172,57 @@ module.exports = (...args) => {
             const [name, value, options] = args;
             return;
           };
-          cnt.html = (...args) => {
+          cnt.html = async (...args) => {
             const [html, arg, headers] = args;
             switch (channel) {
               case "init":
                 intercomm.fire("deskinit", ["data", html]);
                 break;
             }
+            await cnt.req._checkSession(cnt.req);
             return html;
           };
-
+          cnt.body = async (...args) => {
+            const [content, options] = args;
+            await cnt.req._checkSession(cnt.req);
+            return { content, options };
+          };
+          cnt.text = (...args) => {
+            const [content, options] = args;
+            return { content, options };
+          };
           cnt.redirect = async (...args) => {
+            const [url, status] = args;
+            await reproduce(url, status);
+            await cnt.req._checkSession(cnt.req);
+            return;
+          };
+          cnt.json = async (...args) => {
+            const [data, status] = args;
+
+            let output = {
+              ok: true,
+              redirected: false,
+              status,
+              statusText: "OK",
+              type: "basic",
+              url: params.originalUrl,
+              response: `{return ${JSON.stringify(data)};}`,
+            };
+            switch (status) {
+              case 200:
+                break;
+
+              case 301:
+                await reproduce(data.redirect, status);
+                output.ok = false;
+                output.statusText = "Moved Permanantely";
+                break;
+            }
+            return output;
+          };
+
+          const reproduce = async (...args) => {
             const [url, status] = args;
             let r_cnt = { ...cnt },
               r_done = false,
@@ -220,8 +256,7 @@ module.exports = (...args) => {
             for (let i = 0; i < r_proc.length; i++) {
               r_procnum = i;
               r_result = await this.inspector(r_proc[i], [r_cnt, r_next]);
-              // if (result) _result.push(result);
-              if (done) break;
+              if (r_done) break;
             }
 
             switch (channel) {
@@ -240,7 +275,6 @@ module.exports = (...args) => {
                 }
                 break;
             }
-
             return;
           };
 

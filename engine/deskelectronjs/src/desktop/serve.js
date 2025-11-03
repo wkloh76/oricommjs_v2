@@ -281,12 +281,30 @@ module.exports = (...args) => {
           };
 
           const onfetch = async (...args) => {
-            const [parms, obj, channel] = args;
-            return await fetch(parms, obj, channel);
+            const [params, obj, channel] = args;
+            return await fetch(params, obj, channel);
           };
 
-          register({ event: "on", channel: "deskfetch" }, onfetch);
-          register({ event: "handle", channel: "deskfetchsync" }, onfetch);
+          const onfetchapi = async (...args) => {
+            const [event, params] = args;
+            const { channel, ...param } = params;
+
+            let [_sess, ans] = await fetch(
+              param,
+              { win: winlist[0], assist },
+              `${filepath}://resource/`
+            );
+            if (ans) {
+              if (channel == "deskfetch") {
+                result = null;
+                event.reply(`resfetchapi`, ans);
+                return;
+              } else return [null, ans];
+            }
+          };
+
+          register({ event: "on", channel: "deskfetch" }, onfetchapi);
+          register({ event: "handle", channel: "deskfetchsync" }, onfetchapi);
 
           intercomm.register("deskredirect", "always", async (...args) => {
             const [url, status] = args;

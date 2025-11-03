@@ -28,29 +28,22 @@
 
   let decodeapi = (...args) => {
     let [event, param] = args;
-    let { baseUrl, render } = param;
+    let { url: baseUrl, ok, status, statusText } = param;
     try {
+      const json = new Function(param.response);
       let fn = wait_callback[baseUrl];
-      if (render.status == 200) {
+      if (status == 200) {
         if (fn?.success) {
-          fn.success.apply(null, [
-            render.status,
-            render.statusText,
-            render.options.json,
-          ]);
+          fn.success.apply(null, [status, statusText, json]);
         }
       } else {
         if (fn?.error) {
-          render.status;
-          fn.error.apply(null, [
-            render.status,
-            render.statusText,
-            render.options.json,
-          ]);
+          status;
+          fn.error.apply(null, [status, statusText, json]);
         }
       }
       delete wait_callback[baseUrl];
-      return render.options.json;
+      return { url: baseUrl, ok, status, statusText, json };
     } catch (error) {
       console.log(error.message);
       return [-1, error.message, null];
@@ -76,8 +69,9 @@
   contextBridge.exposeInMainWorld("fetchapi", {
     request: async (...args) => {
       try {
-        let [param] = args;
+        let [url, param] = args;
         let { async = false, reroute = false, success, error, ...req } = param;
+        req.originalUrl = url;
 
         if (wait_callback?.[req.originalUrl] === undefined) {
           wait_callback[req.originalUrl] = { count: 0 };
@@ -97,6 +91,8 @@
         if (error) wait_callback[req.baseUrl]["error"] = error;
         req["async"] = async;
         req["reroute"] = false;
+        if (req["body"] && typeof req["body"] == "string")
+          req["body"] = JSON.parse(req["body"]);
         if (reroute) req["reroute"] = reroute;
         if (async) {
           req["channel"] = "deskfetch";

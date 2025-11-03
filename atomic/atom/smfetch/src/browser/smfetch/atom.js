@@ -35,6 +35,21 @@ export default await (() => {
       };
     */
 
+    // code from AI propose
+    const completeRelativeUrl = (
+      relativePath,
+      domain = "localhost",
+      protocol = "http"
+    ) => {
+      try {
+        // If it's already complete, return it
+        return new URL(relativePath).toString();
+      } catch {
+        // Complete it with default domain
+        return new URL(relativePath, `${protocol}://${domain}`).toString();
+      }
+    };
+
     /**
      * Arrange data the data suit to webfetch options
      * @alias module:httpns.options
@@ -277,29 +292,79 @@ export default await (() => {
     const deskfetch = async (...args) => {
       const [param] = args;
       try {
+        let originalUrl = completeRelativeUrl(param.url);
+        if (originalUrl) param.url = originalUrl;
         let data = {};
         let {
           async = true,
-          url: originalUrl,
+          url,
           method,
           data: reqdata,
           success: achieve,
           error: fault,
           ajax = true,
           option = {},
+          download = false,
         } = param;
 
-        data = eoptions({ async, method, originalUrl, reqdata });
+        let {
+          origin = false,
+          cache = false,
+          credentials = true,
+          redirect = false,
+          headers = {},
+          ...opt
+        } = option;
+
+        data = options({
+          ...opt,
+          ...{ headers: headers },
+          origin,
+          cache,
+          credentials,
+          url,
+          method,
+          reqdata,
+        });
+
+        if (data.headers)
+          data.headers = {
+            ...data.headers,
+            "X-Requested-With": "XMLHttpRequest",
+          };
+        else data.headers = { "X-Requested-With": "XMLHttpRequest" };
+        let { url: furl, ...fdata } = data;
+
         if (param?.success !== undefined) data.success = param.success;
         if (param?.error !== undefined) data.error = param.error;
         if (param?.async !== undefined) async = param.async;
         if (param?.reroute !== undefined) data.reroute = param.reroute;
 
         if (async) {
-          window.fetchapi.request(data);
+          window.fetchapi.request(furl, fdata);
           return;
         } else {
-          return await window.fetchapi.request(data);
+          let response = await window.fetchapi.request(furl, fdata);
+          let result = {
+            code: 0,
+            data: null,
+            msg: "",
+            status: response.status,
+            statusText: response.statusText,
+          };
+          if (response.ok) {
+            if (param.reroute && response.url != "") {
+              window.location = response.url;
+            } else if (response.redirected && response.url != "") {
+              window.location = response.url;
+            } else if (download) {
+              result.data = await response.blob();
+            } else {
+              let resp = await response.json();
+              result = { ...result, ...resp };
+            }
+          }
+          return result;
         }
       } catch (error) {
         console.log(error);
