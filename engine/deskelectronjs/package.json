@@ -2,12 +2,11 @@
   "name": "deskelectronjs",
   "dependencies": {
     "electron-builder-squirrel-windows": "26.0.12",
-    "electron-log": "5.4.2",
-    "html-minifier-terser": "7.2.0",
-    "jsdom": "27.0.0"
+    "electron-log": "5.4.3",
+    "got": "14.6.2"
   },
   "devDependencies": {
-    "electron": "38.2.1",
+    "electron": "39.0.0",
     "electron-builder": "26.0.12"
   }
 }
