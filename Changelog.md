@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-11-06
+
+### Summary
+
+- Focus on deskelectronjs engine deployement and auto upgrade.
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+- Remove unused file from utils. Completed on 2025-11-06
+
+### Fixed
+
+- Fix deskelectronjs engine cannot auto upgrade issue. Completed on 2025-11-06
+
+### Security
+
+[1.1.2]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.2
+
 ## [1.1.1] - 2025-10-30
 
 ### Summary

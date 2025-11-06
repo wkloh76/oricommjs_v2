@@ -257,9 +257,6 @@ module.exports = (...args) => {
         return error;
       }
     };
-
-    lib.mimes = require("./handler/mimes.json");
-    lib.htmlTags = require("./handler/html-tags.json");
   } catch (error) {
     lib = error;
   } finally {

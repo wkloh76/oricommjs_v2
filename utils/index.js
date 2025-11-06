@@ -31,7 +31,6 @@ module.exports = (...args) => {
       library.utils["powershell"] = require("./powershell")(params, obj);
       library.utils["intercomm"] = require("./intercomm")(params, obj);
       library.utils["sqlitesession"] = require("./sqlitesession");
-      library.utils["html"] = require("./html")(params, obj);
       library.utils["excluded"] = [
         "powershell",
         "intercomm",

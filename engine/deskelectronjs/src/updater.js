@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024   Loh Wah Kiang
+ * Copyright (c) 2025   Loh Wah Kiang
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -40,7 +40,7 @@ module.exports = (...args) => {
       let cwdexec = util.promisify(require("child_process").exec);
 
       let addHeader = { headers: {} };
-      let sudo, tout, appupdater, packagetype, softwarepack;
+      let sudopwd, tout, appupdater, packagetype, softwarepack;
       let lib = {};
 
       /**
@@ -94,7 +94,7 @@ module.exports = (...args) => {
               )
             );
             servicetemp.Unit.Description = productName;
-            let ExecStart = `${name} --mode=${arg.mode} --engine=${arg.engine}`;
+            let ExecStart = `${name} --mode=${arg.mode} --engine=${arg.engine} --disable-gpu --no-sandbox`;
             servicetemp.Service.ExecStart = ExecStart;
             let service = ini
               .stringify(servicetemp)
@@ -105,13 +105,13 @@ module.exports = (...args) => {
               service
             );
 
-            let mv = `${sudo}mv ${path.join(
+            let mv = `echo ${sudopwd} | sudo -S  mv ${path.join(
               splitter,
               "tmp",
               `${name}.service`
             )} ${path.join(splitter, "etc", "systemd", "user")}`;
             let enservice = `systemctl --user enable ${name}.service`;
-            let glbservice = `${sudo}systemctl --global enable ${name}.service`;
+            let glbservice = `echo ${sudopwd} | sudo -S  systemctl --global enable ${name}.service`;
             await cwdexec(mv);
             await cwdexec(enservice);
             await cwdexec(glbservice);
@@ -123,7 +123,7 @@ module.exports = (...args) => {
 
       const install = async () => {
         try {
-          let cmd = `${sudo}dpkg -i ${softwarepack} > /dev/null`;
+          let cmd = `echo ${sudopwd} | sudo -S  dpkg -i ${softwarepack} > /dev/null`;
           await cwdexec(cmd);
         } catch (error) {
           logger.error(["Install error!", error.message]);
@@ -300,15 +300,15 @@ module.exports = (...args) => {
       lib.init = async (...args) => {
         let [setting] = args;
         let {
-          deskelectronjs: {
-            updater: { auth, cyclecheck, delay, silent, systemd },
-            updater,
-          },
+          deskelectronjs,
           general,
+          homedir,
           packagejson: { name },
           packagejson,
           splitter,
         } = setting;
+        let { updater } = deskelectronjs;
+        let { auth, cyclecheck, delay, silent, systemd } = updater;
 
         //print log to logger
         logger.transports.file.maxSize = 1002430; // 10M
@@ -318,12 +318,12 @@ module.exports = (...args) => {
         logger.transports.file.resolvePathFn = () =>
           path.join(app.getPath("appData"), "logs", "eupdater.log");
 
-        let conftoml = path.join(cosetting.logpath, "conf.toml");
+        let conftoml = path.join(homedir, "conf.toml");
         if (fs.existsSync(conftoml)) {
           let conf = toml.parse(fs.readFileSync(conftoml), {
             bigint: false,
           });
-          sudo = decryptor(conf.encryptpwd, cosetting.general);
+          sudopwd = decryptor(conf.encryptpwd, general);
         }
 
         if (auth !== undefined && auth != "") {
