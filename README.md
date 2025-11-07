@@ -306,6 +306,33 @@ A JavaScript project framework that provides an engine to handle desktop, web, a
 - Dependencies: The modules will bundle to the project and standby for deployment.
 - Devdependencies: The modules will bundle to project for development and testing purpose. The deployment stage can be ignore the modules.
 
+# Deployment Notes
+
+## Electronjs + Linux
+
+1. Setup application:
+
+```
+  Application
+    |- atomic
+    |- components
+    |- web_<your project>
+    |- engine
+    |    |- compmgr
+    |    |- deskelectronjs
+    |    |- sqlmanager
+    |- utils
+    |- electron-builder.yml
+    |- app.js
+    |- coresetting.toml
+    |- package.json
+    |- License
+```
+
+2. Enter to application folder and key the command `bun makeone` to ins tall node_modules.
+
+3. After node_modules ready, key the commond `node_modules/.bin/electron-builder --config` and it will build the install package and keep into `dist` folder. It will take minimun 10 minutes or above depand the pc spec.
+
 # License
 
 OriCommJS is freely distributable under the terms of the [Mulan PSL v2 license][license-url].

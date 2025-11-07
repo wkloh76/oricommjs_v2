@@ -24,6 +24,10 @@
   "devDependencies": {
     "@types/bun": "latest"
   },
+  "scripts": {
+    "makeone": "bun install --linker hoisted",
+    "makeiso": "bun install --linker isolated"
+  },
   "workspaces": [
     "engine/*",
     "atomic/atom/*",

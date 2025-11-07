@@ -148,8 +148,9 @@ module.exports = (...args) => {
 
       const download = async (...args) => {
         return new Promise(async (resolve, reject) => {
+          let [param] = args;
           try {
-            let [param] = args;
+            if (!param.url.endsWith("/")) param.url += "/";
             let options = {
               url: `${param.url}${param.path}`,
               headers: {
