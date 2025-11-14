@@ -159,7 +159,9 @@ module.exports = (...args) => {
                   userAgent: req.header("User-Agent"),
                   status: res.status,
                   responseTime: `${ms}ms`,
-                  ip: getConnInfo(cnt).remote.address,
+                  ip:
+                    req.header("x-forwarded-for") ||
+                    getConnInfo(cnt).remote.address,
                   query: JSON.stringify(req.query()),
                   body: JSON.stringify(parsebody),
                   params: JSON.stringify(req.param()),

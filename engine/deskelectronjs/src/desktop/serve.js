@@ -121,8 +121,8 @@ module.exports = (...args) => {
               };
 
               const createWindow = () => {
-                let monwidth = "";
-                let monheight = "";
+                let monwidth = winopt.width;
+                let monheight = winopt.width;
                 let { width, height } = screen.getPrimaryDisplay().workAreaSize;
                 if (width > winopt.width) monwidth = width;
                 if (height > winopt.height) monheight = height;
