@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add new parameter to ignore default force import database at atom/startupinit if the database schema does not exist. Completed on 2025-11-18
+
 ### Changed
 
 - Apply header from `x-forwarded-for` to get client ip from proxy (save to pino log) at both webbunjs and webnodehonojs engine. Completed on 2025-11-14
