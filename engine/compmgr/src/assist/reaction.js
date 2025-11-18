@@ -421,7 +421,7 @@ module.exports = (...args) => {
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
           const { JSDOM } = jsdom;
-          let [cnt, orires] = args;
+          let [cnt, orires, errflag] = args;
           try {
             let {
               options: {
@@ -503,11 +503,12 @@ module.exports = (...args) => {
                 let found = document.querySelector(el);
                 if (found) found.innerHTML = content;
               }
-
-              let preload = await get_domhtml(
-                path.join(pathname, curdir, "data", "preload.html")
-              );
-              document.querySelector("body").innerHTML += preload;
+              if (!errflag) {
+                let preload = await get_domhtml(
+                  path.join(pathname, "data", "preload.html")
+                );
+                document.querySelector("body").innerHTML += preload;
+              }
               let script = document.createElement("script");
               script.type = "text/javascript";
               script.innerHTML = `var mjs=${JSON.stringify(
@@ -923,8 +924,8 @@ module.exports = (...args) => {
           } else {
             err["status"] = errcode;
             if (errcode >= 500)
-              err["view"] = path.join(pathname, curdir, "data", "500.html");
-            else err["view"] = path.join(pathname, curdir, "data", "404.html");
+              err["view"] = path.join(pathname, "data", "500.html");
+            else err["view"] = path.join(pathname, "data", "404.html");
             let msg;
             if (typeof errmessage == "string") msg = errmessage;
             else msg = JSON.stringify(errmessage);
@@ -939,7 +940,7 @@ module.exports = (...args) => {
           if (typeof errmessage == "string") errmsg += errmessage;
           else errmsg += JSON.stringify(errmessage);
           logerr(errmsg);
-          return await processEnd(cnt, orires);
+          return await processEnd(cnt, orires, true);
         }
       };
 

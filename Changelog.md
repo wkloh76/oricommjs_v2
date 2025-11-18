@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Apply header from `x-forwarded-for` to get client ip from proxy (save to pino log) at both webbunjs and webnodehonojs engine. Completed on 2025-11-14
 - Update window default size in deskelectronjs engine. Completed on 2025-11-14
+- Standardization code in compmgr engine at assits module. The impact include webbunjs, webnodehonojs and deskelectronjs. Completed on 2025-11-18
 
 ### Deprecated
 

@@ -423,7 +423,7 @@ module.exports = async (...args) => {
       str_inject,
       utilities,
       Path: join(params[0], "src", "assist", cosetting.general.engine.type),
-      webaction: await require("./assist/web/reaction")(
+      reaction: await require("./assist/reaction")(
         [join(params[0], "src", "assist"), "web"],
         [
           {
@@ -434,17 +434,17 @@ module.exports = async (...args) => {
           cosetting,
         ]
       ),
-      deskaction: await require("./assist/desktop/reaction")(
-        [join(params[0], "src", "assist"), "desktop"],
-        [
-          {
-            ...library,
-            assist: { getContentType, identify_htmltag, mimes, str_inject },
-          },
-          sys,
-          cosetting,
-        ]
-      ),
+      // deskaction: await require("./assist/desktop/reaction")(
+      //   [join(params[0], "src", "assist"), "desktop"],
+      //   [
+      //     {
+      //       ...library,
+      //       assist: { getContentType, identify_htmltag, mimes, str_inject },
+      //     },
+      //     sys,
+      //     cosetting,
+      //   ]
+      // ),
     };
   } catch (error) {
     lib = errhandler(error);

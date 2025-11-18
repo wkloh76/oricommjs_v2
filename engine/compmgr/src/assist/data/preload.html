@@ -1,6 +1,6 @@
 <script defer>
   /**
-   * Copyright (c) 2024   Loh Wah Kiang
+   * Copyright (c) 2025   Loh Wah Kiang
    *
    * openGauss is licensed under Mulan PSL v2.
    * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -93,16 +93,17 @@
         let fn = item.split("/").pop().replace(".js", "");
         let [, atomic] = item.split("/");
         if (atomic == "atomic") {
-          if (!glib[atomic]) glib[atomic] = {}
+          if (!glib[atomic]) glib[atomic] = {};
         }
         fn = fn.replace(".", "-");
         let { default: df, ...otherlib } = await import(item);
         if (Object.keys(otherlib).length > 0) {
-          if (atomic !== "atomic")
-            glib[fn] = { ...df, ...otherlib };
+          if (atomic !== "atomic") glib[fn] = { ...df, ...otherlib };
           else glib[atomic][fn] = { ...df, ...otherlib };
+        } else {
+          if (atomic !== "atomic") glib[fn] = df;
+          else glib[atomic][fn] = df;
         }
-        else { if (atomic !== "atomic") glib[fn] = df; else glib[atomic][fn] = df; }
       }
       return;
     } catch (error) {
@@ -115,7 +116,16 @@
     const { guimaker, ...otherglib } = glib.atomic;
     const [library, sys, interfaces] = Object.values(guimaker);
     const { utils } = library;
-    const { arr_selected, datatype, handler, getNestedObject, objpick, pick_arrayofobj, pick_arrayobj2list, serialize } = utils;
+    const {
+      arr_selected,
+      datatype,
+      handler,
+      getNestedObject,
+      objpick,
+      pick_arrayofobj,
+      pick_arrayobj2list,
+      serialize,
+    } = utils;
     const { jptr } = sys;
     const atom = { ...otherglib };
 
@@ -135,23 +145,27 @@
         let task_type = datatype(task);
         if (task_type == "string") func = task;
         else if (task_type == "object") {
-          let { taskname, required: req } = task
+          let { taskname, required: req } = task;
           func = taskname;
           if (req) required = req;
         }
 
         const parallel = async (...args) => {
-          const [input, share] = args
+          const [input, share] = args;
           let process = [];
           for (let objserialize of input) {
             objserialize.func = objfuncs;
             objserialize.share = share;
-            let rtn = await new serialize(objserialize, [library, sys], showdata);
+            let rtn = await new serialize(
+              objserialize,
+              [library, sys],
+              showdata
+            );
             process.push(rtn);
             if (rtn.code != 0) break;
           }
           return process;
-        }
+        };
         for (let item of objkeys) {
           let getfn = getNestedObject(htmlworkflow, `${item}.${func}`);
           if (getfn) {
@@ -180,21 +194,23 @@
             let code = "";
             for (let chkrtnproc of rtnprocess) {
               if (datatype(chkrtnproc) == "array") {
-                let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"])
-                let chkcode = pick_arrayobj2list(pickarrobj, ["code"]).code.join("");
+                let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"]);
+                let chkcode = pick_arrayobj2list(pickarrobj, [
+                  "code",
+                ]).code.join("");
                 let validcode = "0".padStart(chkrtnproc.length, "0");
                 if (chkcode != validcode) code += `[${chkcode}],`;
               } else {
-                if (chkrtnproc["code"] != 0) code += `[${chkrtnproc["code"].toString()}],`;
+                if (chkrtnproc["code"] != 0)
+                  code += `[${chkrtnproc["code"].toString()}],`;
               }
             }
 
             if (code != "") {
-              output.code = -1
-              output.msg = code
-            };
-            output.data = rtnprocess
-
+              output.code = -1;
+              output.msg = code;
+            }
+            output.data = rtnprocess;
           } else {
             output.code = -1;
 
@@ -209,19 +225,23 @@
     };
 
     const alter_arr2str = (...args) => {
-      const [arr, front, back] = args
+      const [arr, front, back] = args;
       const inistr = "";
       const result = arr.reduce(
         (accumulator, cval) => accumulator + `${front}${cval}${back}`,
-        inistr,
+        inistr
       );
-      return result.toString().trim()
-    }
+      return result.toString().trim();
+    };
 
     const preproc = async (...args) => {
       const [event, showdata = true] = args;
       let attrs = event.currentTarget.attributes;
-      let clsname = alter_arr2str(event.currentTarget.className.split(" "), ".", " ");
+      let clsname = alter_arr2str(
+        event.currentTarget.className.split(" "),
+        ".",
+        " "
+      );
       let tagName = event.currentTarget.tagName;
       let id = `#${event.currentTarget.id}`;
       let func = attrs["func"].nodeValue;
@@ -233,13 +253,13 @@
 
       for (let [key, valobjevent] of Object.entries(webengine.trigger)) {
         let evtkeys = Object.keys(valobjevent);
-        let { code, data, msg } = arr_selected(qslist, evtkeys)
+        let { code, data, msg } = arr_selected(qslist, evtkeys);
         if (data && data.length == 1) {
           let { attr } = valobjevent[data[0]];
           if (attr) {
             if (attr.required) {
               let { func: fn, required } = attr;
-              func = { taskname: fn, required: required }
+              func = { taskname: fn, required: required };
             }
           }
         }
@@ -261,7 +281,8 @@
               let { default: df } = await import(fnpath);
               if (df) {
                 let { load, register, ...other } = df;
-                if (htmlengine[name][fn]) htmlengine[name][fn] = { ...htmlengine[name][fn], ...other }
+                if (htmlengine[name][fn])
+                  htmlengine[name][fn] = { ...htmlengine[name][fn], ...other };
                 else htmlengine[name][fn] = other;
                 if (load) {
                   let helper;
@@ -291,7 +312,7 @@
     };
 
     const convtrigger = (...args) => {
-      const [trigger] = args
+      const [trigger] = args;
       let objevents = handler.winevents;
       for (let [name, value] of Object.entries(trigger)) {
         let fn = getNestedObject(html_objevents, name);
@@ -301,7 +322,7 @@
         }
       }
       return objevents;
-    }
+    };
 
     if (webengine) {
       await load(webengine);
@@ -313,8 +334,13 @@
   window.addEventListener("DOMContentLoaded", async () => {
     if (mjs) {
       if (mjs.lib.length > 0) await loadlib(mjs.lib);
-       if (Object.keys(mjs.initialize.initialize).length > 0)
-        await initialize(mjs.initialize.initialize);
+      if (mjs.initialize.initialize) {
+        if (Object.keys(mjs.initialize.initialize).length > 0)
+          await initialize(mjs.initialize.initialize);
+      } else {
+        if (Object.keys(mjs.initialize).length > 0)
+          await initialize(mjs.initialize);
+      }
     }
     await start();
   });

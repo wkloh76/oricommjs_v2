@@ -65,16 +65,10 @@ module.exports = (...args) => {
        */
       const establish = async (...args) => {
         const [setting, compmgr] = args;
-        const { general, genernalexcludefile, logpath, share, webbunjs } =
-          setting;
+        const { general, genernalexcludefile, logpath, share } = setting;
         const { savestore, store, verbose, ...setsession } =
           setting[setting.args.engine].session;
-        const {
-          assets,
-          atomic,
-          deskaction: reaction,
-          utilities,
-        } = compmgr.assist;
+        const { assets, atomic, reaction, utilities } = compmgr.assist;
 
         try {
           // Setup server log
