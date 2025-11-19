@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bug fix in atomic/atom/startupinit at sqlite3 method. Completed on 2025-11-19
+
 ### Security
 
 [1.1.4]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.4

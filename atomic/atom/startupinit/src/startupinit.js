@@ -31,15 +31,13 @@ module.exports = async (...args) => {
       let lib = {};
 
       lib["sqlite3"] = async (...args) => {
-        const [[setting, compname], pathname, dbengine] = args;
+        const [[setting, compname, restore = false], pathname, dbengine] = args;
         let output = handler.dataformat;
         try {
           let err;
           let connection = {};
           for (let [kconconf, conconf] of Object.entries(setting.db)) {
-            for (let [key, dbconf, restore = false] of Object.entries(
-              conconf
-            )) {
+            for (let [key, dbconf] of Object.entries(conconf)) {
               dbconf["engine"] = "sqlite3";
               dbconf["setting"] = setting;
               dbconf["dbgroup"] = kconconf;

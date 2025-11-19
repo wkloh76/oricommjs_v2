@@ -15,7 +15,7 @@
  */
 "use strict";
 /**
- * The main module in smfetch
+ * The main module in startupinit
  * @module index
  */
 module.exports = (...args) => {
