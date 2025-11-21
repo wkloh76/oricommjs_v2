@@ -103,6 +103,7 @@ module.exports = (...args) => {
           {
             options: {
               css: { atomic: [], locally: [], other: [], remotely: [] },
+              CSSE: {},
               download: {
                 content: "",
                 ctype: "",

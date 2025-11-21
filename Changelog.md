@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add new parameter to ignore default force import database at atom/startupinit if the database schema does not exist. Completed on 2025-11-18
+- Add Client and Server Side Event to atomic/atom. In progress
 
 ### Changed
 

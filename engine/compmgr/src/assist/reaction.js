@@ -14,16 +14,15 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
-
-const { minify } = require("html-minifier-terser");
-const jsdom = require("jsdom");
-
 /**
  * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
  * @module web_reaction
  */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
+    const { minify } = require("html-minifier-terser");
+    const jsdom = require("jsdom");
+
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
@@ -426,6 +425,7 @@ module.exports = (...args) => {
             let {
               options: {
                 css,
+                CSSE,
                 download,
                 html,
                 injectionjs,
@@ -445,10 +445,14 @@ module.exports = (...args) => {
             let isredirect = handler.check_empty(redirect);
             let isjson = handler.check_empty(json);
             let ishtml = handler.check_empty(html);
+
             if (!handler.check_empty(download.content))
               resolve(downloadproc(cnt, download));
 
-            // let iscss = handler.check_empty(options.css);
+            if (!handler.handler.check_empty(CSSE))
+              resolve(() => {
+                CSSE.func(CSSE.params);
+              });
 
             if (!isredirect) {
               if (orires.isfetchreq) resolve(cnt.json({ redirect }, 301));
@@ -590,6 +594,7 @@ module.exports = (...args) => {
         if (!handler.check_empty(options.json)) return false;
         if (!handler.check_empty(options.html)) return false;
         if (!handler.check_empty(options.download.content)) return false;
+        if (!handler.check_empty(options.CSSE)) return false;
         return true;
       };
 

@@ -14,10 +14,6 @@
  * -------------------------------------------------------------------------
  */
 "use strict";
-const util = require("util");
-const os = require("os");
-const stream = require("stream");
-
 /**
  * The submodule of auto update execute program
  * @module src__desktop_session
