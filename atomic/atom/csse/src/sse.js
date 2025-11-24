@@ -27,13 +27,17 @@ module.exports = async (...args) => {
     try {
       let _SSEClient = {};
 
-      const SSEStream = async (...args) => {
+      const SSEStream = (...args) => {
         const [params] = args;
-        const { id, ...otherprm } = params;
+        const { id, domain, ...otherprm } = params;
         const stream = new ReadableStream({
           start(controller) {
-            if (!Object.keys(_SSEClient).includes(id))
-              _SSEClient[id] = { controller, ...otherprm };
+            if (!_SSEClient[domain])
+              _SSEClient[domain] = {
+                controller,
+                queue: [{ [id]: { ...otherprm } }],
+              };
+            else _SSEClient[domain].queue.push({ [id]: { ...otherprm } });
 
             // Send initial connection message
             const data = `data: ${JSON.stringify({

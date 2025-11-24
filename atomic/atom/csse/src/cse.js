@@ -35,13 +35,13 @@ module.exports = async (...args) => {
       class ClientSE {
         constructor(...args) {
           const [params, obj] = args;
-          const { param, url } = params;
+          const { param, cseurl } = params;
           const { id } = param;
           this.obj = obj;
           this.cseid = id;
           let searchurl = `?${new URLSearchParams(param).toString()}`;
 
-          this.es = new EventSource(`${url}${searchurl}`);
+          this.es = new EventSource(`${cseurl}${searchurl}`);
           return {
             onstatus: this.#status,
           };
@@ -83,11 +83,19 @@ module.exports = async (...args) => {
       const CSEStream = (...args) => {
         const [params] = args;
         const { csse } = params;
-        const { cseurl: url, ...param } = csse;
+        const { csseid: id, domain, cseurl, ...otherprm } = csse;
         let output = handler.dataformat;
         try {
-          _CSEClient[param.id] = new ClientSE({ param, url }, obj);
-          _CSEClient[param.id].onstatus = CSEStatus;
+          if (!_CSEClient[domain])
+            _CSEClient[domain] = {
+              sender: new ClientSE({
+                param: { domain, id, ...otherprm },
+                cseurl,
+              }),
+              onstatus: CSEStatus,
+              queue: [{ [id]: { ...otherprm } }],
+            };
+          else _CSEClient[domain].queue.push({ [id]: { ...otherprm } });
         } catch (error) {
           output = errhandler(error);
         } finally {
@@ -95,24 +103,6 @@ module.exports = async (...args) => {
         }
       };
 
-      const message = async (...args) => {
-        const [params] = args;
-        const { cmd, id, message } = params;
-        if (_CSEClient[id]) {
-          const data = `data: ${JSON.stringify(message)}`;
-          _CSEClient[id].controller.enqueue(data);
-          if (cmd == "destroy") emitter.emit("destroy", id);
-        }
-      };
-
-      const destroy = (...args) => {
-        const [params] = args;
-        const { id } = params;
-        if (_CSEClient[id]) {
-          _CSEClient[id].controller.destroy();
-          delete _CSEClient[id];
-        }
-      };
       const validate = (...args) => {
         const [params] = args;
         if (_CSEClient[params]) return true;
@@ -123,8 +113,6 @@ module.exports = async (...args) => {
         get count() {
           return Object.keys(_CSEClient).length;
         },
-        destroy,
-        message,
         CSEStream,
         validate,
       });
