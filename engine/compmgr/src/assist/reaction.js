@@ -449,7 +449,7 @@ module.exports = (...args) => {
             if (!handler.check_empty(download.content))
               resolve(downloadproc(cnt, download));
 
-            if (!handler.handler.check_empty(CSSE))
+            if (!handler.check_empty(CSSE))
               resolve(() => {
                 CSSE.func(CSSE.params);
               });

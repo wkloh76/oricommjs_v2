@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bug fix in atomic/atom/startupinit at sqlite3 method. Completed on 2025-11-19
+- Bug fix in compmgr engine. Completed on 2025-11-25
 
 ### Security
 
