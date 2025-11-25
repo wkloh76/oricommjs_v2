@@ -34,10 +34,9 @@ module.exports = async (...args) => {
       let _CSEClient = {};
       class ClientSE {
         constructor(...args) {
-          const [params, obj] = args;
+          const [params] = args;
           const { param, cseurl } = params;
           const { id } = param;
-          this.obj = obj;
           this.cseid = id;
           let searchurl = `?${new URLSearchParams(param).toString()}`;
 
@@ -83,19 +82,23 @@ module.exports = async (...args) => {
       const CSEStream = (...args) => {
         const [params] = args;
         const { csse } = params;
-        const { csseid: id, domain, cseurl, ...otherprm } = csse;
+        const { csseid: id, domain, cseurl } = csse;
         let output = handler.dataformat;
         try {
           if (!_CSEClient[domain])
             _CSEClient[domain] = {
               sender: new ClientSE({
-                param: { domain, id, ...otherprm },
+                param: { domain, id },
                 cseurl,
               }),
               onstatus: CSEStatus,
-              queue: [{ [id]: { ...otherprm } }],
+              queue: [id],
+              timestamp,
             };
-          else _CSEClient[domain].queue.push({ [id]: { ...otherprm } });
+          else {
+            _CSEClient[domain].queue.push(id);
+            _CSEClient[domain].timestamp = timestamp;
+          }
         } catch (error) {
           output = errhandler(error);
         } finally {
@@ -103,18 +106,12 @@ module.exports = async (...args) => {
         }
       };
 
-      const validate = (...args) => {
-        const [params] = args;
-        if (_CSEClient[params]) return true;
-        return false;
-      };
-
       resolve({
         get count() {
           return Object.keys(_CSEClient).length;
         },
+        message: CSEStatus,
         CSEStream,
-        validate,
       });
     } catch (error) {
       reject(error);

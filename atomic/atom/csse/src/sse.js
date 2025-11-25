@@ -29,28 +29,34 @@ module.exports = async (...args) => {
 
       const SSEStream = (...args) => {
         const [params] = args;
-        const { id, domain, ...otherprm } = params;
+        const { id, domain } = params;
         const stream = new ReadableStream({
           start(controller) {
+            let timestamp = new Date().toISOString();
             if (!_SSEClient[domain])
               _SSEClient[domain] = {
                 controller,
-                queue: [{ [id]: { ...otherprm } }],
+                queue: [id],
+                timestamp,
               };
-            else _SSEClient[domain].queue.push({ [id]: { ...otherprm } });
+            else {
+              _SSEClient[domain].queue.push(id);
+              _SSEClient[domain].timestamp = timestamp;
+            }
 
             // Send initial connection message
             const data = `data: ${JSON.stringify({
               type: "connected",
               message: "SSE connection established successfully",
+              domain,
               clientId: id,
-              timestamp: new Date().toISOString(),
+              timestamp,
             })}\n\n`;
             controller.enqueue(data);
 
             // 使用更兼容的方式处理连接关闭
             const cleanup = () => {
-              delete _SSEClient[id];
+              delete _SSEClient[domain];
             };
 
             // 监听流结束事件
@@ -82,37 +88,38 @@ module.exports = async (...args) => {
 
       const message = async (...args) => {
         const [params] = args;
-        const { cmd, id, message } = params;
-        if (_SSEClient[id]) {
-          const data = `data: ${JSON.stringify(message)}`;
-          _SSEClient[id].controller.enqueue(data);
-          if (cmd == "destroy") emitter.emit("destroy", id);
+        const { cmd, domain, id, message } = params;
+        if (_SSEClient[domain]) {
+          const data = `data: ${JSON.stringify(params)}`;
+          _SSEClient[domain].controller.enqueue(data);
+          if (cmd == "destroy") emitter.emit("destroy", [domain, id]);
         }
       };
 
       const destroy = (...args) => {
-        const [params] = args;
-        const { id } = params;
-        if (_SSEClient[id]) {
-          _SSEClient[id].controller.destroy();
-          delete _SSEClient[id];
+        const [domain, id] = args;
+        if (_SSEClient[domain]) {
+          if (_SSEClient[domain].queue.include(id))
+            _SSEClient[domain].queue = _SSEClient[domain].queue.filter(
+              (queue) => queue !== id
+            );
+
+          if (_SSEClient[domain].queue.length == 0) {
+            _SSEClient[domain].controller.destroy();
+            delete _SSEClient[domain];
+          }
         }
       };
-      const validate = (...args) => {
-        const [params] = args;
-        if (_SSEClient[params]) return true;
-        return false;
-      };
+     
 
       emitter.on("destroy", destroy);
       resolve({
         get count() {
           return Object.keys(_SSEClient).length;
         },
-        destroy,
         message,
         SSEStream,
-        validate,
+       
       });
     } catch (error) {
       reject(error);
