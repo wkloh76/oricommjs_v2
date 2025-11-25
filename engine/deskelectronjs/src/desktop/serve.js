@@ -52,6 +52,8 @@ module.exports = (...args) => {
         },
       },
     ]);
+    // // 谨慎使用GPU加速（根据应用类型）
+    app.disableHardwareAcceleration();
     return {
       serve: async (...args) => {
         const [params] = args;
@@ -90,6 +92,7 @@ module.exports = (...args) => {
                     originalUrl: completeRelativeUrl(
                       new URL(request.url).pathname
                     ),
+                    isresource: true,
                   };
 
                   let results = await onfetch(
@@ -147,6 +150,8 @@ module.exports = (...args) => {
                   },
                 });
 
+                // 禁用拼写检查
+                win.webContents.session.setSpellCheckerEnabled(false);
                 win.webContents.session.webRequest.onBeforeSendHeaders(
                   (details, callback) => {
                     callback({
@@ -250,6 +255,12 @@ module.exports = (...args) => {
                 winlist.push(win);
               };
 
+              // main.js
+              app.commandLine.appendSwitch(
+                "js-flags",
+                "--max-semi-space-size=64"
+              );
+
               app.removeAllListeners("ready");
               app.removeAllListeners("window-all-closed");
               app.removeAllListeners("activate");
@@ -267,6 +278,17 @@ module.exports = (...args) => {
                 protocol.handle(filepath, resource);
                 createWindow();
               });
+
+              // // Monitor process memory leakage
+              // let windowCount = 0;
+              // setInterval(() => {
+              //   const { heapUsed, heapTotal } = process.memoryUsage();
+              //   console.log(
+              //     `[主进程] 窗口数: ${windowCount} | 堆内存: ${Math.round(
+              //       heapUsed / 1024 / 1024
+              //     )}MB / ${Math.round(heapTotal / 1024 / 1024)}MB`
+              //   );
+              // }, 5000);
 
               // await app.whenReady();
               app.on("window-all-closed", () => {

@@ -31,14 +31,7 @@ module.exports = (...args) => {
     class sessionMiddleware {
       constructor(...args) {
         const [params, sess] = args;
-        const {
-          // autoExtendExpiration = true,
-          // cookieOptions,
-          // encryptionKey,
-          // expireAfterSeconds,
-          // sessionCookieName = "session",
-          store,
-        } = params;
+        const { expireAfterSeconds, store } = params;
         this._db = store;
         this._sess = sess;
         this._sessconf = params;
@@ -51,7 +44,7 @@ module.exports = (...args) => {
           _expire: null,
         };
         this._timeout;
-        this._timer = 60000;
+        this._timer = expireAfterSeconds * 1000;
         this.init();
 
         return {
@@ -59,14 +52,6 @@ module.exports = (...args) => {
           Expired: this.checkExpire,
           Clear: this.clearSession,
         };
-      }
-
-      async autoexpired(...args) {
-        const [obj, tm] = args;
-        await obj();
-        clearTimeout(tm);
-        tm = setTimeout(await this.autoexpired(obj, tm), tm);
-        return;
       }
 
       async init() {
@@ -77,10 +62,7 @@ module.exports = (...args) => {
           let cookiedata = this.initcookie(this._id);
           await this.createSession(cookiedata);
         }
-        this._timeout = setTimeout(
-          await this.autoexpired(this.checkExpire, this._timeout),
-          this._timer
-        );
+        this._timeout = setTimeout(await this.checkExpire, this._timer);
         return;
       }
 
@@ -136,6 +118,7 @@ module.exports = (...args) => {
 
       checkExpire = async () => {
         let output = false;
+        clearTimeout(this._timeout);
         let name = this._sessconf.cookieOptions.name;
         let cookiedata = this.initcookie(this._id);
         let sess = await this.getSession({ name });
@@ -149,6 +132,7 @@ module.exports = (...args) => {
             output = true;
           }
         }
+        setTimeout(await this.checkExpire, this._timer);
         return output;
       };
 

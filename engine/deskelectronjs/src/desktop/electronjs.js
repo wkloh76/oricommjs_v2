@@ -93,7 +93,7 @@ module.exports = (...args) => {
           let done = false;
 
           let cnt = {
-            req: { raw: { headers: {} } },
+            req: { raw: { headers: {} }, isresource: false },
             res: {
               locals: {},
               setHeader: function (...args) {
@@ -132,7 +132,7 @@ module.exports = (...args) => {
               },
             },
           };
-
+          if (params.isresource) cnt.req.isresource = params.isresource;
           cnt.req.path = _url.pathname;
           cnt.req.method = params.method;
           cnt.req.query = () => {
@@ -179,12 +179,12 @@ module.exports = (...args) => {
                 intercomm.fire("deskinit", ["data", html]);
                 break;
             }
-            await cnt.req._checkSession(cnt.req);
+            if (!cnt.req.isresource) await cnt.req._checkSession(cnt.req);
             return html;
           };
           cnt.body = async (...args) => {
             const [content, options] = args;
-            await cnt.req._checkSession(cnt.req);
+            if (!cnt.req.isresource) await cnt.req._checkSession(cnt.req);
             return { content, options };
           };
           cnt.text = (...args) => {
@@ -194,7 +194,7 @@ module.exports = (...args) => {
           cnt.redirect = async (...args) => {
             const [url, status] = args;
             await reproduce(url, status);
-            await cnt.req._checkSession(cnt.req);
+            if (!cnt.req.isresource) await cnt.req._checkSession(cnt.req);
             return;
           };
           cnt.json = async (...args) => {
@@ -333,10 +333,14 @@ module.exports = (...args) => {
           let result;
           for (let i = 0; i < _proc.length; i++) {
             _procnum = i;
-            result = await this.inspector(_proc[i], [cnt, next]);
-            if (result) {
-              if (result._session) _cachesess = result._session;
-              _result.push(result);
+            if (_proc[i].name == "middleware" && cnt.req.isresource)
+              _result.push({});
+            else {
+              result = await this.inspector(_proc[i], [cnt, next]);
+              if (result) {
+                if (result._session) _cachesess = result._session;
+                _result.push(result);
+              }
             }
             if (done) break;
           }
