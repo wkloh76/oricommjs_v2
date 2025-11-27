@@ -449,10 +449,7 @@ module.exports = (...args) => {
             if (!handler.check_empty(download.content))
               resolve(downloadproc(cnt, download));
 
-            if (!handler.check_empty(CSSE))
-              resolve(() => {
-                CSSE.func(CSSE.params);
-              });
+            if (!handler.check_empty(CSSE)) resolve(cnt.body(CSSE[0], CSSE[1]));
 
             if (!isredirect) {
               if (orires.isfetchreq) resolve(cnt.json({ redirect }, 301));
