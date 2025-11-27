@@ -26,24 +26,23 @@ module.exports = async (...args) => {
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
     const { utils } = library;
-    const { errhandler, handler, sandbox } = utils;
-    const { path } = sys;
-    const { join } = path;
+    const { errhandler, handler } = utils;
 
     try {
       let _CSEClient = {};
+      let message;
       class ClientSE {
         constructor(...args) {
-          const [params] = args;
-          const { param, cseurl } = params;
+          const [params, onstatus] = args;
+          const { param, csseurl } = params;
           const { id } = param;
           this.cseid = id;
+          this.onstatus = onstatus;
           let searchurl = `?${new URLSearchParams(param).toString()}`;
 
-          this.es = new EventSource(`${cseurl}${searchurl}`);
-          return {
-            onstatus: this.#status,
-          };
+          this.es = new EventSource(`${csseurl}${searchurl}`);
+          this.proc();
+          return;
         }
 
         proc() {
@@ -52,14 +51,11 @@ module.exports = async (...args) => {
           };
 
           this.es.onmessage = async (event) => {
-            const { func, ...data } = JSON.parse(event.data);
-            if (func == "terminate") {
+            const { cmd, ...data } = JSON.parse(event.data);
+            this.#status("message", data);
+            if (cmd == "destroy") {
               this.es.close();
-              this.#status("terminate");
-            } else {
-              let fn = this.obj[func];
-              if (fn) await sandbox(fn, data);
-              else this.#status("error", "Undefind function!");
+              this.#status("message", cmd);
             }
           };
 
@@ -69,33 +65,38 @@ module.exports = async (...args) => {
         }
 
         #status = (channel, data) => {
-          return [this.cseid, channel, data];
+          this.onstatus(this.cseid, channel, data);
         };
       }
 
-      const CSEStatus = (...args) => {
+      let CSEStatus = (...args) => {
         const [id, channel, data = ""] = args;
-        if (channel == "terminate") delete _CSEClient[id];
-        console.log(channel, ":", data);
+        if (channel == "destroy") delete _CSEClient[id];
+        if (message) message(...args);
       };
 
       const CSEStream = (...args) => {
-        const [params] = args;
+        const [params, onstatus] = args;
         const { csse } = params;
-        const { csseid: id, domain, cseurl } = csse;
+        const { csseid: id, domain, csseurl } = csse;
+        const timestamp = new Date().toISOString();
         let output = handler.dataformat;
+        if (!message) message = onstatus;
         try {
-          if (!_CSEClient[domain])
-            _CSEClient[domain] = {
-              sender: new ClientSE({
+          if (!_CSEClient[domain]) {
+            let sender = new ClientSE(
+              {
                 param: { domain, id },
-                cseurl,
-              }),
-              onstatus: CSEStatus,
+                csseurl,
+              },
+              CSEStatus
+            );
+            _CSEClient[domain] = {
+              sender,
               queue: [id],
               timestamp,
             };
-          else {
+          } else {
             _CSEClient[domain].queue.push(id);
             _CSEClient[domain].timestamp = timestamp;
           }
@@ -110,7 +111,6 @@ module.exports = async (...args) => {
         get count() {
           return Object.keys(_CSEClient).length;
         },
-        message: CSEStatus,
         CSEStream,
       });
     } catch (error) {

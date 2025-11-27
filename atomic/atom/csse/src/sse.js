@@ -30,9 +30,10 @@ module.exports = async (...args) => {
       const SSEStream = (...args) => {
         const [params] = args;
         const { id, domain } = params;
+        const timestamp = new Date().toISOString();
+
         const stream = new ReadableStream({
           start(controller) {
-            let timestamp = new Date().toISOString();
             if (!_SSEClient[domain])
               _SSEClient[domain] = {
                 controller,
@@ -74,43 +75,44 @@ module.exports = async (...args) => {
             console.log("SSE stream cancelled");
           },
         });
-
-        return new Response(stream, {
-          headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            Connection: "keep-alive",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Cache-Control",
+        return [
+          stream,
+          {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Headers": "Cache-Control",
+            },
           },
-        });
+        ];
       };
 
       const message = async (...args) => {
         const [params] = args;
-        const { cmd, domain, id, message } = params;
+        const { cmd, domain, id } = params;
         if (_SSEClient[domain]) {
-          const data = `data: ${JSON.stringify(params)}`;
-          _SSEClient[domain].controller.enqueue(data);
-          if (cmd == "destroy") emitter.emit("destroy", [domain, id]);
+          let { controller } = _SSEClient[domain];
+          if (controller) {
+            const data = `data: ${JSON.stringify(params)}\n\n`;
+            controller.enqueue(data);
+            if (cmd == "destroy") emitter.emit("destroy", domain, id);
+          }
         }
       };
 
       const destroy = (...args) => {
         const [domain, id] = args;
         if (_SSEClient[domain]) {
-          if (_SSEClient[domain].queue.include(id))
+          if (_SSEClient[domain].queue.includes(id))
             _SSEClient[domain].queue = _SSEClient[domain].queue.filter(
               (queue) => queue !== id
             );
 
-          if (_SSEClient[domain].queue.length == 0) {
-            _SSEClient[domain].controller.destroy();
-            delete _SSEClient[domain];
-          }
+          if (_SSEClient[domain].queue.length == 0) delete _SSEClient[domain];
         }
       };
-     
 
       emitter.on("destroy", destroy);
       resolve({
@@ -119,7 +121,6 @@ module.exports = async (...args) => {
         },
         message,
         SSEStream,
-       
       });
     } catch (error) {
       reject(error);
