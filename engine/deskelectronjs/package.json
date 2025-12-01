@@ -3,7 +3,7 @@
   "dependencies": {
     "electron-builder-squirrel-windows": "26.0.12",
     "electron-log": "5.4.3",
-    "got": "14.6.4"
+    "got": "14.6.5"
   },
   "devDependencies": {
     "electron": "39.2.3",

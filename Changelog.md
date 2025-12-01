@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update all package.json dependencies. Completed on 2025-12-01
+- Change the sequence in catch at app.js. Completed on 2025-12-01
+
 ### Deprecated
 
 ### Removed

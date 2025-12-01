@@ -657,7 +657,7 @@
       `done app (${sysmodule.dayjs().format("DD-MM-YYYY HH:mm:ss")})`
     );
   } catch (error) {
-    sysmodule.logerr.error(error.stack);
     console.log(error.stack);
+    sysmodule.logerr.error(error.stack);
   }
 })();
