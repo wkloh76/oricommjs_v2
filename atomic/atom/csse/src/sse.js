@@ -26,6 +26,9 @@ module.exports = async (...args) => {
 
     try {
       let _SSEClient = {};
+      let awake_flag = false;
+      let awake_timeout,
+        _timer = 5 * 1000;
 
       const SSEStream = (...args) => {
         const [params] = args;
@@ -44,7 +47,9 @@ module.exports = async (...args) => {
               _SSEClient[domain].queue.push(id);
               _SSEClient[domain].timestamp = timestamp;
             }
-
+            if (!awake_flag) awake_flag = true;
+            clearTimeout(awake_timeout);
+            awake_timeout = setTimeout(heartbeat, _timer);
             // Send initial connection message
             const data = `data: ${JSON.stringify({
               type: "connected",
@@ -87,6 +92,26 @@ module.exports = async (...args) => {
             },
           },
         ];
+      };
+
+      const heartbeat = async () => {
+        clearTimeout(awake_timeout);
+        if (Object.keys(_SSEClient).length > 0) {
+          for (let [k, v] of Object.entries(_SSEClient)) {
+            let { controller } = v;
+            if (controller) {
+              let msg = {
+                cmd: "heartbeat",
+                domain: k,
+                message: "Still alive...with a strong heartbeat",
+                timestamp: new Date().toISOString(),
+              };
+              const data = `data: ${JSON.stringify(msg)}\n\n`;
+              controller.enqueue(data);
+            }
+          }
+          awake_timeout = setTimeout(heartbeat, _timer);
+        } else awake_flag = false;
       };
 
       const message = async (...args) => {

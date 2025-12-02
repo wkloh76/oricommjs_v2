@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bug fix in compmgr engine. Completed on 2025-11-26
+- Bug fix in sse at csse atom which is no responding cause client alway reconnected. Completed on 2025-12-02
 
 ### Security
 
