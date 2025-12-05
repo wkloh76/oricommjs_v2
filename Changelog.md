@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug fix in compmgr engine. Completed on 2025-11-26
 - Bug fix in sse at csse atom which is no responding cause client alway reconnected. Completed on 2025-12-02
+- Bug fix in deskfetch function at atom/smfetch which unable carry on the GET method to backend api. Completed on 2025-12-05
 
 ### Security
 

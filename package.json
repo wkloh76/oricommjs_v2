@@ -15,7 +15,7 @@
     "chalk": "5.6.2",
     "dayjs": "1.11.19",
     "ini": "6.0.0",
-    "inquirer": "13.0.1",
+    "inquirer": "13.0.2",
     "multer": "1.4.5-lts.2",
     "pino": "10.1.0",
     "pino-roll": "4.0.0",

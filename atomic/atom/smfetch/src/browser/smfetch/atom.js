@@ -114,41 +114,57 @@ export default await (() => {
      */
     const eoptions = (...args) => {
       let [options] = args;
-      let { method, originalUrl, reqdata, ...output } = options;
-      output = {
-        ...output,
-        body: {},
-        method,
-        originalUrl,
-        query: {},
-      };
+      let { url, cache, credentials, reqdata, origin, ...output } = options;
 
-      switch (options.method.toUpperCase()) {
+      switch (output.method) {
         case "GET":
+          let myUrl = new URL(url);
+          if (reqdata !== undefined) {
+            if (typeof reqdata == "object")
+              myUrl.search = new URLSearchParams(
+                JSON.parse(JSON.stringify(reqdata))
+              ).toString();
+            else if (typeof reqdata == "string") myUrl.search = reqdata;
+          }
+
           output["query"] = {};
-          if (options?.["dataType"] === "json") {
-            if (typeof options.data == "object") output["param"] = data;
-          } else if (typeof options.data == "string") {
-            const mySearchParams = new URLSearchParams(options.data);
-            let myobj = {};
-            for (const [key, value] of mySearchParams.entries()) {
-              myobj[key] = value;
+          for (const [key, value] of myUrl.searchParams.entries()) {
+            output["query"][key] = value;
+          }
+
+          url = myUrl.href;
+          break;
+
+        default:
+          if (typeof reqdata == "object") {
+            if (reqdata instanceof FormData) output["body"] = reqdata;
+            else {
+              output["headers"] = {
+                ...output["headers"],
+                ...{
+                  "Content-Type": "application/json",
+                },
+              };
+              output["body"] = JSON.stringify(reqdata);
             }
-            output["query"] = myobj;
+          } else if (typeof reqdata == "string") {
+            output["headers"] = {
+              ...output["headers"],
+              ...{
+                "Content-Type": "text/plain;charset=UTF-8",
+              },
+            };
+            output["body"] = reqdata;
           }
           break;
-
-        case "POST":
-          if (reqdata instanceof FormData) {
-            for (const [key, val] of reqdata.entries())
-              output["body"][key] = val;
-          } else if (reqdata.files) {
-            output = { ...output, ...reqdata };
-            // output["files"] = reqdata.files;
-          } else output["body"] = reqdata;
-
-          break;
       }
+      output["url"] = url;
+      if (credentials) output["credentials"] = "same-origin";
+      else output["credentials"] = "include";
+      if (origin) output["mode"] = "cors";
+      else output["mode"] = "same-origin";
+      if (cache) output["cache"] = "default";
+      else output["cache"] = "no-cache";
       return output;
     };
 
@@ -316,7 +332,7 @@ export default await (() => {
           ...opt
         } = option;
 
-        data = options({
+        data = eoptions({
           ...opt,
           ...{ headers: headers },
           origin,
