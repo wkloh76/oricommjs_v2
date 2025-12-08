@@ -462,10 +462,8 @@ module.exports = class {
       let [compsetting] = compname.split("_");
       let setting = this.cosetting;
       let tomlpath = join(prjsrc, `${compsetting}.toml`);
-      // let reaction;
-      // if (setting.general.engine.type == "desktop") reaction = deskaction;
-      // else if (setting.general.engine.type == "web") reaction = webaction;
-      // else if (setting.general.engine.type == "app") reaction = appaction;
+      let pkgcomp = join(prjsrc, `package.json`);
+      components.package = {};
 
       if (existsSync(tomlpath)) {
         let psetting = toml.parse(readFileSync(tomlpath), {
@@ -476,6 +474,10 @@ module.exports = class {
         setting = mergeDeep(setting, settingtmp);
         setting[mode] = mergeDeep(setting[mode], psetting[mode]);
         setting["ongoing"][compname] = mergeDeep({}, psetting[mode]);
+      }
+      if (existsSync(pkgcomp)) {
+        let pkg = JSON.parse(readFileSync(pkgcomp));
+        components.package[compname] = pkg;
       }
 
       let comp_engine = engine[setting.general.engine.name];
