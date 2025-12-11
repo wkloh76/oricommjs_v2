@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Client and Server Side Event to atomic/atom complete design. Completed on 2025-11-27
 - Add load components package.json content into cengine class at compmgr engine. Completed on 2025-12-07
 - Add shared to both toml file in compmgr engine which allow web and desktop service to access local file (css,js and etc) like `public/assest` feature. Completed on 2025-12-11
+- Design workflow engine. In progress
 
 ### Changed
 
