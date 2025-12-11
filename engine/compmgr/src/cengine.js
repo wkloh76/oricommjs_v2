@@ -489,11 +489,23 @@ module.exports = class {
       let share = {};
       share[`/${compname}/public`] = join(prjsrc, "src", "public");
       share[`/${compname}/less`] = {
-        fn: "onless",
-        checkpoint: `${compname}/less`,
         content: less,
         filepath: join(prjsrc, "src", "public", "assets", "less"),
       };
+
+      share[`/${compname}/less`] = {
+        content: less,
+        filepath: join(prjsrc, "src", "public", "assets", "less"),
+      };
+
+      if (
+        setting.ongoing[compname].shared &&
+        Object.keys(setting.ongoing[compname].shared).length > 0
+      ) {
+        for (let [k, v] of Object.entries(setting.ongoing[compname].shared))
+          share[`${v}/${k}`] = join(v, k);
+      }
+
       setting.share.public[compname] = share;
 
       components[compname] = this.compstruct;

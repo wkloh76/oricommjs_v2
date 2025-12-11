@@ -1,0 +1,9 @@
+[Production]
+defaulturl = ""
+remote = { cdn = "" }
+shared={}
+
+[debug]
+defaulturl = ""
+remote = { cdn = "" }
+shared={}
