@@ -16,65 +16,15 @@
    */
   "use strict";
 
-  var glib = {};
-
-  const getNestedObject = (obj, dotSeparatedKeys) => {
-    if (dotSeparatedKeys !== undefined && typeof dotSeparatedKeys !== "string")
-      return undefined;
-    if (typeof obj !== "undefined" && typeof dotSeparatedKeys === "string") {
-      // split on ".", "[", "]", "'", """ and filter out empty elements
-      const splitRegex = /[.\[\]'"]/g; // eslint-disable-line no-useless-escape
-      const pathArr = dotSeparatedKeys
-        .split(splitRegex)
-        .filter((k) => k !== "");
-
-      // eslint-disable-next-line no-param-reassign, no-confusing-arrow
-      obj = pathArr.reduce(
-        (o, key) => (o && o[key] !== "undefined" ? o[key] : undefined),
-        obj
-      );
-    }
-    return obj;
-  };
-
-  const sanbox = async (...args) => {
-    let [fn, params] = args;
-    try {
-      let result = fn.apply(null, params);
-      if (result instanceof Promise) {
-        result = await result;
-        if (result instanceof ReferenceError) throw result;
-      } else if (result instanceof ReferenceError) throw result;
-      return result;
-    } catch (error) {
-      return errhandler(error);
-    }
-  };
-
-  const errhandler = (...args) => {
-    let [error] = args;
-    if (error.errno)
-      return {
-        code: error.errno,
-        errno: error.errno,
-        message: error.message,
-        stack: error.stack,
-        data: error,
-      };
-    else
-      return {
-        code: -1,
-        errno: -1,
-        message: error.message,
-        stack: error.stack,
-        data: error,
-      };
-  };
+  var glib = {},
+    library = {},
+    sys = {};
 
   /**------------------ Private function--------------------------------------------*/
   const initialize = async (...args) => {
-    let [param] = args;
+    const [param] = args;
 
+    let { getNestedObject, sanbox } = library.utils;
     for (let [idx, val] of Object.entries(param)) {
       let func = getNestedObject(glib, idx);
       if (func) {
@@ -82,7 +32,6 @@
         if (rtn) console.log("Error:", idx, "---", rtn.msg);
       }
     }
-
     return;
   };
 
@@ -93,16 +42,16 @@
         let fn = item.split("/").pop().replace(".js", "");
         let [, atomic] = item.split("/");
         if (atomic == "atomic") {
-          if (!glib[atomic]) glib[atomic] = {};
+          if (!library[atomic]) library[atomic] = {};
         }
         fn = fn.replace(".", "-");
         let { default: df, ...otherlib } = await import(item);
         if (Object.keys(otherlib).length > 0) {
           if (atomic !== "atomic") glib[fn] = { ...df, ...otherlib };
-          else glib[atomic][fn] = { ...df, ...otherlib };
+          else library[atomic][fn] = { ...df, ...otherlib };
         } else {
           if (atomic !== "atomic") glib[fn] = df;
-          else glib[atomic][fn] = df;
+          else library[atomic][fn] = df;
         }
       }
       return;
@@ -113,12 +62,13 @@
 
   const start = async () => {
     const { webengine, ...injection } = injectionjs;
-    const { guimaker, ...otherglib } = glib.atomic;
-    const [library, sys, interfaces] = Object.values(guimaker);
-    const { utils } = library;
+    const { atomic, utils } = library;
+    const { interfaces } = atomic.guimaker;
+
     const {
       arr_selected,
       datatype,
+      errhandler,
       handler,
       getNestedObject,
       objpick,
@@ -127,7 +77,6 @@
       serialize,
     } = utils;
     const { jptr } = sys;
-    const atom = { ...otherglib };
 
     let lib = {};
 
@@ -284,12 +233,6 @@
                 if (htmlengine[name][fn])
                   htmlengine[name][fn] = { ...htmlengine[name][fn], ...other };
                 else htmlengine[name][fn] = other;
-                if (load) {
-                  let helper;
-                  if (folder == "event") helper = preproc;
-                  else helper = atom;
-                  await df.load([library, sys, interfaces], helper);
-                }
               }
             }
           }
@@ -332,6 +275,10 @@
   };
 
   window.addEventListener("DOMContentLoaded", async () => {
+    let { default: df, ...other } = await import("/library/utils.js");
+    library.utils = { ...df(), handler: other.handler() };
+    sys.jptr = other.jptr();
+
     if (mjs) {
       if (mjs.lib.length > 0) await loadlib(mjs.lib);
       if (mjs.initialize.initialize) {

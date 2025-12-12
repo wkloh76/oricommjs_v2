@@ -460,8 +460,6 @@ module.exports = (...args) => {
               let dom, isvalid, layouts;
               if (!ishtml) dom = new JSDOM(html);
               else {
-                // if (!isview) isvalid = path.extname(view);
-                // else if (!islayer) isvalid = path.extname(layer.layouts);
                 if (!isview) {
                   if (path.extname(view) == ".html") isvalid = true;
                   else isvalid = identify_htmltag(view);
@@ -519,6 +517,11 @@ module.exports = (...args) => {
                 script.innerHTML += `var injectionjs=${JSON.stringify(
                   injectionjs.variables
                 )}`;
+              let libutils = document.createElement("script");
+              libutils.type = "module"; // Crucial for ES module
+              libutils.src = "/library/utils.js"; // For external module
+
+              document.getElementsByTagName("head")[0].appendChild(libutils);
               document.getElementsByTagName("head")[0].appendChild(script);
               let rtnimport_css = import_css(document, css, params);
               if (rtnimport_css) throw rtnimport_css;
