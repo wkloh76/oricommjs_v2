@@ -147,17 +147,16 @@ module.exports = async (...args) => {
           getContent: async (fname, c) => {
             let pattern = route.slice(0, -1);
             let filePath = `${fname.replace(pattern, "")}`;
-            let name = path.parse(filePath).name;
             let mimes = getContentType(filePath);
             let cssContent = Buffer.from("");
             let options = {};
 
             if (!mimes) mimes = "text/plain";
             if (library.mode != "Production") {
-              cssContent = Buffer.from(beautify(jptr.get(objmodule, filePath)));
+              cssContent = Buffer.from(beautify(jptr.get(objmodule, fname)));
             } else
               cssContent = Buffer.from(
-                await minify(jptr.get(objmodule, filePath), {
+                await minify(jptr.get(objmodule, fname), {
                   collapseWhitespace: true,
                 })
               );
