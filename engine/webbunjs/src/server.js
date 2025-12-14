@@ -63,7 +63,7 @@ module.exports = (...args) => {
           setting;
         const { savestore, store, verbose, ...setsession } =
           setting[setting.args.engine].session;
-        const { assets, atomic, reaction, utilities } = compmgr.assist;
+        const { assets, atomic, reaction, libraries } = compmgr.assist;
 
         try {
           // Setup server log
@@ -116,7 +116,7 @@ module.exports = (...args) => {
             serveStatic,
           });
 
-          await utilities(["utils"], {
+          await libraries(["utils", "engine/workflow"], {
             register: app.use,
             serveStatic,
             library,

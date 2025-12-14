@@ -27,9 +27,8 @@ module.exports = (...args) => {
     const { join } = sys.path;
     try {
       let dir = join(mpath, "src");
-      let lib = {
-        wfengine: require(join(dir, "wfengine")),
-      };
+      let lib = require(join(dir))([dir, mname], obj);
+
       resolve(lib);
     } catch (error) {
       reject(error);

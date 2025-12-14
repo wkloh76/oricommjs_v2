@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add load components package.json content into cengine class at compmgr engine. Completed on 2025-12-07
 - Add shared to both toml file in compmgr engine which allow web and desktop service to access local file (css,js and etc) like `public/assest` feature. Completed on 2025-12-11
 - Design workflow engine. In progress
+- Apply workflow engine for frontend. Code transfer from compmgr `assist/data/preload.html`. In progress
 
 ### Changed
 

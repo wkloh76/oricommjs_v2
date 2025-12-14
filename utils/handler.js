@@ -90,7 +90,51 @@ module.exports = (...args) => {
           }
         );
       },
-
+      get winevents() {
+        return Object.assign(
+          {},
+          {
+            drag: {
+              dragend: {},
+              dragenter: {},
+              dragleave: {},
+              dragover: {},
+              dragstart: {},
+              drop: {},
+            },
+            events: {
+              change: {},
+              input: {},
+              load: {},
+              resize: {},
+              reset: {},
+              submit: {},
+            },
+            focus: {
+              blur: {},
+              focus: {},
+              focusin: {},
+              focusout: {},
+            },
+            mouse: {
+              click: {},
+              contextmenu: {},
+              dbclick: {},
+              down: {},
+              enter: {},
+              leave: {},
+              out: {},
+              over: {},
+              up: {},
+            },
+            keyboard: {
+              keydown: {},
+              keypress: {},
+              keyup: {},
+            },
+          }
+        );
+      },
       /**
        *  Getter the web view render as html dataformat value
        * @type {Object}

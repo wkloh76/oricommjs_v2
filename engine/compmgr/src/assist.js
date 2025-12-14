@@ -29,9 +29,9 @@ module.exports = async (...args) => {
   const [params, obj] = args;
   const [pathname, curdir] = params;
   const [library, sys, cosetting] = obj;
-  const { datatype, errhandler, io } = library.utils;
+  const { datatype, errhandler, io, jptr } = library.utils;
   const { dir_module } = io;
-  const { fs, logerr: logerror, path } = sys;
+  const { fs, path } = sys;
   const { existsSync, readFileSync } = fs;
   const { basename, extname, join } = path;
 
@@ -153,11 +153,11 @@ module.exports = async (...args) => {
             let options = {};
 
             if (!mimes) mimes = "text/plain";
-            if (library.mode != "Production")
-              cssContent = Buffer.from(beautify(objmodule[name]));
-            else
+            if (library.mode != "Production") {
+              cssContent = Buffer.from(beautify(jptr.get(objmodule, filePath)));
+            } else
               cssContent = Buffer.from(
-                await minify(objmodule[name], {
+                await minify(jptr.get(objmodule, filePath), {
                   collapseWhitespace: true,
                 })
               );
@@ -340,11 +340,16 @@ module.exports = async (...args) => {
       }
     };
 
-    const utilities = async (...args) => {
+    const libraries = async (...args) => {
       const [params, obj] = args;
       const [name] = params;
       let { library: share, ...otherobj } = obj;
-      objmodule[name] = esm2strMaker(name, share[name]);
+      for (let param of params)
+        jptr.set(
+          objmodule,
+          join("library", `${param}.js`),
+          esm2strMaker(param, jptr.get(share, param))
+        );
 
       regutils(["/library/*"], obj);
     };
@@ -421,7 +426,7 @@ module.exports = async (...args) => {
       identify_htmltag,
       mimes,
       str_inject,
-      utilities,
+      libraries,
       Path: join(params[0], "src", "assist"),
       reaction: await require("./assist/reaction")(
         [join(params[0], "src", "assist"), cosetting.general.engine.type],
