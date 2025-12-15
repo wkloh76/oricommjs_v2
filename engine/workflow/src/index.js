@@ -40,7 +40,7 @@ module.exports = (...args) => {
               fn = fn.replace(".", "-");
               let { default: df } = await import(fnpath);
               if (df) {
-                let { load, register, ...other } = df;
+                let { register, ...other } = df;
                 if (htmlengine[name][fn])
                   htmlengine[name][fn] = {
                     ...htmlengine[name][fn],
@@ -55,19 +55,50 @@ module.exports = (...args) => {
       return htmlengine;
     };
 
+    const helper = async (...args) => {
+      const [event, showdata = true] = args;
+      const { arr2str, arr_selected } = library.utils;
+
+      let attrs = event.currentTarget.attributes;
+      let clsname = arr2str(event.currentTarget.className.split(" "), ".", " ");
+      let tagName = event.currentTarget.tagName;
+      let id = `#${event.currentTarget.id}`;
+      let func = attrs["func"].nodeValue;
+      let qslist = [];
+
+      if (tagName) qslist.push(tagName);
+      if (id) qslist.push(id);
+      if (clsname) qslist.push(clsname);
+
+      for (let [, valobjevent] of Object.entries(
+        injectionjs.webengine.trigger
+      )) {
+        let evtkeys = Object.keys(valobjevent);
+        let { data } = arr_selected(qslist, evtkeys);
+        if (data && data.length == 1) {
+          let { attr } = valobjevent[data[0]];
+          if (attr) {
+            if (attr.required) {
+              let { func: fn, required } = attr;
+              func = { taskname: fn, required: required };
+            }
+          }
+        }
+      }
+      if (func) return await taskrun(event, func, showdata);
+    };
+
     const register = (...args) => {
-      const [params, obj] = args;
-      const [htmlengine, trigger] = params;
+      const [htmlengine, trigger] = args;
       const { htmlcollection, htmlevent, htmllogicflow, htmlrender } =
         htmlengine;
-      const { convtrigger, regevents } = obj;
       const { mergeDeep } = library.utils;
-      let objfuncs = {};
-      for (let funcs of [htmllogicflow, htmlrender, htmlcollection])
-        objfuncs = mergeDeep(objfuncs, { ...funcs });
+      let funcs = {};
+      for (let func of [htmllogicflow, htmlrender, htmlcollection])
+        funcs = mergeDeep(funcs, { ...func });
 
       regevents(convtrigger(trigger), htmlevent);
-      return objfuncs;
+      return funcs;
     };
 
     const convtrigger = (...args) => {
@@ -85,10 +116,8 @@ module.exports = (...args) => {
       return objevents;
     };
 
-    const run = async (...args) => {
-      const [params, obj] = args;
-      const [event, task, showdata = true] = params;
-      const { htmlengine, objfuncs } = obj;
+    const taskrun = async (...args) => {
+      const [event, task, showdata = true] = args;
       const {
         datatype,
         errhandler,
@@ -118,11 +147,7 @@ module.exports = (...args) => {
           for (let objserialize of input) {
             objserialize.func = objfuncs;
             objserialize.share = share;
-            let rtn = await new serialize(
-              objserialize,
-              [library, sys],
-              showdata
-            );
+            let rtn = await new serialize(objserialize, [library], showdata);
             process.push(rtn);
             if (rtn.code != 0) break;
           }
@@ -147,7 +172,7 @@ module.exports = (...args) => {
               if (datatype(input) == "object") {
                 input.func = objfuncs;
                 input.share = share;
-                allexec.push(new serialize(input, [library, sys], showdata));
+                allexec.push(new serialize(input, [library], showdata));
               } else if (datatype(input) == "array")
                 allexec.push(parallel(input, share));
             }
@@ -175,7 +200,6 @@ module.exports = (...args) => {
             output.data = rtnprocess;
           } else {
             output.code = -1;
-
             output.msg = `Error: Incomplete workflow in ${func} process`;
           }
         }
@@ -224,8 +248,9 @@ module.exports = (...args) => {
     };
 
     const loadlib = async (...args) => {
+      const [param] = args;
+      const { jptr } = library.utils;
       try {
-        let [param] = args;
         let libraries = {};
         for (let item of param) {
           let fn = item.split("/").pop().replace(".js", "");
@@ -237,10 +262,14 @@ module.exports = (...args) => {
           let { default: df, ...otherlib } = await import(item);
           if (Object.keys(otherlib).length > 0) {
             if (atomic !== "atomic") glib[fn] = { ...df, ...otherlib };
-            else libraries[atomic][fn] = { ...df, ...otherlib };
+            else
+              jptr.set(libraries, item.replace(".js", ""), {
+                ...df,
+                ...otherlib,
+              });
           } else {
             if (atomic !== "atomic") glib[fn] = df;
-            else libraries[atomic][fn] = df;
+            else jptr.set(libraries, item.replace(".js", ""), { ...df });
           }
         }
         return libraries;
@@ -251,11 +280,12 @@ module.exports = (...args) => {
 
     return {
       convtrigger,
+      helper,
       load,
       loadlib,
       regevents,
       register,
-      run,
+      taskrun,
       excluded: ["excluded"],
     };
   } catch (error) {

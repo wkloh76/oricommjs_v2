@@ -40,11 +40,12 @@
     };
     library.utils.jptr.set(library, "engine/workflow", { ...workflow() });
     const { jptr, mergeDeep } = library.utils;
-    const { convtrigger, load, loadlib, regevents, register, run } = library.engine.workflow;
-
+    const { convtrigger, load, loadlib, regevents, register, taskrun } =
+      library.engine.workflow;
 
     if (mjs) {
-      if (mjs.lib.length > 0) library = mergeDeep(library, await loadlib(mjs.lib));
+      if (mjs.lib.length > 0)
+        library = mergeDeep(library, await loadlib(mjs.lib));
       if (mjs.initialize.initialize) {
         if (Object.keys(mjs.initialize.initialize).length > 0)
           await initialize(mjs.initialize.initialize);
@@ -56,11 +57,9 @@
 
     const { webengine, ...injection } = injectionjs;
     if (webengine) {
-      let htmlengine = await load(webengine);
-      let objfuncs = register([htmlengine, webengine.trigger], { convtrigger, regevents });
-      if (webengine.startup) await run([null, webengine.startup, false], { htmlengine, objfuncs });
+      htmlengine = await load(webengine);
+      objfuncs = register(htmlengine, webengine.trigger);
+      if (webengine.startup) await taskrun(null, webengine.startup, false);
     }
-
-
   });
 </script>

@@ -510,7 +510,7 @@ module.exports = (...args) => {
               }
               let script = document.createElement("script");
               script.type = "text/javascript";
-              script.innerHTML = `var glib = {},library = {},sys = {},mjs = ${JSON.stringify(
+              script.innerHTML = `var glib = {}, htmlengine = {}, objfuncs = {}, library = {}, mjs = ${JSON.stringify(
                 import_mjs(mjs, params)
               )};`;
               if (Object.keys(injectionjs.variables).length > 0)
@@ -518,15 +518,16 @@ module.exports = (...args) => {
                   injectionjs.variables
                 )}`;
 
-              [
-                "/library/utils.js",
-                "/library/engine/workflow.js",
-              ].map((value) => {
-                let libraries = document.createElement("script");
-                libraries.type = "module"; // Crucial for ES module
-                libraries.src = value; // For external module
-                document.getElementsByTagName("head")[0].appendChild(libraries);
-              });
+              ["/library/utils.js", "/library/engine/workflow.js"].map(
+                (value) => {
+                  let libraries = document.createElement("script");
+                  libraries.type = "module"; // Crucial for ES module
+                  libraries.src = value; // For external module
+                  document
+                    .getElementsByTagName("head")[0]
+                    .appendChild(libraries);
+                }
+              );
 
               document.getElementsByTagName("head")[0].appendChild(script);
               let rtnimport_css = import_css(document, css, params);
