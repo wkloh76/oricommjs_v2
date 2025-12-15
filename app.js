@@ -348,21 +348,17 @@
           const { errhandler, handler } = utils;
           const { fs, path } = sys;
           const { join } = path;
-          const { type: enginetype } = cosetting.general.engine;
-
           let output = handler.dataformat;
           try {
             let modules = {};
             let arr_process = [],
               arr_name = [];
             for (let val of arr_modname) {
-              if (val.indexOf(`${enginetype}_`) == 0) {
-                let modpath = join(pathname, val);
-                if (fs.readdirSync(modpath).length > 0) {
-                  let module = new cengine([modpath, val, curdir], obj);
-                  arr_name.push(val);
-                  arr_process.push(module);
-                }
+              let modpath = join(pathname, val);
+              if (fs.readdirSync(modpath).length > 0) {
+                let module = new cengine([modpath, val, curdir], obj);
+                arr_name.push(val);
+                arr_process.push(module);
               }
             }
             let arrrtn = await Promise.all(arr_process);

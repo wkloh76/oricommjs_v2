@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ~~- Apply workflow engine for frontend. Code transfer from compmgr `assist/data/preload.html`. In progress~~
 - Add arr2str function to utils. Completed on 2025-12-15
 - Apply workflow engine for frontend. Code transfer from compmgr `assist/data/preload.html`. Completed on 2025-12-15
+- Add auto indentify component toml file base on engine. The prefix of component name no longer to use. Completed on 2025-12-15
 
 ### Changed
 

@@ -214,16 +214,14 @@ module.exports = async (...args) => {
       const [share, enginetype] = params;
 
       for (let [pubkey, pubval] of Object.entries(share)) {
-        if (pubkey.indexOf(`${enginetype}_`) > -1) {
-          for (let [key, val] of Object.entries(pubval)) {
-            let route = `${key}/*`;
-            let fpath = val.filepath;
-            if (datatype(val) == "object") {
-              registration([route, fpath, val], obj);
-            } else {
-              fpath = val;
-              registration([route, fpath], obj);
-            }
+        for (let [key, val] of Object.entries(pubval)) {
+          let route = `${key}/*`;
+          let fpath = val.filepath;
+          if (datatype(val) == "object") {
+            registration([route, fpath, val], obj);
+          } else {
+            fpath = val;
+            registration([route, fpath], obj);
           }
         }
       }

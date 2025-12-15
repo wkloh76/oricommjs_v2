@@ -459,9 +459,8 @@ module.exports = class {
     try {
       let compname = this.compname;
       let prjsrc = this.prjsrc;
-      let [compsetting] = compname.split("_");
       let setting = this.cosetting;
-      let tomlpath = join(prjsrc, `${compsetting}.toml`);
+      let tomlpath = join(prjsrc, `${this.cosetting.general.engine.type}.toml`);
       let pkgcomp = join(prjsrc, `package.json`);
       components.package = {};
 
@@ -474,128 +473,127 @@ module.exports = class {
         setting = mergeDeep(setting, settingtmp);
         setting[mode] = mergeDeep(setting[mode], psetting[mode]);
         setting["ongoing"][compname] = mergeDeep({}, psetting[mode]);
-      }
-      if (existsSync(pkgcomp)) {
-        let pkg = JSON.parse(readFileSync(pkgcomp));
-        components.package[compname] = pkg;
-      }
 
-      let comp_engine = engine[setting.general.engine.name];
-      if (Object.keys(setting.share.atomic).length == 0)
-        setting.share.atomic = join(dir, "atomic");
+        if (existsSync(pkgcomp)) {
+          let pkg = JSON.parse(readFileSync(pkgcomp));
+          components.package[compname] = pkg;
+        }
 
-      let less = `{"remote": "${setting.ongoing[compname].remote.cdn}","internal": "/${compname}/less","internalcss": "/${compname}/public/assets"}`;
+        let comp_engine = engine[setting.general.engine.name];
+        if (Object.keys(setting.share.atomic).length == 0)
+          setting.share.atomic = join(dir, "atomic");
 
-      let share = {};
-      share[`/${compname}/public`] = join(prjsrc, "src", "public");
-      share[`/${compname}/less`] = {
-        content: less,
-        filepath: join(prjsrc, "src", "public", "assets", "less"),
-      };
+        let less = `{"remote": "${setting.ongoing[compname].remote.cdn}","internal": "/${compname}/less","internalcss": "/${compname}/public/assets"}`;
 
-      share[`/${compname}/less`] = {
-        content: less,
-        filepath: join(prjsrc, "src", "public", "assets", "less"),
-      };
+        let share = {};
+        share[`/${compname}/public`] = join(prjsrc, "src", "public");
+        share[`/${compname}/less`] = {
+          content: less,
+          filepath: join(prjsrc, "src", "public", "assets", "less"),
+        };
 
-      if (
-        setting.ongoing[compname].shared &&
-        Object.keys(setting.ongoing[compname].shared).length > 0
-      ) {
-        for (let [k, v] of Object.entries(setting.ongoing[compname].shared))
-          share[`${v}/${k}`] = join(v, k);
-      }
+        share[`/${compname}/less`] = {
+          content: less,
+          filepath: join(prjsrc, "src", "public", "assets", "less"),
+        };
 
-      setting.share.public[compname] = share;
+        if (
+          setting.ongoing[compname].shared &&
+          Object.keys(setting.ongoing[compname].shared).length > 0
+        ) {
+          for (let [k, v] of Object.entries(setting.ongoing[compname].shared))
+            share[`${v}/${k}`] = join(v, k);
+        }
 
-      components[compname] = this.compstruct;
+        setting.share.public[compname] = share;
 
-      components[compname].less = {
-        [`/${compname}/less`]: {
-          config: less,
-          path: join(prjsrc, "src", "public", "assets", "less"),
-        },
-      };
+        components[compname] = this.compstruct;
 
-      components[compname]["common"]["models"] = {};
-      components[compname]["common"] = this.comb_obj(
-        components[compname]["common"]["models"],
-        await this.general(
-          [join(prjsrc, "src", "common"), ["models"], compname],
-          [this.library, this.sys, setting]
-        )
-      );
+        components[compname].less = {
+          [`/${compname}/less`]: {
+            config: less,
+            path: join(prjsrc, "src", "public", "assets", "less"),
+          },
+        };
 
-      components[compname] = this.comb_obj(
-        components[compname],
-        await this.general(
-          [join(prjsrc, "src"), ["startup"], compname],
-          [this.library, this.sys, setting]
-        )
-      );
-
-      components[compname]["common"]["viewspath"] = join(
-        prjsrc,
-        "src",
-        "common",
-        "views"
-      );
-
-      if (setting.general.engine.type !== "app") {
-        components[compname] = this.comb_obj(
-          components[compname],
-          await this.rules(
-            [join(prjsrc, "src"), ["rules"], compname],
+        components[compname]["common"]["models"] = {};
+        components[compname]["common"] = this.comb_obj(
+          components[compname]["common"]["models"],
+          await this.general(
+            [join(prjsrc, "src", "common"), ["models"], compname],
             [this.library, this.sys, setting]
           )
         );
 
-        components[compname] = this.comb_obj(
-          components[compname],
-          await this.guiapi(
-            [join(prjsrc, "src"), ["api", "gui"], compname],
-            [this.library, this.sys, setting]
-          )
-        );
-      } else {
         components[compname] = this.comb_obj(
           components[compname],
           await this.general(
-            [join(prjsrc, "src"), ["app"], compname],
+            [join(prjsrc, "src"), ["startup"], compname],
             [this.library, this.sys, setting]
           )
         );
-      }
 
-      let routejson = await this.prepare_rules(components[compname]);
-      let dataset = {};
-      dataset[compname] = components[compname];
+        components[compname]["common"]["viewspath"] = join(
+          prjsrc,
+          "src",
+          "common",
+          "views"
+        );
 
-      if (!setting.ongoing[compname].internalurl)
-        setting.ongoing[compname].internalurl = {};
-      setting.ongoing[compname].internalurl[
-        `${compname}`
-      ] = `/${compname}/public/assets`;
+        if (setting.general.engine.type !== "app") {
+          components[compname] = this.comb_obj(
+            components[compname],
+            await this.rules(
+              [join(prjsrc, "src"), ["rules"], compname],
+              [this.library, this.sys, setting]
+            )
+          );
 
-      dataset[compname].defaulturl = setting.ongoing[compname].defaulturl;
-      if (compname.indexOf(`${setting.general.engine.type}_`) > -1) {
-        reaction["register"](dataset);
-      }
-
-      components.done.push(setting.general.engine);
-      if (!components.start) components.start = comp_engine.start;
-
-      if (Object.keys(components[compname]["startup"]).length > 0) {
-        for (let [, module] of Object.entries(
-          components[compname]["startup"]
-        )) {
-          if (!components.startup) components.startup = [];
-          components.startup.push(module.startup);
+          components[compname] = this.comb_obj(
+            components[compname],
+            await this.guiapi(
+              [join(prjsrc, "src"), ["api", "gui"], compname],
+              [this.library, this.sys, setting]
+            )
+          );
+        } else {
+          components[compname] = this.comb_obj(
+            components[compname],
+            await this.general(
+              [join(prjsrc, "src"), ["app"], compname],
+              [this.library, this.sys, setting]
+            )
+          );
         }
+
+        let routejson = await this.prepare_rules(components[compname]);
+        let dataset = {};
+        dataset[compname] = components[compname];
+
+        if (!setting.ongoing[compname].internalurl)
+          setting.ongoing[compname].internalurl = {};
+        setting.ongoing[compname].internalurl[
+          `${compname}`
+        ] = `/${compname}/public/assets`;
+
+        dataset[compname].defaulturl = setting.ongoing[compname].defaulturl;
+        reaction["register"](dataset);
+
+        components.done.push(setting.general.engine);
+        if (!components.start) components.start = comp_engine.start;
+
+        if (Object.keys(components[compname]["startup"]).length > 0) {
+          for (let [, module] of Object.entries(
+            components[compname]["startup"]
+          )) {
+            if (!components.startup) components.startup = [];
+            components.startup.push(module.startup);
+          }
+        }
+        if (!components.routejson) components.routejson = { ...routejson };
+        else components.routejson = mergeDeep(components.routejson, routejson);
+        output.data = setting;
       }
-      if (!components.routejson) components.routejson = { ...routejson };
-      else components.routejson = mergeDeep(components.routejson, routejson);
-      output.data = setting;
     } catch (error) {
       output = errhandler(error);
     } finally {
