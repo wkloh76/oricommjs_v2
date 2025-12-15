@@ -143,7 +143,7 @@ module.exports = (...args) => {
           if (Array.isArray(pVal) && Array.isArray(oVal)) {
             prev[key] = pVal.concat(...oVal);
           } else if (isObject(pVal) && isObject(oVal)) {
-            prev[key] = lib["mergeDeep"](pVal, oVal);
+            prev[key] = mergeDeep(pVal, oVal);
           } else {
             prev[key] = oVal;
           }
@@ -846,7 +846,18 @@ module.exports = (...args) => {
       );
     };
 
+    const arr2str = (...args) => {
+      const [arr, front = "", back = ""] = args;
+      const inistr = "";
+      const result = arr.reduce(
+        (accumulator, cval) => accumulator + `${front}${cval}${back}`,
+        inistr
+      );
+      return result.toString().trim();
+    };
+
     lib = {
+      arr2str,
       getNestedObject,
       updateObject,
       renameObjectKeys,

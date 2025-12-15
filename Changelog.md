@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add shared to both toml file in compmgr engine which allow web and desktop service to access local file (css,js and etc) like `public/assest` feature. Completed on 2025-12-11
 - Design workflow engine. In progress
 - Apply workflow engine for frontend. Code transfer from compmgr `assist/data/preload.html`. In progress
+- Add arr2str function to utils. Completed on 2025-12-15
 
 ### Changed
 
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug fix in sse at csse atom which is no responding cause client alway reconnected. Completed on 2025-12-02
 - Bug fix in deskfetch function at atom/smfetch which unable carry on the GET method to backend api. Completed on 2025-12-05
 - Bug fix in regutils method at compmgr engine which unable load content due to improper path. This only happen in deskelectronjs engine. Completed on 2025-12-15
+- Bug fix in mergeDeep function at utils. Completed on 2025-12-15
 
 ### Security
 
