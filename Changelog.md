@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug fix in regutils method at compmgr engine which unable load content due to improper path. This only happen in deskelectronjs engine. Completed on 2025-12-15
 - Bug fix in mergeDeep function at utils. Completed on 2025-12-15
 - Bug fix in workflow engine for frontend. Completed on 2025-12-15
+- Bug fix in smfetch at `atomic/atom` which unsupport current design without prefix to identify current runtime engine. Completed on 2025-12-16
 
 ### Security
 

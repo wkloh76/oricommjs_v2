@@ -19,31 +19,389 @@
  * @module smfetch
  */
 export default await (async () => {
-  let { default: atom } = await import(`./smfetch/atom.js`);
-
-  let lib = {};
-
   const urlidentify = (...args) => {
-    let [url] = args;
+    const [url] = args;
     let output = { code: 0, msg: "", data: null };
+    let { electron } = window;
     try {
       new URL(url);
       output.data = { method: "webfetch", url: url };
     } catch (error) {
-      let compname = url.split("/").slice(0, 2).join("");
-      if (compname.indexOf("desktop_") > -1)
-        output.data = { method: "deskfetch", url: url };
-      else if (compname.indexOf("web_") > -1)
+      if (electron) output.data = { method: "deskfetch", url: url };
+      else
         output.data = {
           method: "webfetch",
           url: `${window.location.origin}${url}`,
         };
-      else {
-        output.code = -10;
-        output.msg = error.stack;
-      }
     } finally {
       return output;
+    }
+  };
+
+  /* -----Comment-------
+       var dataformat = {
+     	method: "POST", // *GET, POST, PUT, DELETE, etc.
+     	mode: "same-origin", // no-cors, *cors, same-origin
+     	cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+     	credentials: "same-origin", // include, *same-origin, omit
+     	headers: {
+     		"Content-Type": "application/json", // *application/json. 'application/x-www-form-urlencoded',
+     	},
+     	redirect: "follow", // manual, *follow, error
+     	referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+     	body: null, // * JSON.stringify(data) body data type must match "Content-Type" header
+      };
+    */
+
+  // code from AI propose
+  const completeRelativeUrl = (
+    relativePath,
+    domain = "localhost",
+    protocol = "http"
+  ) => {
+    try {
+      // If it's already complete, return it
+      return new URL(relativePath).toString();
+    } catch {
+      // Complete it with default domain
+      return new URL(relativePath, `${protocol}://${domain}`).toString();
+    }
+  };
+
+  /**
+   * Arrange data the data suit to webfetch options
+   * @alias module:httpns.options
+   * @param {Object} error - Any data type
+   * @returns {Object} - Return error data in json format
+   */
+  const options = (...args) => {
+    let [options] = args;
+    let { url, cache, credentials, reqdata, origin, ...output } = options;
+
+    switch (output.method) {
+      case "GET":
+        url = new URL(url);
+        if (reqdata !== undefined) {
+          if (typeof reqdata == "object")
+            url.search = new URLSearchParams(
+              JSON.parse(JSON.stringify(reqdata))
+            ).toString();
+          else if (typeof reqdata == "string") url.search = reqdata;
+        }
+        break;
+
+      default:
+        if (typeof reqdata == "object") {
+          if (reqdata instanceof FormData) output["body"] = reqdata;
+          else {
+            output["headers"] = {
+              ...output["headers"],
+              ...{
+                "Content-Type": "application/json",
+              },
+            };
+            output["body"] = JSON.stringify(reqdata);
+          }
+        } else if (typeof reqdata == "string") {
+          output["headers"] = {
+            ...output["headers"],
+            ...{
+              "Content-Type": "text/plain;charset=UTF-8",
+            },
+          };
+          output["body"] = reqdata;
+        }
+        break;
+    }
+
+    output["url"] = url;
+    if (credentials) output["credentials"] = "same-origin";
+    else output["credentials"] = "include";
+    if (origin) output["mode"] = "cors";
+    else output["mode"] = "same-origin";
+    if (cache) output["cache"] = "default";
+    else output["cache"] = "no-cache";
+    return output;
+  };
+
+  /**
+   * Arrange data the data suit to tronfetch options
+   * @alias module:httpns.eoptions
+   * @param {Object} error - Any data type
+   * @returns {Object} - Return error data in json format
+   */
+  const eoptions = (...args) => {
+    let [options] = args;
+    let { url, cache, credentials, reqdata, origin, ...output } = options;
+
+    switch (output.method) {
+      case "GET":
+        let myUrl = new URL(url);
+        if (reqdata !== undefined) {
+          if (typeof reqdata == "object")
+            myUrl.search = new URLSearchParams(
+              JSON.parse(JSON.stringify(reqdata))
+            ).toString();
+          else if (typeof reqdata == "string") myUrl.search = reqdata;
+        }
+
+        output["query"] = {};
+        for (const [key, value] of myUrl.searchParams.entries()) {
+          output["query"][key] = value;
+        }
+
+        url = myUrl.href;
+        break;
+
+      default:
+        if (typeof reqdata == "object") {
+          if (reqdata instanceof FormData) output["body"] = reqdata;
+          else {
+            output["headers"] = {
+              ...output["headers"],
+              ...{
+                "Content-Type": "application/json",
+              },
+            };
+            output["body"] = JSON.stringify(reqdata);
+          }
+        } else if (typeof reqdata == "string") {
+          output["headers"] = {
+            ...output["headers"],
+            ...{
+              "Content-Type": "text/plain;charset=UTF-8",
+            },
+          };
+          output["body"] = reqdata;
+        }
+        break;
+    }
+    output["url"] = url;
+    if (credentials) output["credentials"] = "same-origin";
+    else output["credentials"] = "include";
+    if (origin) output["mode"] = "cors";
+    else output["mode"] = "same-origin";
+    if (cache) output["cache"] = "default";
+    else output["cache"] = "no-cache";
+    return output;
+  };
+
+  /**
+   * FIre fetch api request in async method
+   * @alias module:fetchapi.request
+   * @param {...Object} args - 1 parameters
+   * @param {Object} args[0] - param for call api server base on fecth api format
+   * @param {Object} args[0] - param.url api server request link
+   * @param {Object} args[0] - param.method request method (support RESTFUL API)
+   * @param {Object} args[0] - param.data transfer to api server,in String or Json object
+   * @param {Object} args[0] - param.success data callback from server
+   * @param {Object} args[0] - param.error error callback from server
+   * @param {Object} args[0] - param.option cretical setting
+   * @param {Object} args[0] - param.option.async if false the client wait until api server response,default true
+   * @param {Object} args[0] - param.option.origin if true cross-origin requests are allowed,default false
+   * @param {Object} args[0] - param.option.cache if true the reequested pages cached by the browser,default false
+   * @param {Object} args[0] - param.option.headers can assign such as HTTP-Authorization basic headers
+   */
+  const webfetch = async (...args) => {
+    const [param] = args;
+    try {
+      let data = {};
+      let {
+        async = true,
+        url,
+        method,
+        data: reqdata,
+        success: achieve,
+        error: fault,
+        ajax = true,
+        option = {},
+        download = false,
+      } = param;
+
+      let {
+        origin = false,
+        cache = false,
+        credentials = true,
+        redirect = false,
+        headers = {},
+        ...opt
+      } = option;
+
+      data = options({
+        ...opt,
+        ...{ headers: headers },
+        origin,
+        cache,
+        credentials,
+        url,
+        method,
+        reqdata,
+      });
+
+      if (data.headers)
+        data.headers = {
+          ...data.headers,
+          "X-Requested-With": "XMLHttpRequest",
+        };
+      else data.headers = { "X-Requested-With": "XMLHttpRequest" };
+      let { url: furl, ...fdata } = data;
+      if (async) {
+        fetch(furl, fdata)
+          .then(async (response) => {
+            if (response.ok) {
+              if (param.reroute && response.url != "")
+                window.location = response.url;
+              else if (achieve) {
+                let result = {};
+                if (response.redirected && response.url != "")
+                  window.location = response.url;
+                else if (download) result.data = await response.blob();
+                else result.data = await response.json();
+                success({
+                  status: response.status,
+                  statusText: response.statusText,
+                  data: result,
+                });
+              }
+            } else {
+              if (fault) {
+                fault({
+                  status: response.status,
+                  statusText: response.statusText,
+                });
+              }
+            }
+          })
+          .catch((error) => {
+            return {
+              code: -1,
+              msg: error.message,
+              data: null,
+            };
+          });
+        return;
+      } else {
+        let response = await fetch(furl, fdata);
+        let result = {
+          code: 0,
+          data: null,
+          msg: "",
+          status: response.status,
+          statusText: response.statusText,
+        };
+        if (response.ok) {
+          if (param.reroute && response.url != "") {
+            window.location = response.url;
+          } else if (response.redirected && response.url != "") {
+            window.location = response.url;
+          } else if (download) {
+            result.data = await response.blob();
+          } else {
+            let resp = await response.json();
+            result = { ...result, ...resp };
+          }
+        } else {
+          if (response.status == 301) {
+            let resp = await response.json();
+            window.location = resp.redirect;
+          }
+        }
+        return result;
+      }
+    } catch (error) {
+      return {
+        code: -1,
+        msg: error.message,
+        data: null,
+      };
+    }
+  };
+
+  /**
+   * FIre fetch api request in async method
+   * @alias module:fetchapi.request
+   * @param {...Object} args - 1 parameters
+   * @param {Object} args[0] - param for call api server base on electron ContentBridge format
+   */
+  const deskfetch = async (...args) => {
+    const [param] = args;
+    try {
+      let originalUrl = completeRelativeUrl(param.url);
+      if (originalUrl) param.url = originalUrl;
+      let data = {};
+      let {
+        async = true,
+        url,
+        method,
+        data: reqdata,
+        success: achieve,
+        error: fault,
+        ajax = true,
+        option = {},
+        download = false,
+      } = param;
+
+      let {
+        origin = false,
+        cache = false,
+        credentials = true,
+        redirect = false,
+        headers = {},
+        ...opt
+      } = option;
+
+      data = eoptions({
+        ...opt,
+        ...{ headers: headers },
+        origin,
+        cache,
+        credentials,
+        url,
+        method,
+        reqdata,
+      });
+
+      if (data.headers)
+        data.headers = {
+          ...data.headers,
+          "X-Requested-With": "XMLHttpRequest",
+        };
+      else data.headers = { "X-Requested-With": "XMLHttpRequest" };
+      let { url: furl, ...fdata } = data;
+
+      if (param?.success !== undefined) data.success = param.success;
+      if (param?.error !== undefined) data.error = param.error;
+      if (param?.async !== undefined) async = param.async;
+      if (param?.reroute !== undefined) data.reroute = param.reroute;
+
+      if (async) {
+        window.fetchapi.request(furl, fdata);
+        return;
+      } else {
+        let response = await window.fetchapi.request(furl, fdata);
+        let result = {
+          code: 0,
+          data: null,
+          msg: "",
+          status: response.status,
+          statusText: response.statusText,
+        };
+        if (response.ok) {
+          if (param.reroute && response.url != "") {
+            window.location = response.url;
+          } else if (response.redirected && response.url != "") {
+            window.location = response.url;
+          } else if (download) {
+            result.data = await response.blob();
+          } else {
+            let resp = await response.json();
+            result = { ...result, ...resp };
+          }
+        }
+        return result;
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
   /**
@@ -52,7 +410,7 @@ export default await (async () => {
    * @param {...Object} args - 1 parameters
    * @param {Object} args[0] - param for call api server base on fecth api format
    */
-  lib.request = (...args) => {
+  const request = (...args) => {
     return new Promise(async (resolve, reject) => {
       try {
         let [param] = args;
@@ -68,5 +426,6 @@ export default await (async () => {
     });
   };
 
-  return lib;
+  let atom = { deskfetch, webfetch };
+  return { request };
 })();

@@ -362,8 +362,9 @@
               }
             }
             let arrrtn = await Promise.all(arr_process);
-            for (let [idx, val] of Object.entries(arrrtn))
-              modules[arr_name[idx]] = val;
+            for (let [idx, val] of Object.entries(arrrtn)) {
+              if (val != null) modules[arr_name[idx]] = val;
+            }
 
             output.data = modules;
             resolve(output);
