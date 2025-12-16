@@ -28,11 +28,11 @@ module.exports = (...args) => {
   try {
     const load = async (...args) => {
       const [param] = args;
-      let htmlengine = {};
+      let lib = {};
       for (let [name, value] of Object.entries(param.load)) {
         if (name.substring(0, 4) == "html") {
           let folder = name.substring(4);
-          htmlengine[name] = {};
+          lib[name] = {};
           for (let [parent, child] of Object.entries(value)) {
             for (let item of child) {
               let fnpath = `${param.path}${parent}/${folder}/${item}`;
@@ -41,22 +41,24 @@ module.exports = (...args) => {
               let { default: df } = await import(fnpath);
               if (df) {
                 let { register, ...other } = df;
-                if (htmlengine[name][fn])
-                  htmlengine[name][fn] = {
-                    ...htmlengine[name][fn],
+                if (lib[name][fn])
+                  lib[name][fn] = {
+                    ...lib[name][fn],
                     ...other,
                   };
-                else htmlengine[name][fn] = other;
+                else lib[name][fn] = other;
               }
             }
           }
         }
       }
-      return htmlengine;
+      return lib;
     };
 
     const helper = async (...args) => {
-      const [event, showdata = true] = args;
+      const [params, obj] = args;
+      const [event, showdata = true] = params;
+      const { htmlengine, objfuncs } = obj;
       const { arr2str, arr_selected } = library.utils;
 
       let attrs = event.currentTarget.attributes;
@@ -85,7 +87,11 @@ module.exports = (...args) => {
           }
         }
       }
-      if (func) return await taskrun(event, func, showdata);
+      if (func)
+        return await taskrun([event, func, showdata], {
+          htmlengine,
+          objfuncs,
+        });
     };
 
     const register = (...args) => {
@@ -117,7 +123,9 @@ module.exports = (...args) => {
     };
 
     const taskrun = async (...args) => {
-      const [event, task, showdata = true] = args;
+      const [params, obj] = args;
+      const [event, task, showdata = true] = params;
+      const { htmlengine, objfuncs } = obj;
       const {
         datatype,
         errhandler,
@@ -278,6 +286,13 @@ module.exports = (...args) => {
       }
     };
 
+    class queuetask {
+      constructor(...args) {
+        const [params, obj] = args;
+        return async () => await taskrun([null, params, false], obj);
+      }
+    }
+
     return {
       convtrigger,
       helper,
@@ -286,7 +301,8 @@ module.exports = (...args) => {
       regevents,
       register,
       taskrun,
-      excluded: ["excluded"],
+      queuetask,
+      excluded: ["excluded", "queuetask"],
     };
   } catch (error) {
     return library.utils.errhandler(error);

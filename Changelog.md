@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update all package.json dependencies. Completed on 2025-12-01
 - Change the sequence in catch at app.js. Completed on 2025-12-01
 - Change the frontend javascript preloading library at compmgr engine. Completed on 2025-12-12
+- Workflow engine code improvement to support backend. Completed on 2025-12-16
 
 ### Deprecated
 

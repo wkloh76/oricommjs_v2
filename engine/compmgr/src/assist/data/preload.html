@@ -59,7 +59,11 @@
     if (webengine) {
       htmlengine = await load(webengine);
       objfuncs = register(htmlengine, webengine.trigger);
-      if (webengine.startup) await taskrun(null, webengine.startup, false);
+      if (webengine.startup)
+        await taskrun([null, webengine.startup, false], {
+          htmlengine,
+          objfuncs,
+        });
     }
   });
 </script>
