@@ -24,6 +24,7 @@ module.exports = (...args) => {
   const [params, obj] = args;
   const [pathname, curdir] = params;
   const [library, sys, cosetting] = obj;
+  const backend = true;
 
   try {
     const load = async (...args) => {
@@ -289,8 +290,156 @@ module.exports = (...args) => {
     class queuetask {
       constructor(...args) {
         const [params, obj] = args;
-        return async () => await taskrun([null, params, false], obj);
+        const [event] = params;
+
+        return (async () => {
+          if (typeof backend === "undefined") {
+            const scriptTag = document.getElementById("jsonData");
+            const data = JSON.parse(scriptTag.textContent);
+            if (event == null)
+              return await this.taskrun([null, params, false], obj);
+            else return await this.helper(params, obj);
+          }
+        })();
       }
+
+      helper = async (...args) => {
+        const [params, obj] = args;
+        const [event, showdata = true] = params;
+        const { htmlengine, objfuncs } = obj;
+        const { arr2str, arr_selected } = library.utils;
+
+        let attrs = event.currentTarget.attributes;
+        let clsname = arr2str(
+          event.currentTarget.className.split(" "),
+          ".",
+          " "
+        );
+        let tagName = event.currentTarget.tagName;
+        let id = `#${event.currentTarget.id}`;
+        let func = attrs["func"].nodeValue;
+        let qslist = [];
+
+        if (tagName) qslist.push(tagName);
+        if (id) qslist.push(id);
+        if (clsname) qslist.push(clsname);
+
+        for (let [, valobjevent] of Object.entries(
+          injectionjs.webengine.trigger
+        )) {
+          let evtkeys = Object.keys(valobjevent);
+          let { data } = arr_selected(qslist, evtkeys);
+          if (data && data.length == 1) {
+            let { attr } = valobjevent[data[0]];
+            if (attr) {
+              if (attr.required) {
+                let { func: fn, required } = attr;
+                func = { taskname: fn, required: required };
+              }
+            }
+          }
+        }
+        if (func)
+          return await taskrun([event, func, showdata], {
+            htmlengine,
+            objfuncs,
+          });
+      };
+      taskrun = async (...args) => {
+        const [params, obj] = args;
+        const [event, task, showdata = true] = params;
+        const { htmlengine, objfuncs } = obj;
+        const {
+          datatype,
+          errhandler,
+          getNestedObject,
+          handler,
+          pick_arrayofobj,
+          pick_arrayobj2list,
+          serialize,
+        } = library.utils;
+        let output = handler.dataformat;
+
+        try {
+          let { htmlworkflow } = htmlengine;
+          let objkeys = Object.keys(htmlworkflow);
+          let fn, func, required;
+          let task_type = datatype(task);
+          if (task_type == "string") func = task;
+          else if (task_type == "object") {
+            let { taskname, required: req } = task;
+            func = taskname;
+            if (req) required = req;
+          }
+
+          const parallel = async (...args) => {
+            const [input, share] = args;
+            let process = [];
+            for (let objserialize of input) {
+              objserialize.func = objfuncs;
+              objserialize.share = share;
+              let rtn = await new serialize(objserialize, [library], showdata);
+              process.push(rtn);
+              if (rtn.code != 0) break;
+            }
+            return process;
+          };
+          for (let item of objkeys) {
+            let getfn = getNestedObject(htmlworkflow, `${item}.${func}`);
+            if (getfn) {
+              fn = getfn;
+              break;
+            }
+          }
+          if (fn) {
+            let rtnprocess = [];
+            let inputs = fn(event, func);
+            if (inputs) {
+              let share = { shared: { htmlengine, convtrigger } };
+              if (required) share.shared = { ...share.shared, required };
+              if (datatype(inputs) == "object") inputs = [inputs];
+              let allexec = [];
+              for (let input of inputs) {
+                if (datatype(input) == "object") {
+                  input.func = objfuncs;
+                  input.share = share;
+                  allexec.push(new serialize(input, [library], showdata));
+                } else if (datatype(input) == "array")
+                  allexec.push(parallel(input, share));
+              }
+              rtnprocess = await Promise.all(allexec);
+
+              let code = "";
+              for (let chkrtnproc of rtnprocess) {
+                if (datatype(chkrtnproc) == "array") {
+                  let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"]);
+                  let chkcode = pick_arrayobj2list(pickarrobj, [
+                    "code",
+                  ]).code.join("");
+                  let validcode = "0".padStart(chkrtnproc.length, "0");
+                  if (chkcode != validcode) code += `[${chkcode}],`;
+                } else {
+                  if (chkrtnproc["code"] != 0)
+                    code += `[${chkrtnproc["code"].toString()}],`;
+                }
+              }
+
+              if (code != "") {
+                output.code = -1;
+                output.msg = code;
+              }
+              output.data = rtnprocess;
+            } else {
+              output.code = -1;
+              output.msg = `Error: Incomplete workflow in ${func} process`;
+            }
+          }
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
     }
 
     return {
@@ -302,7 +451,7 @@ module.exports = (...args) => {
       register,
       taskrun,
       queuetask,
-      excluded: ["excluded", "queuetask"],
+      excluded: ["excluded"],
     };
   } catch (error) {
     return library.utils.errhandler(error);
