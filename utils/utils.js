@@ -430,14 +430,7 @@ module.exports = (...args) => {
         return new Promise(async (resolve) => {
           const [params, obj, verbose = true] = args;
           const [library] = obj;
-          const {
-            datatype,
-            errhandler,
-            getNestedObject,
-            handler,
-            jptr,
-            sanbox,
-          } = library.utils;
+          const { datatype, errhandler, handler, jptr, sanbox } = library.utils;
 
           try {
             const { err, func: funcs, workflow, share } = params;
@@ -520,7 +513,7 @@ module.exports = (...args) => {
               };
 
               for (let [kfunc, vfunc] of Object.entries(func.split(","))) {
-                let fn = getNestedObject(funcs, vfunc);
+                let fn = jptr.get(funcs, vfunc.replaceAll(".", "/"));
                 if (fn) {
                   let funcparams = proparams(
                     [pull, param, kfunc],
@@ -568,7 +561,7 @@ module.exports = (...args) => {
                     }
                   } else {
                     if (error != "") {
-                      let fnerr = getNestedObject(funcs, error);
+                      let fnerr = jptr.get(funcs, error.replaceAll(".", "/"));
                       let fnerrrtn = await sanbox(fnerr, [queuertn, errmsg]);
                       if (!fnerrrtn) {
                         if (queuertn.stack) queuertn.stack += errmsg;
@@ -585,7 +578,7 @@ module.exports = (...args) => {
                           ...errfunc,
                         };
 
-                        let fn = getNestedObject(funcs, func);
+                        let fn = jptr.get(funcs, func);
                         if (fn) {
                           let funcparams = proparams(
                             [pull, param, errkey],
@@ -619,6 +612,210 @@ module.exports = (...args) => {
                 }
                 if (terminate == true) break;
               }
+              if (terminate == true) break;
+            }
+
+            if (output.code == 0 && verbose == true) output.data = temp;
+
+            resolve(output);
+          } catch (error) {
+            resolve(errhandler(error));
+          }
+        });
+      };
+    }
+
+    class serialize1 {
+      constructor(...args) {
+        const [params, obj, verbose = true] = args;
+        return (async () => {
+          return await this.serialize(params, obj, verbose);
+        })();
+      }
+      serialize = async (...args) => {
+        return new Promise(async (resolve) => {
+          const [params, obj, verbose = true] = args;
+          const [library] = obj;
+          const { datatype, errhandler, handler, jptr, objreplace, sanbox } =
+            library.utils;
+
+          try {
+            const { err, func: funcs, workflow, share, trigger } = params;
+            let output = handler.dataformat;
+            let temp = {};
+            let terminate = false;
+            let errmsg;
+
+            const getparams = (...args) => {
+              let [value, cache_temp, cache_share] = args;
+              let result;
+              if (value.lastIndexOf(".") > -1) {
+                let location = value.replaceAll(".", "/");
+                let getpull_temp = jptr.get(cache_temp, location);
+                let getpull_share = jptr.get(cache_share, location);
+                if (getpull_temp) result = getpull_temp;
+                else if (getpull_share) result = getpull_share;
+              }
+              return result;
+            };
+
+            const proparams = (...args) => {
+              const [param, obj] = args;
+              const [pulling, parameter, idx] = param;
+              const [localshare, pubshare] = obj;
+              let funcparams = [];
+              if (pulling[idx]) {
+                if (pulling[idx].length == 0) {
+                  if (parameter[idx]) {
+                    if (parameter[idx].length > 0) funcparams = parameter[idx];
+                  }
+                } else {
+                  let cache_pull = [];
+                  for (let value of pulling[idx]) {
+                    let dtype = datatype(value);
+                    switch (dtype) {
+                      case "string":
+                        let result = getparams(value, localshare, pubshare);
+                        if (result) cache_pull.push(result);
+                        break;
+                      case "array":
+                        let arr_result = [];
+                        for (let subval of value) {
+                          let result = getparams(subval, localshare, pubshare);
+                          if (result) arr_result.push(result);
+                        }
+                        cache_pull.push(arr_result);
+                        break;
+                    }
+                  }
+                  if (!parameter[idx]) {
+                    if (cache_pull.length > 0) funcparams = cache_pull;
+                  } else {
+                    if (cache_pull.length == 1) funcparams = cache_pull;
+                    else if (cache_pull.length >= 1)
+                      funcparams.push(cache_pull);
+                    if (parameter[idx].length == 1)
+                      funcparams = funcparams.concat(parameter[idx]);
+                    else if (parameter[idx].length > 1)
+                      funcparams.push(parameter[idx]);
+                  }
+                }
+              } else {
+                if (parameter[idx]) {
+                  if (parameter[idx].length > 0)
+                    funcparams = funcparams.concat(parameter[idx]);
+                }
+              }
+
+              return funcparams;
+            };
+
+            for (let [idx, compval] of Object.entries(workflow)) {
+              errmsg = `Current onging step is:${parseInt(idx) + 1}/${
+                workflow.length
+              }. `;
+              let { error, func, name, param, pull, push } = {
+                ...handler.wfwseries,
+                ...compval,
+              };
+
+              let fn = jptr.get(funcs, func);
+              if (fn) {
+                let funcparams = proparams(
+                  [pull, objreplace(param, trigger), 0],
+                  [temp, share]
+                );
+
+                let queuertn = await sanbox(fn, funcparams);
+                let { code, data, msg } = queuertn;
+                if (code == 0) {
+                  jptr.set(temp, `${name}/detail`, data);
+                  if (push[idx]) {
+                    push[idx].map((value, id) => {
+                      let dataval;
+                      if (data == null) dataval = data;
+                      else if (data[value]) dataval = data[value];
+                      else dataval = data;
+                      if (value.lastIndexOf(".") > -1) {
+                        let location = value.replaceAll(".", "/");
+                        let emptycheck = jptr.get(share, location);
+                        if (!emptycheck) jptr.set(share, location, dataval);
+                        else {
+                          let dtype = datatype(emptycheck);
+                          switch (dtype) {
+                            case "object":
+                              jptr.set(
+                                share,
+                                location,
+                                mergeDeep(emptycheck, dataval)
+                              );
+                              break;
+                            case "array":
+                              if (emptycheck.length == 0)
+                                jptr.set(share, location, dataval);
+                              else
+                                jptr.set(
+                                  share,
+                                  location,
+                                  emptycheck.concat(dataval)
+                                );
+                              break;
+                          }
+                        }
+                      } else jptr.set(temp, `${name}/${value}`, dataval);
+                    });
+                  }
+                } else {
+                  if (error != "") {
+                    let fnerr = jptr.get(funcs, error.replaceAll(".", "/"));
+                    let fnerrrtn = await sanbox(fnerr, [queuertn, errmsg]);
+                    if (!fnerrrtn) {
+                      if (queuertn.stack) queuertn.stack += errmsg;
+                      else if (queuertn.message) queuertn.message += errmsg;
+                      else if (queuertn.msg) queuertn.msg += errmsg;
+                      if (verbose == true) output = { ...queuertn, data: temp };
+                      terminate = true;
+                    }
+                  } else if (err.length > 0) {
+                    for (let [errkey, errfunc] of Object.entries(err)) {
+                      let { func, name, param, pull, push } = {
+                        ...handler.wfwseries,
+                        ...errfunc,
+                      };
+
+                      let fn = jptr.get(funcs, func);
+                      if (fn) {
+                        let funcparams = proparams(
+                          [pull, param, errkey],
+                          [temp, share]
+                        );
+                        let fnerrrtn = await sanbox(fn, [
+                          queuertn,
+                          errmsg,
+                          funcparams,
+                        ]);
+                        if (!fnerrrtn) {
+                          if (queuertn.stack) queuertn.stack += errmsg;
+                          else if (queuertn.message) queuertn.message += errmsg;
+                          else if (queuertn.msg) queuertn.msg += errmsg;
+                          if (verbose == true)
+                            output = { ...queuertn, data: temp };
+                          terminate = true;
+                        }
+                      }
+                    }
+                    terminate = true;
+                  }
+                  output.code = code;
+                  output.msg = msg;
+                }
+              } else {
+                output.code = -3;
+                output.msg = `Process stop at (${name}).${errmsg}. `;
+                terminate = true;
+              }
+              if (terminate == true) break;
+
               if (terminate == true) break;
             }
 
@@ -856,6 +1053,61 @@ module.exports = (...args) => {
       return result.toString().trim();
     };
 
+    const objreplace = (...args) => {
+      const [source, data] = args;
+      const [library] = obj;
+      const { jptr } = library.utils;
+      const input = JSON.stringify(source);
+      const patterns = [
+        ["{{$", "}}"],
+        ["<-{", "}>"],
+      ];
+
+      let output = "";
+      let cache = input;
+
+      while (true) {
+        for (let pattern of patterns) {
+          let cont = true;
+          while (cont) {
+            let fpos = cache.indexOf(pattern[0]);
+            let lpos = cache.indexOf(pattern[1]);
+            if (fpos > -1 && lpos > -1) {
+              let keyname = cache.substring(fpos + pattern[0].length, lpos);
+              let keyval = jptr.get(data, keyname);
+              let name = `${pattern[0]}${keyname}${pattern[1]}`;
+              let fposchar = cache.charAt(fpos - 1);
+              let lposchar = cache.charAt(lpos + pattern[1].length);
+
+              if (fposchar == '"' && fposchar == '"')
+                name = `${fposchar}${name}${lposchar}`;
+              if (keyval) {
+                if (typeof keyval !== "string") keyval = JSON.stringify(keyval);
+                else if (fposchar == '"' && fposchar == '"')
+                  keyval = `"${keyval}"`;
+              } else keyval = name;
+
+              let idx = cache.indexOf(name);
+              output += `${cache.substring(0, idx)}${keyval}`;
+              let pos = idx + name.length;
+              cache = cache.substring(pos, cache.length);
+            } else {
+              output += cache;
+              cont = false;
+            }
+          }
+          if (output == "") cache = source;
+          else {
+            cache = output;
+            output = "";
+          }
+        }
+        break;
+      }
+
+      return JSON.parse(cache);
+    };
+
     lib = {
       arr2str,
       getNestedObject,
@@ -871,8 +1123,10 @@ module.exports = (...args) => {
       arr_objpick_update,
       omit,
       objpick,
+      objreplace,
       string2json,
       serialize,
+      serialize1,
       arr_selected,
       arr_diff,
       arr_diffidx,

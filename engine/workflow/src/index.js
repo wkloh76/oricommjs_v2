@@ -291,14 +291,35 @@ module.exports = (...args) => {
       constructor(...args) {
         const [params, obj] = args;
         const [event] = params;
+        const { wfengine, objfuncs, ...objother } = obj;
+        const { engine, utils } = library;
+        const { datatype, objreplace, handler, jptr } = utils;
 
         return (async () => {
-          if (typeof backend === "undefined") {
-            const scriptTag = document.getElementById("jsonData");
-            const data = JSON.parse(scriptTag.textContent);
-            if (event == null)
-              return await this.taskrun([null, params, false], obj);
-            else return await this.helper(params, obj);
+          let output;
+          try {
+            let htmlworkflow = {};
+            let taskrole;
+            if (typeof backend === "undefined") {
+              const scriptTag = document.getElementById("jsonData");
+              const data = JSON.parse(scriptTag.textContent);
+              if (event == null)
+                output = await this.taskrun([null, params, false], obj);
+              else output = await this.helper(params, obj);
+            } else {
+              let { parameters, tasks, ...wf } = wfengine[params];
+              htmlworkflow = objreplace(wf, parameters);
+              taskrole = tasks;
+              output = await this.taskrun1([null, taskrole, true], {
+                htmlengine: { htmlworkflow },
+                objfuncs,
+                ...objother,
+              });
+            }
+          } catch (error) {
+            output = library.utils.errhandler(error);
+          } finally {
+            return output;
           }
         })();
       }
@@ -432,6 +453,101 @@ module.exports = (...args) => {
             } else {
               output.code = -1;
               output.msg = `Error: Incomplete workflow in ${func} process`;
+            }
+          }
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
+
+      taskrun1 = async (...args) => {
+        const [params, obj] = args;
+        const [event, tasks, showdata = true] = params;
+        const { htmlengine, objfuncs, ...other } = obj;
+        const {
+          datatype,
+          errhandler,
+          handler,
+          jptr,
+          pick_arrayofobj,
+          pick_arrayobj2list,
+          serialize1,
+        } = library.utils;
+        let output = handler.dataformat;
+
+        try {
+          const parallel = async (...args) => {
+            const [input, share] = args;
+            let process = [];
+            for (let objserialize of input) {
+              objserialize.func = objfuncs;
+              objserialize.share = share;
+              objserialize.trigger = other;
+              let rtn = await new serialize1(objserialize, [library], showdata);
+              process.push(rtn);
+              if (rtn.code != 0) break;
+            }
+            return process;
+          };
+
+          let { htmlworkflow } = htmlengine;
+          let fn = [],
+            rtnprocess = [];
+          let func, required;
+
+          for (let task of tasks) {
+            for (let executable of task) {
+              let step = "";
+              for (let run of executable.split(",")) {
+                step = run;
+                let getfn = jptr.get(htmlworkflow, `${step}`);
+                if (getfn) {
+                  fn.push(getfn);
+                }
+              }
+
+              if (fn.length > 0) {
+                let inputs = fn[0];
+                if (fn.length > 1) inputs = fn;
+                let share = { shared: { htmlengine, convtrigger } };
+                if (required) share.shared = { ...share.shared, required };
+                let allexec = [];
+                if (datatype(inputs) == "object") {
+                  inputs.func = objfuncs;
+                  inputs.share = share;
+                  inputs.trigger = other;
+                  allexec.push(new serialize1(inputs, [library], showdata));
+                } else if (datatype(inputs) == "array")
+                  allexec.push(parallel(inputs, share));
+
+                rtnprocess = await Promise.all(allexec);
+
+                let code = "";
+                for (let chkrtnproc of rtnprocess) {
+                  if (datatype(chkrtnproc) == "array") {
+                    let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"]);
+                    let chkcode = pick_arrayobj2list(pickarrobj, [
+                      "code",
+                    ]).code.join("");
+                    let validcode = "0".padStart(chkrtnproc.length, "0");
+                    if (chkcode != validcode) code += `[${chkcode}],`;
+                  } else {
+                    if (chkrtnproc["code"] != 0)
+                      code += `[${chkrtnproc["code"].toString()}],`;
+                  }
+                }
+
+                if (code != "") {
+                  output.code = -1;
+                  output.msg = code;
+                }
+                output.data = rtnprocess;
+              } else {
+                output.code = -1;
+                output.msg = `Error: Incomplete workflow in ${step} process`;
+              }
             }
           }
         } catch (error) {
