@@ -310,11 +310,15 @@ module.exports = (...args) => {
               let { parameters, tasks, ...wf } = wfengine[params];
               htmlworkflow = objreplace(wf, parameters);
               taskrole = tasks;
-              output = await this.taskrun1([null, taskrole, true], {
-                htmlengine: { htmlworkflow },
-                objfuncs,
-                ...objother,
-              });
+              output = await this.taskrun1(
+                [null, taskrole, true],
+                {
+                  htmlengine: { htmlworkflow },
+                  objfuncs,
+                  ...objother,
+                },
+                backend
+              );
             }
           } catch (error) {
             output = library.utils.errhandler(error);
@@ -463,7 +467,7 @@ module.exports = (...args) => {
       };
 
       taskrun1 = async (...args) => {
-        const [params, obj] = args;
+        const [params, obj, backend = false] = args;
         const [event, tasks, showdata = true] = params;
         const { htmlengine, objfuncs, ...other } = obj;
         const {
@@ -473,6 +477,7 @@ module.exports = (...args) => {
           jptr,
           pick_arrayofobj,
           pick_arrayobj2list,
+          mergeDeep,
           serialize1,
         } = library.utils;
         let output = handler.dataformat;
@@ -481,13 +486,19 @@ module.exports = (...args) => {
           const parallel = async (...args) => {
             const [input, share] = args;
             let process = [];
+            let cross = share;
             for (let objserialize of input) {
               objserialize.func = objfuncs;
-              objserialize.share = share;
+              objserialize.share = cross;
               objserialize.trigger = other;
               let rtn = await new serialize1(objserialize, [library], showdata);
               process.push(rtn);
               if (rtn.code != 0) break;
+              let name =
+                objserialize.workflow[objserialize.workflow.length - 1].name;
+              cross = mergeDeep(cross, {
+                [objserialize.wfname]: rtn.data[name],
+              });
             }
             return process;
           };
@@ -495,7 +506,7 @@ module.exports = (...args) => {
           let { htmlworkflow } = htmlengine;
           let fn = [],
             rtnprocess = [];
-          let func, required;
+          let required;
 
           for (let task of tasks) {
             for (let executable of task) {
@@ -504,15 +515,19 @@ module.exports = (...args) => {
                 step = run;
                 let getfn = jptr.get(htmlworkflow, `${step}`);
                 if (getfn) {
-                  fn.push(getfn);
+                  fn.push({ ...getfn, wfname: step });
                 }
               }
 
               if (fn.length > 0) {
                 let inputs = fn[0];
                 if (fn.length > 1) inputs = fn;
-                let share = { shared: { htmlengine, convtrigger } };
-                if (required) share.shared = { ...share.shared, required };
+                let share = { shared: {} };
+                if (!backend) {
+                  share.shared = { htmlengine, convtrigger };
+                  if (required)
+                    share.shared = mergeDeep(share.shared, { required });
+                }
                 let allexec = [];
                 if (datatype(inputs) == "object") {
                   inputs.func = objfuncs;
@@ -543,7 +558,14 @@ module.exports = (...args) => {
                   output.code = -1;
                   output.msg = code;
                 }
-                output.data = rtnprocess;
+                let result = rtnprocess[rtnprocess.length - 1];
+                let dtype = datatype(result);
+                if (dtype == "array") {
+                  output.data = result[result.length - 1].data[step]["detail"];
+                } else if (dtype == "object") {
+                  let name = inputs.workflow[inputs.workflow.length - 1].name;
+                  output.data = result.data[name]["detail"];
+                }
               } else {
                 output.code = -1;
                 output.msg = `Error: Incomplete workflow in ${step} process`;

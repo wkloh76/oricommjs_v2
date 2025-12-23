@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change the sequence in catch at app.js. Completed on 2025-12-01
 - Change the frontend javascript preloading library at compmgr engine. Completed on 2025-12-12
 - Workflow engine code improvement to support fronted. Completed on 2025-12-16
+- queuetask method at workflow engine for backend done. Completed on 2025-12-23
 
 ### Deprecated
 

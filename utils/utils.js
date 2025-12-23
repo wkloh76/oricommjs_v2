@@ -646,70 +646,6 @@ module.exports = (...args) => {
             let terminate = false;
             let errmsg;
 
-            const getparams = (...args) => {
-              let [value, cache_temp, cache_share] = args;
-              let result;
-              if (value.lastIndexOf(".") > -1) {
-                let location = value.replaceAll(".", "/");
-                let getpull_temp = jptr.get(cache_temp, location);
-                let getpull_share = jptr.get(cache_share, location);
-                if (getpull_temp) result = getpull_temp;
-                else if (getpull_share) result = getpull_share;
-              }
-              return result;
-            };
-
-            const proparams = (...args) => {
-              const [param, obj] = args;
-              const [pulling, parameter, idx] = param;
-              const [localshare, pubshare] = obj;
-              let funcparams = [];
-              if (pulling[idx]) {
-                if (pulling[idx].length == 0) {
-                  if (parameter[idx]) {
-                    if (parameter[idx].length > 0) funcparams = parameter[idx];
-                  }
-                } else {
-                  let cache_pull = [];
-                  for (let value of pulling[idx]) {
-                    let dtype = datatype(value);
-                    switch (dtype) {
-                      case "string":
-                        let result = getparams(value, localshare, pubshare);
-                        if (result) cache_pull.push(result);
-                        break;
-                      case "array":
-                        let arr_result = [];
-                        for (let subval of value) {
-                          let result = getparams(subval, localshare, pubshare);
-                          if (result) arr_result.push(result);
-                        }
-                        cache_pull.push(arr_result);
-                        break;
-                    }
-                  }
-                  if (!parameter[idx]) {
-                    if (cache_pull.length > 0) funcparams = cache_pull;
-                  } else {
-                    if (cache_pull.length == 1) funcparams = cache_pull;
-                    else if (cache_pull.length >= 1)
-                      funcparams.push(cache_pull);
-                    if (parameter[idx].length == 1)
-                      funcparams = funcparams.concat(parameter[idx]);
-                    else if (parameter[idx].length > 1)
-                      funcparams.push(parameter[idx]);
-                  }
-                }
-              } else {
-                if (parameter[idx]) {
-                  if (parameter[idx].length > 0)
-                    funcparams = funcparams.concat(parameter[idx]);
-                }
-              }
-
-              return funcparams;
-            };
-
             for (let [idx, compval] of Object.entries(workflow)) {
               errmsg = `Current onging step is:${parseInt(idx) + 1}/${
                 workflow.length
@@ -721,9 +657,9 @@ module.exports = (...args) => {
 
               let fn = jptr.get(funcs, func);
               if (fn) {
-                let funcparams = proparams(
-                  [pull, objreplace(param, trigger), 0],
-                  [temp, share]
+                let [funcparams] = objreplace(
+                  param,
+                  mergeDeep(trigger, temp, share)
                 );
 
                 let queuertn = await sanbox(fn, funcparams);
@@ -785,10 +721,11 @@ module.exports = (...args) => {
 
                       let fn = jptr.get(funcs, func);
                       if (fn) {
-                        let funcparams = proparams(
-                          [pull, param, errkey],
-                          [temp, share]
+                        let [funcparams] = objreplace(
+                          param,
+                          mergeDeep(temp, share)
                         );
+
                         let fnerrrtn = await sanbox(fn, [
                           queuertn,
                           errmsg,
