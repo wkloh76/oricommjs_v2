@@ -120,10 +120,12 @@
     "wbr"
   ],
   "mimes": {
+    "3g2": "video/3gpp2",
+    "3gp": "video/3gpp",
     "aac": "audio/aac",
+    "av1": "video/av1",
     "avi": "video/x-msvideo",
     "avif": "image/avif",
-    "av1": "video/av1",
     "bin": "application/octet-stream",
     "bmp": "image/bmp",
     "css": "text/css",
@@ -131,6 +133,8 @@
     "eot": "application/vnd.ms-fontobject",
     "epub": "application/epub+zip",
     "gif": "image/gif",
+    "glb": "model/gltf-binary",
+    "gltf": "model/gltf+json",
     "gz": "application/gzip",
     "htm": "text/html",
     "html": "text/html",
@@ -164,17 +168,14 @@
     "ttf": "font/ttf",
     "txt": "text/plain",
     "wasm": "application/wasm",
-    "webm": "video/webm",
     "weba": "audio/webm",
+    "webm": "video/webm",
     "webp": "image/webp",
     "woff": "font/woff",
     "woff2": "font/woff2",
     "xhtml": "application/xhtml+xml",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "xml": "application/xml",
-    "zip": "application/zip",
-    "3gp": "video/3gpp",
-    "3g2": "video/3gpp2",
-    "gltf": "model/gltf+json",
-    "glb": "model/gltf-binary"
+    "zip": "application/zip"
   }
 }

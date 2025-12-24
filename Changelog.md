@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply workflow engine for frontend. Code transfer from compmgr `assist/data/preload.html`. Completed on 2025-12-15
 - Add auto indentify component toml file base on engine. The prefix of component name no longer to use. Completed on 2025-12-15
 - Redesign queuetask method at workflow engine. In progress
+- Add `xlsx` to mimes at compmgr engine. Completed on 2025-12-24
+- Add and alter objreplace function to utils which will deep search and replacement. Completed on 2025-12-24
 
 ### Changed
 
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Removed
+
+- Remove unused frontend module in guimaker at atomic/atom. Completed on 2025-12-24
 
 ### Fixed
 

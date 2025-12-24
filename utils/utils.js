@@ -994,55 +994,54 @@ module.exports = (...args) => {
       const [source, data] = args;
       const [library] = obj;
       const { jptr } = library.utils;
-      const input = JSON.stringify(source);
-      const patterns = [
-        ["{{$", "}}"],
-        ["<-{", "}>"],
-      ];
 
-      let output = "";
-      let cache = input;
-
-      while (true) {
-        for (let pattern of patterns) {
-          let cont = true;
-          while (cont) {
-            let fpos = cache.indexOf(pattern[0]);
-            let lpos = cache.indexOf(pattern[1]);
-            if (fpos > -1 && lpos > -1) {
-              let keyname = cache.substring(fpos + pattern[0].length, lpos);
-              let keyval = jptr.get(data, keyname);
-              let name = `${pattern[0]}${keyname}${pattern[1]}`;
-              let fposchar = cache.charAt(fpos - 1);
-              let lposchar = cache.charAt(lpos + pattern[1].length);
-
-              if (fposchar == '"' && fposchar == '"')
-                name = `${fposchar}${name}${lposchar}`;
-              if (keyval) {
-                if (typeof keyval !== "string") keyval = JSON.stringify(keyval);
-                else if (fposchar == '"' && fposchar == '"')
-                  keyval = `"${keyval}"`;
-              } else keyval = name;
-
-              let idx = cache.indexOf(name);
-              output += `${cache.substring(0, idx)}${keyval}`;
-              let pos = idx + name.length;
-              cache = cache.substring(pos, cache.length);
-            } else {
-              output += cache;
-              cont = false;
+      // QWEN3-MAX
+      const replaceStructuralPlaceholders = (...args) => {
+        const [value, replacement] = args;
+        if (typeof value === "string") {
+          // 检查是否整个字符串是一个占位符
+          const match = value.match(/^\{\{\$([^}]+)\}\}$/);
+          const match2 = value.match(/^<-{([^}]+)}>$/);
+          if (match || match2) {
+            const path = (match ? match[1] : match2[1]).trim();
+            const resolved = jptr.get(replacement, path);
+            if (resolved)
+              // 返回实际值（可能是 string / object / array）
+              return resolved;
+            else return value;
+          }
+          // 如果只是字符串中包含占位符（如 "/{{$xxx}}/path"），则不支持嵌入对象！
+          // 这里我们只替换字符串中的 scalar 值（如 general/0）
+          return value.replace(
+            /\{\{\$([^}]+)\}\}|\<-{([^}]+)}>}/g,
+            (match, p1, p2) => {
+              const path = (p1 || p2).trim();
+              const resolved = jptr.get(replacement, path);
+              if (typeof resolved === "object") {
+                throw new Error(
+                  `Cannot embed object/array into string template: ${match}. ` +
+                    `Only scalar replacements allowed inside strings.`
+                );
+              }
+              return String(resolved);
             }
+          );
+        } else if (Array.isArray(value)) {
+          return value.map((item) =>
+            replaceStructuralPlaceholders(item, replacement)
+          );
+        } else if (value !== null && typeof value === "object") {
+          const result = {};
+          for (const [key, val] of Object.entries(value)) {
+            result[key] = replaceStructuralPlaceholders(val, replacement);
           }
-          if (output == "") cache = source;
-          else {
-            cache = output;
-            output = "";
-          }
+          return result;
+        } else {
+          return value;
         }
-        break;
-      }
+      };
 
-      return JSON.parse(cache);
+      return replaceStructuralPlaceholders(source, data);
     };
 
     lib = {
