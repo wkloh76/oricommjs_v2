@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesign queuetask method at workflow engine. In progress
 - Add `xlsx` to mimes at compmgr engine. Completed on 2025-12-24
 - Add and alter objreplace function to utils which will deep search and replacement. Completed on 2025-12-24
+- Add new element to guiapi method in cengine at compmgr engine. Completed on 2025-12-26
 
 ### Changed
 
@@ -48,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug fix in mergeDeep function at utils. Completed on 2025-12-15
 - Bug fix in workflow engine for frontend. Completed on 2025-12-15
 - Bug fix in smfetch at `atomic/atom` which unsupport current design without prefix to identify current runtime engine. Completed on 2025-12-16
+- Bug fix at app.js. Completed on 2025-12-26
 
 ### Security
 

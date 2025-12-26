@@ -28,7 +28,8 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { assist, utils } = library;
     const { getContentType, identify_htmltag, mimes, str_inject } = assist;
-    const { handler, getNestedObject, sanbox } = utils;
+    const { getNestedObject, handler, jptr, mergeDeep, objreplace, sanbox } =
+      utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
@@ -411,6 +412,32 @@ module.exports = (...args) => {
         }
       };
 
+      const wfexchange = async (...args) => {
+        const [abspath, collect, excluded = []] = args;
+        const { readdirSync, readFileSync } = fs;
+        const { join, extname } = path;
+        const _path = join(abspath, "json");
+        let output = {};
+        for (let dir of collect) {
+          let files = await sanbox(readdirSync, [join(_path, dir)]);
+          if (!files.code && files.length > 0) {
+            files.map((file) => {
+              let bname = path.parse(file).name;
+              let ext = extname(file);
+              if (ext == ".json" && !excluded.includes(file)) {
+                jptr.set(
+                  output,
+                  join(dir, bname),
+                  JSON.parse(readFileSync(join(_path, dir, file), "utf8"))
+                );
+              }
+            });
+          }
+        }
+
+        return output;
+      };
+
       /**
        * The final process which is sending resutl to frontend
        * @alias module:reaction.processEnd
@@ -513,6 +540,12 @@ module.exports = (...args) => {
               script.innerHTML = `var glib = {}, htmlengine = {}, objfuncs = {}, library = {}, mjs = ${JSON.stringify(
                 import_mjs(mjs, params)
               )};`;
+              injectionjs.variables["wfexchange"] = await wfexchange(
+                orires.abspath,
+                ["api", "trigger", "workflow"],
+                ["backend.json"]
+              );
+
               if (Object.keys(injectionjs.variables).length > 0)
                 script.innerHTML += `var injectionjs=${JSON.stringify(
                   injectionjs.variables
@@ -910,7 +943,9 @@ module.exports = (...args) => {
             orires.locals = { render: handler.webview };
             orires.locals.render.options.redirect = redirect;
           } else throw { code: 404, message: "Page not found" };
-
+          orires.abspath = fn.abspath;
+          orires.compname = fn.compname;
+          orires.worker = fn.worker;
           return await processEnd(cnt, orires);
         } catch (error) {
           orires.locals = { render: handler.webview };

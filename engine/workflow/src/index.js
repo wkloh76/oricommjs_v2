@@ -291,7 +291,6 @@ module.exports = (...args) => {
       constructor(...args) {
         const [params, obj] = args;
         const [event] = params;
-        const { wfengine, objfuncs, ...objother } = obj;
         const { engine, utils } = library;
         const { datatype, objreplace, handler, jptr } = utils;
 
@@ -301,12 +300,33 @@ module.exports = (...args) => {
             let htmlworkflow = {};
             let taskrole;
             if (typeof backend === "undefined") {
-              const scriptTag = document.getElementById("jsonData");
-              const data = JSON.parse(scriptTag.textContent);
+              const { webengine, wfexchange } = obj;
+              const { htmlcollection, htmlevent, htmlrender, htmllogicflow } =
+                webengine.load;
+              const { api, trigger, workflow } = wfexchange;
+              if (webengine) {
+                htmlengine = await this.load({
+                  htmlcollection,
+                  htmlevent,
+                  htmlrender,
+                  htmllogicflow,
+                  _path: webengine.path,
+                });
+                let objfuncs = this.register(
+                  htmlengine,
+                  Object.values(trigger)
+                );
+                // if (webengine.startup)
+                //   await taskrun([null, webengine.startup, false], {
+                //     htmlengine,
+                //     objfuncs,
+                //   });
+              }
               if (event == null)
                 output = await this.taskrun([null, params, false], obj);
               else output = await this.helper(params, obj);
             } else {
+              const { wfengine, objfuncs, ...objother } = obj;
               let { parameters, tasks, ...wf } = wfengine[params];
               htmlworkflow = objreplace(wf, parameters);
               taskrole = tasks;
@@ -327,6 +347,109 @@ module.exports = (...args) => {
           }
         })();
       }
+      test = {
+        t0: function (arg) {
+          this.source = arg;
+          let yy = utils.datatype(arg);
+          if ((yy = "object")) this.proceed = true;
+          return this;
+        },
+        t1: function (arg) {
+          if (this.proceed) return objreplace(this.source, arg);
+          else return this.source;
+        },
+      };
+
+      load = async (...args) => {
+        const [params] = args;
+        const { _path, ...load } = params;
+        const { mergeDeep, jptr } = library.utils;
+        let lib = {};
+        for (let [name, value] of Object.entries(load)) {
+          if (name.substring(0, 4) == "html") {
+            let folder = name.substring(4);
+            for (let [parent, child] of Object.entries(value)) {
+              for (let item of child) {
+                let fnpath = `${_path}${parent}/${folder}/${item}`;
+                let libname = `${folder}/${parent}/${folder}/${item}`;
+                let fn = fnpath.split("/").pop().replace(".js", "");
+                fn = fn.replace(".", "-");
+                let { default: df } = await import(fnpath);
+                if (df) {
+                  let chkexists = jptr.get(lib, libname);
+                  let { register, ...other } = df;
+                  if (chkexists)
+                    jptr.set(lib, libname, mergeDeep(chkexists, other));
+                  else jptr.set(lib, libname, other);
+                }
+              }
+            }
+          }
+        }
+        return lib;
+      };
+      register = (...args) => {
+        const [htmlengine, [trigger]] = args;
+        const { collection, event, logicflow, render } = htmlengine;
+        const { mergeDeep } = library.utils;
+        let funcs = {};
+        for (let func of [logicflow, render, collection])
+          funcs = mergeDeep(funcs, { ...func });
+        let conv = this.convtrigger(trigger);
+        this.regevents(conv, event);
+        return funcs;
+      };
+      convtrigger = (...args) => {
+        const [trigger] = args;
+        const { handler, jptr } = library.utils;
+        const html_objevents = handler.winevents;
+        let objevents = handler.winevents;
+        for (let [name, value] of Object.entries(trigger)) {
+          let fn = jptr.get(html_objevents, name);
+          if (fn) jptr.set(objevents, name, value);
+        }
+        return objevents;
+      };
+      regevents = (...args) => {
+        const [param, objfuncs] = args;
+        const { utils } = library;
+        const { datatype, errhandler, getNestedObject, handler, jptr } = utils;
+        let output = handler.dataformat;
+        try {
+          for (let [, valobjevent] of Object.entries(param)) {
+            for (let [key, value] of Object.entries(valobjevent)) {
+              for (let [evt, fn] of Object.entries(value)) {
+                let qs = document.querySelectorAll(evt);
+                if (qs) {
+                  for (let nodevalue of qs) {
+                    if (typeof fn === "function")
+                      nodevalue.addEventListener(key, fn);
+                    else if (datatype(fn) === "string") {
+                      let func = getNestedObject(objfuncs, fn);
+                      if (func) nodevalue.addEventListener(key, func);
+                    } else if (datatype(fn) === "object") {
+                      if (fn.attr) {
+                        for (let [attrkey, attrval] of Object.entries(fn.attr))
+                          nodevalue.setAttribute(attrkey, attrval);
+                      }
+                      let func = jptr.get(objfuncs, fn.evt);
+                      if (func)
+                        nodevalue.addEventListener(key, async(event) => {
+                          await func(event);
+                          await this.helper(event)
+                        });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
+      };
 
       helper = async (...args) => {
         const [params, obj] = args;

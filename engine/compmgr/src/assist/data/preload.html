@@ -63,15 +63,15 @@
     }
 
     const { webengine, ...injection } = injectionjs;
-    if (webengine) {
-      htmlengine = await load(webengine);
-      objfuncs = register(htmlengine, webengine.trigger);
-      if (webengine.startup)
-        await taskrun([null, webengine.startup, false], {
-          htmlengine,
-          objfuncs,
-        });
-      // await new queuetask([event], { htmlengine, objfuncs });
-    }
+    // if (webengine) {
+    // htmlengine = await load(webengine);
+    //   // objfuncs = register(htmlengine, webengine.trigger);
+    //   // if (webengine.startup)
+    //   //   await taskrun([null, webengine.startup, false], {
+    //   //     htmlengine,
+    //   //     objfuncs,
+    //   //   });
+    // }
+    await new queuetask([event], injectionjs);
   });
 </script>

@@ -453,7 +453,7 @@
           const [params, obj] = args;
           const [library, sys] = obj;
           const { dir, utils } = library;
-          const { errhandler, handler, sanbox } = utils;
+          const { datatype, errhandler, handler, sanbox } = utils;
           const { fs, path } = sys;
           const { existsSync, readFileSync, writeFileSync } = fs;
           const { join } = path;
@@ -473,7 +473,7 @@
               )
                 routefile = JSON.stringify(params.routejson, null, 2);
             }
-            if (routefile)
+            if (datatype(routefile) == "string")
               await sanbox(writeFileSync, [routefilename, routefile]);
             resolve(output);
           } catch (error) {
