@@ -27,235 +27,6 @@ module.exports = (...args) => {
   const backend = true;
 
   try {
-    const load = async (...args) => {
-      const [param] = args;
-      let lib = {};
-      for (let [name, value] of Object.entries(param.load)) {
-        if (name.substring(0, 4) == "html") {
-          let folder = name.substring(4);
-          lib[name] = {};
-          for (let [parent, child] of Object.entries(value)) {
-            for (let item of child) {
-              let fnpath = `${param.path}${parent}/${folder}/${item}`;
-              let fn = fnpath.split("/").pop().replace(".js", "");
-              fn = fn.replace(".", "-");
-              let { default: df } = await import(fnpath);
-              if (df) {
-                let { register, ...other } = df;
-                if (lib[name][fn])
-                  lib[name][fn] = {
-                    ...lib[name][fn],
-                    ...other,
-                  };
-                else lib[name][fn] = other;
-              }
-            }
-          }
-        }
-      }
-      return lib;
-    };
-
-    const helper = async (...args) => {
-      const [params, obj] = args;
-      const [event, showdata = true] = params;
-      const { htmlengine, objfuncs } = obj;
-      const { arr2str, arr_selected } = library.utils;
-
-      let attrs = event.currentTarget.attributes;
-      let clsname = arr2str(event.currentTarget.className.split(" "), ".", " ");
-      let tagName = event.currentTarget.tagName;
-      let id = `#${event.currentTarget.id}`;
-      let func = attrs["func"].nodeValue;
-      let qslist = [];
-
-      if (tagName) qslist.push(tagName);
-      if (id) qslist.push(id);
-      if (clsname) qslist.push(clsname);
-
-      for (let [, valobjevent] of Object.entries(
-        injectionjs.webengine.trigger
-      )) {
-        let evtkeys = Object.keys(valobjevent);
-        let { data } = arr_selected(qslist, evtkeys);
-        if (data && data.length == 1) {
-          let { attr } = valobjevent[data[0]];
-          if (attr) {
-            if (attr.required) {
-              let { func: fn, required } = attr;
-              func = { taskname: fn, required: required };
-            }
-          }
-        }
-      }
-      if (func)
-        return await taskrun([event, func, showdata], {
-          htmlengine,
-          objfuncs,
-        });
-    };
-
-    const register = (...args) => {
-      const [htmlengine, trigger] = args;
-      const { htmlcollection, htmlevent, htmllogicflow, htmlrender } =
-        htmlengine;
-      const { mergeDeep } = library.utils;
-      let funcs = {};
-      for (let func of [htmllogicflow, htmlrender, htmlcollection])
-        funcs = mergeDeep(funcs, { ...func });
-
-      regevents(convtrigger(trigger), htmlevent);
-      return funcs;
-    };
-
-    const convtrigger = (...args) => {
-      const [trigger] = args;
-      const { getNestedObject, handler, jptr } = library.utils;
-      const html_objevents = handler.winevents;
-      let objevents = handler.winevents;
-      for (let [name, value] of Object.entries(trigger)) {
-        let fn = getNestedObject(html_objevents, name);
-        if (fn) {
-          let location = name.replaceAll(".", "/");
-          jptr.set(objevents, location, value);
-        }
-      }
-      return objevents;
-    };
-
-    const taskrun = async (...args) => {
-      const [params, obj] = args;
-      const [event, task, showdata = true] = params;
-      const { htmlengine, objfuncs } = obj;
-      const {
-        datatype,
-        errhandler,
-        getNestedObject,
-        handler,
-        pick_arrayofobj,
-        pick_arrayobj2list,
-        serialize,
-      } = library.utils;
-      let output = handler.dataformat;
-
-      try {
-        let { htmlworkflow } = htmlengine;
-        let objkeys = Object.keys(htmlworkflow);
-        let fn, func, required;
-        let task_type = datatype(task);
-        if (task_type == "string") func = task;
-        else if (task_type == "object") {
-          let { taskname, required: req } = task;
-          func = taskname;
-          if (req) required = req;
-        }
-
-        const parallel = async (...args) => {
-          const [input, share] = args;
-          let process = [];
-          for (let objserialize of input) {
-            objserialize.func = objfuncs;
-            objserialize.share = share;
-            let rtn = await new serialize(objserialize, [library], showdata);
-            process.push(rtn);
-            if (rtn.code != 0) break;
-          }
-          return process;
-        };
-        for (let item of objkeys) {
-          let getfn = getNestedObject(htmlworkflow, `${item}.${func}`);
-          if (getfn) {
-            fn = getfn;
-            break;
-          }
-        }
-        if (fn) {
-          let rtnprocess = [];
-          let inputs = fn(event, func);
-          if (inputs) {
-            let share = { shared: { htmlengine, convtrigger } };
-            if (required) share.shared = { ...share.shared, required };
-            if (datatype(inputs) == "object") inputs = [inputs];
-            let allexec = [];
-            for (let input of inputs) {
-              if (datatype(input) == "object") {
-                input.func = objfuncs;
-                input.share = share;
-                allexec.push(new serialize(input, [library], showdata));
-              } else if (datatype(input) == "array")
-                allexec.push(parallel(input, share));
-            }
-            rtnprocess = await Promise.all(allexec);
-
-            let code = "";
-            for (let chkrtnproc of rtnprocess) {
-              if (datatype(chkrtnproc) == "array") {
-                let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"]);
-                let chkcode = pick_arrayobj2list(pickarrobj, [
-                  "code",
-                ]).code.join("");
-                let validcode = "0".padStart(chkrtnproc.length, "0");
-                if (chkcode != validcode) code += `[${chkcode}],`;
-              } else {
-                if (chkrtnproc["code"] != 0)
-                  code += `[${chkrtnproc["code"].toString()}],`;
-              }
-            }
-
-            if (code != "") {
-              output.code = -1;
-              output.msg = code;
-            }
-            output.data = rtnprocess;
-          } else {
-            output.code = -1;
-            output.msg = `Error: Incomplete workflow in ${func} process`;
-          }
-        }
-      } catch (error) {
-        output = errhandler(error);
-      } finally {
-        return output;
-      }
-    };
-
-    const regevents = (...args) => {
-      const [param, objfuncs] = args;
-      const { utils } = library;
-      const { datatype, errhandler, getNestedObject, handler } = utils;
-      let output = handler.dataformat;
-      try {
-        for (let [, valobjevent] of Object.entries(param)) {
-          for (let [key, value] of Object.entries(valobjevent)) {
-            for (let [evt, fn] of Object.entries(value)) {
-              let qs = document.querySelectorAll(evt);
-              if (qs) {
-                for (let nodevalue of qs) {
-                  if (typeof fn === "function")
-                    nodevalue.addEventListener(key, fn);
-                  else if (datatype(fn) === "string") {
-                    let func = getNestedObject(objfuncs, fn);
-                    if (func) nodevalue.addEventListener(key, func);
-                  } else if (datatype(fn) === "object") {
-                    if (fn.attr) {
-                      for (let [attrkey, attrval] of Object.entries(fn.attr))
-                        nodevalue.setAttribute(attrkey, attrval);
-                    }
-                    let func = getNestedObject(objfuncs, fn.evt);
-                    if (func) nodevalue.addEventListener(key, func);
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch (error) {
-        output = errhandler(error);
-      } finally {
-        return output;
-      }
-    };
-
     const loadlib = async (...args) => {
       const [param] = args;
       const { jptr } = library.utils;
@@ -289,15 +60,15 @@ module.exports = (...args) => {
 
     class queuetask {
       constructor(...args) {
-        const [params, obj] = args;
+        const [params, obj, showdata = true] = args;
         const [event] = params;
-        const { engine, utils } = library;
-        const { datatype, objreplace, handler, jptr } = utils;
+        const { utils } = library;
+        const { objreplace } = utils;
 
         return (async () => {
           let output;
           try {
-            let htmlworkflow = {};
+            let workflow = {};
             let taskrole;
             if (typeof backend === "undefined") {
               const { webengine, wfexchange } = obj;
@@ -312,28 +83,23 @@ module.exports = (...args) => {
                   htmllogicflow,
                   _path: webengine.path,
                 });
-                let objfuncs = this.register(
-                  htmlengine,
+                this.register(
+                  { ...htmlengine, workflow },
                   Object.values(trigger)
                 );
-                // if (webengine.startup)
-                //   await taskrun([null, webengine.startup, false], {
-                //     htmlengine,
-                //     objfuncs,
-                //   });
               }
               if (event == null)
-                output = await this.taskrun([null, params, false], obj);
-              else output = await this.helper(params, obj);
+                output = await this.taskrun([null, params, showdata], obj);
+              else output = await this.taskrun([event, params, showdata], obj);
             } else {
               const { wfengine, objfuncs, ...objother } = obj;
               let { parameters, tasks, ...wf } = wfengine[params];
-              htmlworkflow = objreplace(wf, parameters);
+              workflow = objreplace(wf, parameters);
               taskrole = tasks;
-              output = await this.taskrun1(
+              output = await this.taskrun(
                 [null, taskrole, true],
                 {
-                  htmlengine: { htmlworkflow },
+                  htmlengine: { workflow },
                   objfuncs,
                   ...objother,
                 },
@@ -347,18 +113,6 @@ module.exports = (...args) => {
           }
         })();
       }
-      test = {
-        t0: function (arg) {
-          this.source = arg;
-          let yy = utils.datatype(arg);
-          if ((yy = "object")) this.proceed = true;
-          return this;
-        },
-        t1: function (arg) {
-          if (this.proceed) return objreplace(this.source, arg);
-          else return this.source;
-        },
-      };
 
       load = async (...args) => {
         const [params] = args;
@@ -371,9 +125,9 @@ module.exports = (...args) => {
             for (let [parent, child] of Object.entries(value)) {
               for (let item of child) {
                 let fnpath = `${_path}${parent}/${folder}/${item}`;
-                let libname = `${folder}/${parent}/${folder}/${item}`;
                 let fn = fnpath.split("/").pop().replace(".js", "");
                 fn = fn.replace(".", "-");
+                let libname = `${folder}/${parent}/${folder}/${fn}`;
                 let { default: df } = await import(fnpath);
                 if (df) {
                   let chkexists = jptr.get(lib, libname);
@@ -389,14 +143,14 @@ module.exports = (...args) => {
         return lib;
       };
       register = (...args) => {
-        const [htmlengine, [trigger]] = args;
+        const [htmlengine, [trigger], showdata] = args;
         const { collection, event, logicflow, render } = htmlengine;
         const { mergeDeep } = library.utils;
         let funcs = {};
         for (let func of [logicflow, render, collection])
           funcs = mergeDeep(funcs, { ...func });
         let conv = this.convtrigger(trigger);
-        this.regevents(conv, event);
+        this.regevents([conv, event, htmlengine], showdata);
         return funcs;
       };
       convtrigger = (...args) => {
@@ -411,7 +165,8 @@ module.exports = (...args) => {
         return objevents;
       };
       regevents = (...args) => {
-        const [param, objfuncs] = args;
+        const [params, showdata] = args;
+        const [param, objfuncs, htmlengine] = params;
         const { utils } = library;
         const { datatype, errhandler, getNestedObject, handler, jptr } = utils;
         let output = handler.dataformat;
@@ -434,9 +189,14 @@ module.exports = (...args) => {
                       }
                       let func = jptr.get(objfuncs, fn.evt);
                       if (func)
-                        nodevalue.addEventListener(key, async(event) => {
+                        nodevalue.addEventListener(key, async (event) => {
+                          let { workflow: wfengine, ...otherwf } = htmlengine;
                           await func(event);
-                          await this.helper(event)
+                          await this.helper([event, showdata], {
+                            ...otherwf,
+                            wfengine,
+                            trigger: param,
+                          });
                         });
                     }
                   }
@@ -454,8 +214,9 @@ module.exports = (...args) => {
       helper = async (...args) => {
         const [params, obj] = args;
         const [event, showdata = true] = params;
-        const { htmlengine, objfuncs } = obj;
-        const { arr2str, arr_selected } = library.utils;
+        const { wfengine, trigger, ...objfuncs } = obj;
+        const { arr2str, arr_selected, jptr, objfinds, objreplace } =
+          library.utils;
 
         let attrs = event.currentTarget.attributes;
         let clsname = arr2str(
@@ -472,9 +233,7 @@ module.exports = (...args) => {
         if (id) qslist.push(id);
         if (clsname) qslist.push(clsname);
 
-        for (let [, valobjevent] of Object.entries(
-          injectionjs.webengine.trigger
-        )) {
+        for (let [, valobjevent] of Object.entries(trigger)) {
           let evtkeys = Object.keys(valobjevent);
           let { data } = arr_selected(qslist, evtkeys);
           if (data && data.length == 1) {
@@ -487,109 +246,19 @@ module.exports = (...args) => {
             }
           }
         }
-        if (func)
-          return await taskrun([event, func, showdata], {
-            htmlengine,
+        if (func) {
+          let { parameters, tasks, ...wf } = jptr.get(wfengine, func);
+          let workflow = objreplace(wf, parameters);
+          let taskrole = tasks;
+          return await this.taskrun([event, taskrole, showdata], {
+            htmlengine: { workflow },
             objfuncs,
+            // func,
           });
-      };
-      taskrun = async (...args) => {
-        const [params, obj] = args;
-        const [event, task, showdata = true] = params;
-        const { htmlengine, objfuncs } = obj;
-        const {
-          datatype,
-          errhandler,
-          getNestedObject,
-          handler,
-          pick_arrayofobj,
-          pick_arrayobj2list,
-          serialize,
-        } = library.utils;
-        let output = handler.dataformat;
-
-        try {
-          let { htmlworkflow } = htmlengine;
-          let objkeys = Object.keys(htmlworkflow);
-          let fn, func, required;
-          let task_type = datatype(task);
-          if (task_type == "string") func = task;
-          else if (task_type == "object") {
-            let { taskname, required: req } = task;
-            func = taskname;
-            if (req) required = req;
-          }
-
-          const parallel = async (...args) => {
-            const [input, share] = args;
-            let process = [];
-            for (let objserialize of input) {
-              objserialize.func = objfuncs;
-              objserialize.share = share;
-              let rtn = await new serialize(objserialize, [library], showdata);
-              process.push(rtn);
-              if (rtn.code != 0) break;
-            }
-            return process;
-          };
-          for (let item of objkeys) {
-            let getfn = getNestedObject(htmlworkflow, `${item}.${func}`);
-            if (getfn) {
-              fn = getfn;
-              break;
-            }
-          }
-          if (fn) {
-            let rtnprocess = [];
-            let inputs = fn(event, func);
-            if (inputs) {
-              let share = { shared: { htmlengine, convtrigger } };
-              if (required) share.shared = { ...share.shared, required };
-              if (datatype(inputs) == "object") inputs = [inputs];
-              let allexec = [];
-              for (let input of inputs) {
-                if (datatype(input) == "object") {
-                  input.func = objfuncs;
-                  input.share = share;
-                  allexec.push(new serialize(input, [library], showdata));
-                } else if (datatype(input) == "array")
-                  allexec.push(parallel(input, share));
-              }
-              rtnprocess = await Promise.all(allexec);
-
-              let code = "";
-              for (let chkrtnproc of rtnprocess) {
-                if (datatype(chkrtnproc) == "array") {
-                  let pickarrobj = pick_arrayofobj(chkrtnproc, ["code"]);
-                  let chkcode = pick_arrayobj2list(pickarrobj, [
-                    "code",
-                  ]).code.join("");
-                  let validcode = "0".padStart(chkrtnproc.length, "0");
-                  if (chkcode != validcode) code += `[${chkcode}],`;
-                } else {
-                  if (chkrtnproc["code"] != 0)
-                    code += `[${chkrtnproc["code"].toString()}],`;
-                }
-              }
-
-              if (code != "") {
-                output.code = -1;
-                output.msg = code;
-              }
-              output.data = rtnprocess;
-            } else {
-              output.code = -1;
-              output.msg = `Error: Incomplete workflow in ${func} process`;
-            }
-          }
-        } catch (error) {
-          output = errhandler(error);
-        } finally {
-          return output;
         }
       };
 
-      taskrun1 = async (...args) => {
+      taskrun = async (...args) => {
         const [params, obj, backend = false] = args;
         const [event, tasks, showdata = true] = params;
         const { htmlengine, objfuncs, ...other } = obj;
@@ -613,7 +282,7 @@ module.exports = (...args) => {
             for (let objserialize of input) {
               objserialize.func = objfuncs;
               objserialize.share = cross;
-              objserialize.trigger = other;
+              if (other) objserialize.trigger = other;
               let rtn = await new serialize1(objserialize, [library], showdata);
               process.push(rtn);
               if (rtn.code != 0) break;
@@ -626,7 +295,7 @@ module.exports = (...args) => {
             return process;
           };
 
-          let { htmlworkflow } = htmlengine;
+          let { workflow } = htmlengine;
           let fn = [],
             rtnprocess = [];
           let required;
@@ -636,7 +305,7 @@ module.exports = (...args) => {
               let step = "";
               for (let run of executable.split(",")) {
                 step = run;
-                let getfn = jptr.get(htmlworkflow, `${step}`);
+                let getfn = jptr.get(workflow, `${step}`);
                 if (getfn) {
                   fn.push({ ...getfn, wfname: step });
                 }
@@ -647,7 +316,7 @@ module.exports = (...args) => {
                 if (fn.length > 1) inputs = fn;
                 let share = { shared: {} };
                 if (!backend) {
-                  share.shared = { htmlengine, convtrigger };
+                  // share.shared = { htmlengine };
                   if (required)
                     share.shared = mergeDeep(share.shared, { required });
                 }
@@ -655,7 +324,7 @@ module.exports = (...args) => {
                 if (datatype(inputs) == "object") {
                   inputs.func = objfuncs;
                   inputs.share = share;
-                  inputs.trigger = other;
+                  if (other) inputs.trigger = other;
                   allexec.push(new serialize1(inputs, [library], showdata));
                 } else if (datatype(inputs) == "array")
                   allexec.push(parallel(inputs, share));
@@ -704,13 +373,7 @@ module.exports = (...args) => {
     }
 
     return {
-      convtrigger,
-      helper,
-      load,
       loadlib,
-      regevents,
-      register,
-      taskrun,
       queuetask,
       excluded: ["excluded"],
     };

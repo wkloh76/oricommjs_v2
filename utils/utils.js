@@ -21,6 +21,7 @@
  */
 module.exports = (...args) => {
   const [params, obj] = args;
+  const [library] = obj;
   let lib = {};
   try {
     /**
@@ -650,12 +651,13 @@ module.exports = (...args) => {
               errmsg = `Current onging step is:${parseInt(idx) + 1}/${
                 workflow.length
               }. `;
-              let { error, func, name, param, pull, push } = {
+              let { error, func, name, param, push } = {
                 ...handler.wfwseries,
                 ...compval,
               };
-
-              let fn = jptr.get(funcs, func);
+              let fn;
+              let [found] = objfinds(funcs, func);
+              if (found) fn = found.value;
               if (fn) {
                 let [funcparams] = objreplace(
                   param,
@@ -714,12 +716,13 @@ module.exports = (...args) => {
                     }
                   } else if (err.length > 0) {
                     for (let [errkey, errfunc] of Object.entries(err)) {
-                      let { func, name, param, pull, push } = {
+                      let { func, name, param, push } = {
                         ...handler.wfwseries,
                         ...errfunc,
                       };
 
-                      let fn = jptr.get(funcs, func);
+                      let [found] = objfinds(funcs, func);
+                      if (found) fn = found.value;
                       if (fn) {
                         let [funcparams] = objreplace(
                           param,
@@ -992,7 +995,6 @@ module.exports = (...args) => {
 
     const objreplace = (...args) => {
       const [source, data] = args;
-      const [library] = obj;
       const { jptr } = library.utils;
 
       // QWEN3-MAX
@@ -1044,6 +1046,62 @@ module.exports = (...args) => {
       return replaceStructuralPlaceholders(source, data);
     };
 
+    const objfinds = (...args) => {
+      const [source, search, cur = ""] = args;
+      const findAllWithPath = (objsrc, relPathStr, currentPath = "") => {
+        // Normalize relative path: "/b/c" → ["b", "c"]
+        const relPath = relPathStr.split("/").filter((part) => part !== "");
+
+        const results = [];
+
+        // Helper: Try to resolve `relPath` starting from `currentObj`
+        function resolveFrom(obj, pathParts, basePath) {
+          let current = obj;
+          let fullPath = basePath;
+
+          for (let i = 0; i < pathParts.length; i++) {
+            const key = pathParts[i];
+            if (
+              current == null ||
+              typeof current !== "object" ||
+              !(key in current)
+            ) {
+              return null; // path broken
+            }
+            current = current[key];
+            fullPath = fullPath ? `${fullPath}.${key}` : key;
+          }
+          return { path: fullPath, value: current };
+        }
+
+        // Try matching relative path at current node
+        const match = resolveFrom(objsrc, relPath, currentPath);
+        if (match) {
+          results.push(match);
+        }
+
+        // Recurse into children
+        if (
+          objsrc != null &&
+          typeof objsrc === "object" &&
+          !Array.isArray(objsrc)
+        ) {
+          for (const key in objsrc) {
+            if (objsrc.hasOwnProperty(key)) {
+              const nextPath = currentPath ? `${currentPath}.${key}` : key;
+              results.push(
+                ...findAllWithPath(objsrc[key], relPathStr, nextPath)
+              );
+            }
+          }
+        }
+
+        return results;
+      };
+
+      return findAllWithPath(source, search, cur);
+    };
+
     lib = {
       arr2str,
       getNestedObject,
@@ -1060,6 +1118,7 @@ module.exports = (...args) => {
       omit,
       objpick,
       objreplace,
+      objfinds,
       string2json,
       serialize,
       serialize1,

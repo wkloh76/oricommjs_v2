@@ -41,13 +41,8 @@
     library.utils.jptr.set(library, "engine/workflow", { ...workflow() });
     const { jptr, mergeDeep } = library.utils;
     const {
-      convtrigger,
-      load,
       loadlib,
-      regevents,
       queuetask,
-      register,
-      taskrun,
     } = library.engine.workflow;
 
     if (mjs) {
@@ -63,15 +58,6 @@
     }
 
     const { webengine, ...injection } = injectionjs;
-    // if (webengine) {
-    // htmlengine = await load(webengine);
-    //   // objfuncs = register(htmlengine, webengine.trigger);
-    //   // if (webengine.startup)
-    //   //   await taskrun([null, webengine.startup, false], {
-    //   //     htmlengine,
-    //   //     objfuncs,
-    //   //   });
-    // }
     await new queuetask([event], injectionjs);
   });
 </script>

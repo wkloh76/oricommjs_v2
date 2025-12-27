@@ -26,7 +26,7 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { assist, utils } = library;
+    const { assist, dir, utils } = library;
     const { getContentType, identify_htmltag, mimes, str_inject } = assist;
     const { getNestedObject, handler, jptr, mergeDeep, objreplace, sanbox } =
       utils;
