@@ -1,11 +1,11 @@
 {
   "name": "webnodehonojs",
   "dependencies": {
-    "@hono/node-server": "1.19.6",
+    "@hono/node-server": "1.19.7",
     "@hono/swagger-editor": "1.0.1",
-    "@hono/swagger-ui": "0.5.2",
-    "@hono/zod-openapi": "1.1.5",
-    "hono": "4.10.7",
+    "@hono/swagger-ui": "0.5.3",
+    "@hono/zod-openapi": "1.2.0",
+    "hono": "4.11.3",
     "hono-sessions": "0.8.0"
   }
 }
