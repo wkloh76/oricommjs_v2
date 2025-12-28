@@ -463,6 +463,7 @@ module.exports = (...args) => {
                 mjs,
                 params,
                 redirect,
+                wfactivated,
               },
               status,
               view,
@@ -537,7 +538,7 @@ module.exports = (...args) => {
               }
               let script = document.createElement("script");
               script.type = "text/javascript";
-              script.innerHTML = `var glib = {}, htmlengine = {}, objfuncs = {}, library = {}, mjs = ${JSON.stringify(
+              script.innerHTML = `var wfactivated=${wfactivated}, glib = {}, htmlengine = {}, objfuncs = {}, library = {}, mjs = ${JSON.stringify(
                 import_mjs(mjs, params)
               )};`;
               injectionjs.variables["wfexchange"] = await wfexchange(
@@ -545,6 +546,11 @@ module.exports = (...args) => {
                 ["api", "trigger", "workflow"],
                 ["backend.json"]
               );
+              if (injectionjs.variables.wfexchange.api) {
+                injectionjs.variables.apijson =
+                  injectionjs.variables.wfexchange.api;
+                delete injectionjs.variables.wfexchange.api;
+              }
 
               if (Object.keys(injectionjs.variables).length > 0)
                 script.innerHTML += `var injectionjs=${JSON.stringify(

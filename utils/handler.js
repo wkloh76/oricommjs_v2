@@ -180,6 +180,7 @@ module.exports = (...args) => {
               redirect: "",
               show: true,
               tray: {},
+              wfactivated: true,
             },
             status: 200,
             view: "",

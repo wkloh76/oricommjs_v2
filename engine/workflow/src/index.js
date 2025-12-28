@@ -130,8 +130,7 @@ module.exports = (...args) => {
       const [params, obj] = args;
       const [event, showdata = true] = params;
       const { wfengine, trigger, ...objfuncs } = obj;
-      const { arr2str, arr_selected, jptr, objfinds, objreplace } =
-        library.utils;
+      const { arr2str, arr_selected, jptr, objreplace } = library.utils;
 
       let attrs = event.currentTarget.attributes;
       let clsname = arr2str(event.currentTarget.className.split(" "), ".", " ");
@@ -286,7 +285,7 @@ module.exports = (...args) => {
         const [params, obj, showdata = true] = args;
         const [event] = params;
         const { utils } = library;
-        const { objreplace } = utils;
+        const { objfinds, objreplace } = utils;
 
         return (async () => {
           let output;
@@ -311,9 +310,16 @@ module.exports = (...args) => {
                   Object.values(trigger)
                 );
               }
-              if (event == null)
-                output = await this.taskrun([null, params, showdata], obj);
-              else output = await this.taskrun([event, params, showdata], obj);
+              let [fn] = objfinds(workflow, "initial");
+              if (fn) {
+                let { parameters, tasks, ...wf } = fn.value;
+                let workflow = objreplace(wf, parameters);
+                let taskrole = tasks;
+                output = await this.taskrun([event, taskrole, showdata], {
+                  htmlengine: { workflow },
+                  objfuncs: htmlengine,
+                });
+              }
             } else {
               const { wfengine, objfuncs, ...objother } = obj;
               let { parameters, tasks, ...wf } = wfengine[params];
@@ -438,8 +444,7 @@ module.exports = (...args) => {
         const [params, obj] = args;
         const [event, showdata = true] = params;
         const { wfengine, trigger, ...objfuncs } = obj;
-        const { arr2str, arr_selected, jptr, objfinds, objreplace } =
-          library.utils;
+        const { arr2str, arr_selected, jptr, objreplace } = library.utils;
 
         let attrs = event.currentTarget.attributes;
         let clsname = arr2str(

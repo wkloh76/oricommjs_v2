@@ -56,8 +56,9 @@
           await initialize(mjs.initialize);
       }
     }
-
-    const { webengine, ...injection } = injectionjs;
-    await new queuetask([event], injectionjs);
+    if (wfactivated) {
+      const { webengine, ...injection } = injectionjs;
+      await new queuetask([event], injectionjs);
+    }
   });
 </script>

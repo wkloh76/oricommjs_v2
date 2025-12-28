@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Workflow engine for backend and frontend done. Completed on 2025-12-27
 - Add serialize1 class at utils and work close with workflow engine. Completed on 2025-12-27
 - Add register method to workflow engine which allow register eventlistener externally and work with workflow serialize. Completed on 2025-12-27
+- Add wfactivated flag to handler at utils which will justify trigger runtime workflow engine at frontend js. Completed on 2025-12-27
 
 ### Changed
 
