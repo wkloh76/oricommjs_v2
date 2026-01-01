@@ -180,28 +180,14 @@ module.exports = (...args) => {
               redirect: "",
               show: true,
               tray: {},
-              wfactivated: true,
+              workflowjs: {
+                selectAll: [],
+                selected: {},
+                excluded: {},
+              },
             },
             status: 200,
             view: "",
-          }
-        );
-      },
-
-      get webengine() {
-        return Object.assign(
-          {},
-          {
-            path: "",
-            load: {
-              htmlevent: {},
-              htmlrender: {},
-              htmllogicflow: {},
-              htmlcollection: {},
-              htmlworkflow: {},
-            },
-            trigger: {},
-            startup: "",
           }
         );
       },

@@ -494,11 +494,6 @@ module.exports = class {
           filepath: join(prjsrc, "src", "public", "assets", "less"),
         };
 
-        share[`/${compname}/less`] = {
-          content: less,
-          filepath: join(prjsrc, "src", "public", "assets", "less"),
-        };
-
         if (
           setting.ongoing[compname].shared &&
           Object.keys(setting.ongoing[compname].shared).length > 0

@@ -28,8 +28,7 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { assist, dir, utils } = library;
     const { getContentType, identify_htmltag, mimes, str_inject } = assist;
-    const { getNestedObject, handler, jptr, mergeDeep, objreplace, sanbox } =
-      utils;
+    const { getNestedObject, handler, jptr, sanbox } = utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
@@ -438,6 +437,64 @@ module.exports = (...args) => {
         return output;
       };
 
+      const wfjspath = async (...args) => {
+        const [abspath, collect] = args;
+        const { excluded = {}, selected = {}, selectAll = [] } = collect;
+        const { readdirSync } = fs;
+        const { join, extname } = path;
+        let output = [];
+        let _path = {};
+        for (let [pathsname, paths] of Object.entries(abspath)) {
+          if (typeof paths == "string")
+            _path[pathsname] = join(paths, "assets", "js");
+        }
+
+        for (let [rootname, root] of Object.entries(_path)) {
+          for (let subdir of ["collection", "event", "logicflow", "render"]) {
+            for (let dir of selectAll) {
+              let files = await sanbox(readdirSync, [join(root, dir, subdir)]);
+              if (!files.code && files.length > 0) {
+                files.map((file) => {
+                  let bname = path.parse(file).name;
+                  let ext = extname(file);
+                  if (ext == ".js") {
+                    if (
+                      !excluded[dir] ||
+                      !excluded[dir][subdir] ||
+                      !excluded[dir][subdir].includes(file)
+                    ) {
+                      output.push({
+                        name: jptr.join(subdir, dir, subdir, bname),
+                        path: join(rootname, "assets", "js", dir, subdir, file),
+                      });
+                    }
+                  }
+                });
+              }
+            }
+            for (let dir of Object.keys(selected)) {
+              if (selected[dir][subdir]) {
+                let files = await sanbox(readdirSync, [
+                  join(root, dir, subdir),
+                ]);
+                if (!files.code && files.length > 0) {
+                  files.map((file) => {
+                    let bname = path.parse(file).name;
+                    if (selected[dir][subdir].includes(file)) {
+                      output.push({
+                        name: jptr.join(subdir, dir, subdir, bname),
+                        path: join(rootname, "assets", "js", dir, subdir, file),
+                      });
+                    }
+                  });
+                }
+              }
+            }
+          }
+        }
+        return output;
+      };
+
       /**
        * The final process which is sending resutl to frontend
        * @alias module:reaction.processEnd
@@ -464,6 +521,7 @@ module.exports = (...args) => {
                 params,
                 redirect,
                 wfactivated,
+                workflowjs,
               },
               status,
               view,
@@ -538,9 +596,9 @@ module.exports = (...args) => {
               }
               let script = document.createElement("script");
               script.type = "text/javascript";
-              script.innerHTML = `var wfactivated=${wfactivated}, glib = {}, htmlengine = {}, objfuncs = {}, library = {}, mjs = ${JSON.stringify(
-                import_mjs(mjs, params)
-              )};`;
+              script.innerHTML = `var wfschedule=null, glib = {}, htmlengine = {}, objfuncs = {}, library = {}, compname="${
+                orires.compname
+              }", mjs = ${JSON.stringify(import_mjs(mjs, params))};`;
               injectionjs.variables["wfexchange"] = await wfexchange(
                 orires.abspath,
                 ["api", "trigger", "workflow"],
@@ -552,6 +610,13 @@ module.exports = (...args) => {
                 delete injectionjs.variables.wfexchange.api;
               }
 
+              if (Object.keys(workflowjs).length > 1) {
+                const abspath = cosetting.share.public[orires.compname];
+                injectionjs.variables["workflowjs"] = await wfjspath(
+                  abspath,
+                  workflowjs
+                );
+              }
               if (Object.keys(injectionjs.variables).length > 0)
                 script.innerHTML += `var injectionjs=${JSON.stringify(
                   injectionjs.variables
