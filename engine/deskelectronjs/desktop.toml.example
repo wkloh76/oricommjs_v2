@@ -43,4 +43,14 @@ nodeIntegration = false
 contextIsolation = true
 webSecurity = true
 enableRemoteModule = false
-show = false
+show = true
+
+[production]
+defaulturl = ""
+remote = { cdn = "https://cdn.jsdelivr.net" }
+shared={ npm = "" }
+
+[debug]
+defaulturl = ""
+remote = { cdn = "https://cdn.jsdelivr.net" }
+shared={ npm = "" }

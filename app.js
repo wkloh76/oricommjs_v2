@@ -523,62 +523,46 @@
             },
           ];
           input.share = {
-            lib: { library: library },
-            setting: { cosetting: cosetting },
+            lib: { library },
+            setting: { cosetting },
             message: {
               engine: "engine",
               atomic: "atomic",
               components: "components",
             },
-            core: { obj: obj },
+            core: { obj },
           };
           input.workflow = [
             {
               name: "load_engine",
-              func: "load",
-              param: [[obj]],
-              push: [["data"]],
-              pull: [["setting.cosetting.engine"]],
+              func: "load,call_message",
+              param: [[obj], [obj]],
+              pull: [["setting.cosetting.engine"], ["message.engine"]],
               push: [["engine", "lib.library.engine"]],
             },
             {
-              name: "msg_engine",
-              func: "call_message",
-              param: [[obj]],
-              pull: [["message.engine"]],
-            },
-            {
               name: "load_atomic",
-              func: "nested_load",
-              param: [[obj]],
+              func: "nested_load,call_message",
+              param: [[obj], [obj]],
               pull: [
                 [
                   "setting.cosetting.atomic",
                   "setting.cosetting.general.atomic",
                 ],
+                ["message.atomic"],
               ],
             },
             {
-              name: "msg_atomic",
-              func: "call_message",
-              param: [[obj]],
-              pull: [["message.atomic"]],
-            },
-            {
               name: "load_components",
-              func: "load_comp",
+              func: "load_comp,mergedata",
               param: [[obj]],
-              pull: [["setting.cosetting.components"]],
-              push: [["components"]],
+              pull: [
+                ["setting.cosetting.components"],
+                ["setting.cosetting", "load_components.components"],
+              ],
+              push: [["components"], ["cosetting", "setting.cosetting"]],
             },
             {
-              name: "merge_coresetting",
-              func: "mergedata",
-              pull: [["setting.cosetting", "load_components.components"]],
-              push: [["cosetting", "setting.cosetting"]],
-            },
-            {
-              // error: "failure1",
               name: "work",
               func: "work",
               param: [[obj]],

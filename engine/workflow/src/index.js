@@ -60,6 +60,7 @@ module.exports = (...args) => {
     class queuetask {
       constructor(...args) {
         this.parameters;
+        this.htmlengine;
         return (async () => {
           if (typeof backend === "undefined") return this.frontend(args);
           else return this.backend(args);
@@ -246,15 +247,11 @@ module.exports = (...args) => {
       };
 
       register = (...args) => {
-        const [htmlengine, trigger, showdata] = args;
-        const { collection, event, logicflow, render } = htmlengine;
-        const { mergeDeep } = library.utils;
-        let funcs = {};
-        for (let func of [logicflow, render, collection])
-          funcs = mergeDeep(funcs, { ...func });
+        const [trigger, showdata = true] = args;
+        const { event } = this.htmlengine;
         let conv = this.convtrigger(trigger);
-        this.regevents([conv, event, htmlengine], showdata);
-        return funcs;
+        this.regevents([conv, event], showdata);
+        return;
       };
 
       load = async (...args) => {
@@ -277,13 +274,15 @@ module.exports = (...args) => {
         const [htmlengine, [trigger], showdata] = args;
         const { collection, event, logicflow, render } = htmlengine;
         const { mergeDeep } = library.utils;
+        this.htmlengine = htmlengine;
         let funcs = {};
         for (let func of [logicflow, render, collection])
           funcs = mergeDeep(funcs, { ...func });
         let conv = this.convtrigger(trigger);
-        this.regevents([conv, event, htmlengine], showdata);
+        this.regevents([conv, event], showdata);
         return funcs;
       };
+
       convtrigger = (...args) => {
         const [trigger] = args;
         const { handler, jptr } = library.utils;
@@ -297,7 +296,7 @@ module.exports = (...args) => {
       };
       regevents = (...args) => {
         const [params, showdata] = args;
-        const [param, objfuncs, htmlengine] = params;
+        const [param, objfuncs] = params;
         const { utils } = library;
         const { datatype, errhandler, getNestedObject, handler, jptr } = utils;
         let output = handler.dataformat;
@@ -321,7 +320,8 @@ module.exports = (...args) => {
                       let func = jptr.get(objfuncs, fn.evt);
                       if (func)
                         nodevalue.addEventListener(key, async (event) => {
-                          let { workflow: wfengine, ...otherwf } = htmlengine;
+                          let { workflow: wfengine, ...otherwf } =
+                            this.htmlengine;
                           await func(event);
                           await this.helper([event, showdata], {
                             ...otherwf,

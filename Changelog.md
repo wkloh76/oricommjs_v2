@@ -21,11 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - No longer to use guimaker from atomic/atom. Completed on 2026-01-01
+- Add default setting to all web and desketop toml file. Completed on 2026-01-02
+- Minor update worklow engine frontend design. Completed on 2026-01-02
 
 ### Removed
 
 - Remove unsed code from cengine at compmgr engine. Completed on 2026-01-01
 - Rmove webengine getter from handler at utils. Completed on 2026-01-01
+- Remove unused data from `injectionjs` object in `assist/data/preload.html` at compmgr engine. Completed on 2026-01-02
 
 ### Fixed
 

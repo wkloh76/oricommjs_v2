@@ -11,3 +11,13 @@ expireAfterSeconds= 900 #// Expire session after 15 minutes of inactivity,  8640
 cookieOptions= {sameSite= 'Lax', path= '/', httpOnly= true}
 store = { path = ""}
 savestore = true
+
+[production]
+defaulturl = ""
+remote = { cdn = "https://cdn.jsdelivr.net" }
+shared={ npm = "" }
+
+[debug]
+defaulturl = ""
+remote = { cdn = "https://cdn.jsdelivr.net" }
+shared={ npm = "" }
