@@ -31,12 +31,14 @@ module.exports = (...args) => {
       library.utils["powershell"] = require("./powershell")(params, obj);
       library.utils["intercomm"] = require("./intercomm")(params, obj);
       library.utils["sqlitesession"] = require("./sqlitesession");
+      library.utils["startupinit"] = require("./startupinit")(params, obj);
       library.utils["excluded"] = [
         "powershell",
         "intercomm",
         "sqlitesession",
         "html",
         "io",
+        "startupinit",
         "excluded",
       ];
 
