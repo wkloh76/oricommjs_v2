@@ -53,29 +53,34 @@ module.exports = (...args) => {
           let output = { ...param, requester: "" };
           let broken = await sanbox(
             (url) => {
-              new URL(url);
+              try {
+                new URL(url);
+                return true;
+              } catch (error) {
+                return false;
+              }
             },
             [param.url]
           );
-          if (
-            window?.electron &&
-            typeof backend == undefined &&
-            broken.code != 0
-          ) {
-            output.requester = "deskfetch";
-            let electron = await sanbox(completeRelativeUrl, [param.url]);
-            if (electron) output.url = electron;
-          } else {
-            if (window?.electron) {
-              output.requester = "deskfetch";
-              let electron = await sanbox(completeRelativeUrl, [param.url]);
-              if (electron) output.url = electron;
+          // Mean call from frontend
+          if (typeof backend == "undefined") {
+            if (!broken) {
+              if (window?.electron) {
+                output.requester = "deskfetch";
+                let electron = await sanbox(completeRelativeUrl, [param.url]);
+                if (electron) output.url = electron;
+              } else {
+                output.requester = "webfetch";
+                output.url = `${window.location.origin}${param.url}`;
+              }
             } else {
-              output.requester = "webfetch";
-              output.url = `${window.location.origin}${param.url}`;
+              if (window?.electron) output.requester = "deskfetch";
+              else output.requester = "webfetch";
             }
+          } else {
+            output.requester = "webfetch";
+            if (!broken) output.url = `${window.location.origin}${param.url}`;
           }
-
           return output;
         };
 
