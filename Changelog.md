@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add some keys to webview in handler at utils for workflow engine. Completed on 2026-01-01
 - Add pre porcess for worklow engine frontend data at reaction processEnd function. Completed on 2026-01-01
+- Transfer `atomic/atom/smfetch` frontend modules to utils. Completed on 2026-01-05
 
 ### Changed
 

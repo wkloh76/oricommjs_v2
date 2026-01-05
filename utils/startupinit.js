@@ -15,8 +15,8 @@
  */
 "use strict";
 /**
- * A module which handle web api fetch in backend server service
- * @module src_startupinit
+ * The submodule of utils which manage theproject startup initail process such as database connection
+ * @module utils_startupinit
  */
 module.exports = (...args) => {
   const [params, obj] = args;
