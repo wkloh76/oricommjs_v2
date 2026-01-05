@@ -20,7 +20,7 @@
  */
 module.exports = (...args) => {
   const [params, obj] = args;
-  const [library] = obj;
+  const [library, sys] = obj;
   const backend = true;
   let lib = {};
   try {
@@ -265,7 +265,170 @@ module.exports = (...args) => {
         return errhandler(error);
       }
     };
-    lib = { request };
+
+    /**
+     * Call HTTP/HTTPS DOWNLOAD
+     * @alias module:gotfetch.download
+     * @param {Object} param - Data in object type.
+     * @param {Object} param.headers - HTTP headers example basic auth
+     * @param {Object} param.location - Local directory for save file
+     * @param {Object} param.source - The origin file name from http server
+     * @param {Object} param.target - The file name for save locally, if undefined will apply param.source
+     * @param {String} param.url - The URL for Web API or web server
+     * @returns {Object} - The result return with property (code, data, msg)
+     */
+    const download = (...args) => {
+      return new Promise(async (resolve, reject) => {
+        const { fs, path } = sys;
+        const { createWriteStream, existsSync, mkdirSync, unlinkSync } = sys;
+        const { pipeline, Readable } = require("stream");
+        const streamPipeline = promisify(pipeline);
+        const [params] = args;
+
+        const goterr = (error) => {
+          let err = { code: -1, data: error.data, msg: error.message };
+          switch (error.code) {
+            case "ERR_ABORTED":
+              err.code = -2;
+              break;
+            case "EHOSTUNREACH":
+              err.code = -3;
+              break;
+
+            case "ETIMEDOUT":
+              err.code = -4;
+              break;
+            case "ZEROSIZE":
+              err.code = -5;
+              break;
+          }
+          return err;
+        };
+
+        let furl;
+        let options = {};
+        let tagname = path.join(params.location, params.tagname);
+
+        try {
+          options["headers"] = {
+            ...params.headers,
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language":
+              "en-US,en;q=0.9,fr;q=0.8,ro;q=0.7,ru;q=0.6,la;q=0.5,pt;q=0.4,de;q=0.3",
+            "Cache-Control": "max-age=0",
+            Connection: "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
+          };
+
+          if (params?.["source"]) furl = `${params.url}/${params.source}`;
+          else furl = params.url;
+
+          const response = await fetch(furl, options);
+
+          if (!response.ok) {
+            throw new Error(`Unexpected response: ${response.statusText}`);
+          }
+
+          // Ensure the directory exists (optional)
+          const dir = path.dirname(tagname);
+          if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true });
+          }
+
+          const fileWriterStream = createWriteStream(tagname);
+
+          fileWriterStream
+            .on("error", (error) => {
+              let stats = fs.statSync(tagname);
+              let fileSizeInBytes = stats.size;
+              if (fileSizeInBytes == 0)
+                resolve(
+                  goterr({
+                    code: "ZEROSIZE",
+                    data: { file: tagname },
+                    message: "Zero file size",
+                  })
+                );
+              else resolve({ code: 0, data: null, msg: "" });
+            })
+            .on("finish", () => {
+              let stats = fs.statSync(tagname);
+              let fileSizeInBytes = stats.size;
+              if (fileSizeInBytes > 0)
+                resolve({
+                  code: 0,
+                  data: null,
+                  msg: "",
+                });
+            });
+
+          streamPipeline(response.body, fileWriterStream);
+        } catch (error) {
+          if (existsSync(tagname)) {
+            unlinkSync(tagname);
+          }
+          resolve(goterr(error));
+        }
+      });
+    };
+
+    /**
+     * Call HTTP/HTTPS UPLOAD
+     * @alias module:gotfetch.upload
+     * @param {Object} param - Data in object type.
+     * @param {Object} param.data - Data in json format
+     * @param {Object} param.headers - HTTP headers
+     * @param {Number} param.timeout - Abort the wating responding time from web server.
+     * @param {String} param.url - The URL for Web API or web server
+     * @returns {Object} - The result return with property (code, data, msg)
+     */
+    // const upload = (...args) => {
+    //   return new Promise(async (resolve) => {
+    //     const [param] = args;
+    //     const { file, data, ...other } = param;
+    //     let output = handler.dataformat;
+    //     try {
+    //       const abortController = new AbortController();
+    //       if (!file) throw new Error("Undefined file path and file name");
+    //       let formdata = new FormData();
+    //       formdata.append("smfetch_upload", fs.createReadStream(file));
+
+    //       if (data) jsonToFormData(data, {}, formdata);
+    //       let options = gotoption(Object.assign({ method: "POST" }, other));
+
+    //       if (options.headers) {
+    //         for (let keyname of Object.keys(options.headers)) {
+    //           let value = options.headers[keyname].toLowerCase();
+    //           if (value == "multipart/form-data")
+    //             delete options.headers[keyname];
+    //         }
+    //       }
+    //       if (Object.keys(options.headers).length == 0) delete options.headers;
+
+    //       options.body = formdata;
+
+    //       if (options["timeout"]) {
+    //         options["signal"] = abortController.signal;
+    //         setTimeout(() => {
+    //           abortController.abort();
+    //         }, options["timeout"]);
+    //       }
+
+    //       let rtn = await got(options);
+    //       output.data = rtn.body;
+    //     } catch (error) {
+    //       output = goterr(error);
+    //     } finally {
+    //       resolve(output);
+    //     }
+    //   });
+    // };
+
+    lib = { download, request };
   } catch (error) {
     lib = error;
   } finally {

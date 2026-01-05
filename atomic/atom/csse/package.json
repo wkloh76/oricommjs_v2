@@ -1,8 +1,0 @@
-{
-  "name": "csse",
-  "author": "Loh Wah Kiang",
-  "license": "Mulan PSL v2",
-  "dependencies": {
-    "eventsource": "4.1.0"
-  }
-}

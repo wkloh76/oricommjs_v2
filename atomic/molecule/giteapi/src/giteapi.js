@@ -23,9 +23,7 @@ module.exports = async (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { atomic, utils } = library;
-    const { atom } = atomic;
-    const { smfetch } = atom;
+    const { atomic, utils, smfetch } = library;
     const { datatype, errhandler, handler, objpick } = utils;
 
     try {
