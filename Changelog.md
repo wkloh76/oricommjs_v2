@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add pre porcess for worklow engine frontend data at reaction processEnd function. Completed on 2026-01-01
 - Transfer `atomic/atom/smfetch` frontend modules to utils. Completed on 2026-01-05
 - Add identify method to justify the smfetch request call from backend or frontend. Completed on 2026-01-05
+- `deskelectronjs` engine apply utils/smfetch module instead the got module for client request and download file. Completed on 2026-01-06
+- Add timeout parameter to both request and download in smfetch at utils. Completed on 2026-01-06
+- Migrate giteapai atomic/molecule to utils. Completed on 2026-01-06
 
 ### Changed
 
@@ -28,12 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No longer to use guimaker from atomic/atom. Completed on 2026-01-01
 - Add default setting to all web and desketop toml file. Completed on 2026-01-02
 - Minor update worklow engine frontend design. Completed on 2026-01-02
+- Deprecated got module to reduce the third party dependencies modules. Use the native fetch instead the function. Completed on 2026-01-06
 
 ### Removed
 
 - Remove unsed code from cengine at compmgr engine. Completed on 2026-01-01
 - Rmove webengine getter from handler at utils. Completed on 2026-01-01
 - Remove unused data from `injectionjs` object in `assist/data/preload.html` at compmgr engine. Completed on 2026-01-02
+- Remove atomic/molecule/giteapi. Completed on 2026-01-06
 
 ### Fixed
 

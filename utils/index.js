@@ -26,19 +26,23 @@ module.exports = (...args) => {
     try {
       library.utils = { jptr: (await import(`./jspointer.js`)).default };
       library.utils = { ...library.utils, ...require("./utils")(params, obj) };
-      library.utils["io"] = require("./io")(params, obj);
       library.utils["handler"] = require("./handler")(params, obj);
-      library.utils["powershell"] = require("./powershell")(params, obj);
-      library.utils["intercomm"] = require("./intercomm")(params, obj);
-      library.utils["sqlitesession"] = require("./sqlitesession");
-      library.utils["csse"] = require("./csse.js")(params, obj);
       library.utils["smfetch"] = require("./smfetch")(params, obj);
+
+      library.utils["csse"] = require("./csse")(params, obj);
+      library.utils["giteapi"] = require("./giteapi")(params, obj);
+      library.utils["intercomm"] = require("./intercomm")(params, obj);
+      library.utils["io"] = require("./io")(params, obj);
+      library.utils["powershell"] = require("./powershell")(params, obj);
+      library.utils["sqlitesession"] = require("./sqlitesession");
       library.utils["startupinit"] = require("./startupinit")(params, obj);
       library.utils["excluded"] = [
-        "powershell",
+        "csse",
+        "giteapi",
         "intercomm",
-        "sqlitesession",
         "io",
+        "powershell",
+        "sqlitesession",
         "startupinit",
         "excluded",
       ];

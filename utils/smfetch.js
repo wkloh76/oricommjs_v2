@@ -26,31 +26,43 @@ module.exports = (...args) => {
   try {
     /**
      * FIre fetch api request in async method
-     * @alias module:fetchapi.request
+     * @alias module:smfetch.request
      * @param {...Object} args - 1 parameters
      * @param {Object} args[0] - param for call api server base on fecth api format
+     * @param {Object} args[0].data - Data in json format
+     * @param {Object} args[0].headers - HTTP headers
+     * @param {Object} args[0].method - RESTFUL API
+     * @param {Number} args[0].timeout - Abort the wating responding time from web server.
+     * @param {String} args[0].url - The URL for Web API or web server
+     * @param {Boolean} args[0].download - Is a flag to just return format as bob. Default is false
+     * @param {Boolean} args[0].text - Is a flag to just return format as text. Default is false
+     * @returns {Object} - The result return with property (code, data, msg)
      */
     const request = async (...args) => {
       const { errhandler, sanbox } = library.utils;
       const [params] = args;
-      const { async = true } = params;
       try {
-        const completeRelativeUrl = (
-          relativePath,
-          domain = "localhost",
-          protocol = "http"
-        ) => {
-          try {
-            // If it's already complete, return it
-            return new URL(relativePath).toString();
-          } catch {
-            // Complete it with default domain
-            return new URL(relativePath, `${protocol}://${domain}`).toString();
-          }
-        };
         const urlidentify = async (...args) => {
           const [param] = args;
           let output = { ...param, requester: "" };
+
+          const completeRelativeUrl = (
+            relativePath,
+            domain = "localhost",
+            protocol = "http"
+          ) => {
+            try {
+              // If it's already complete, return it
+              return new URL(relativePath).toString();
+            } catch {
+              // Complete it with default domain
+              return new URL(
+                relativePath,
+                `${protocol}://${domain}`
+              ).toString();
+            }
+          };
+
           let broken = await sanbox(
             (url) => {
               try {
@@ -83,10 +95,10 @@ module.exports = (...args) => {
           }
           return output;
         };
-
         const options = (...args) => {
-          let [options] = args;
-          let { url, cache, credentials, reqdata, origin, ...output } = options;
+          let [params] = args;
+          let { url, cache, credentials, reqdata, origin, timeout, ...output } =
+            params;
 
           switch (output.method) {
             case "GET":
@@ -135,6 +147,12 @@ module.exports = (...args) => {
           else output["mode"] = "same-origin";
           if (cache) output["cache"] = "default";
           else output["cache"] = "no-cache";
+
+          if (timeout) {
+            const abortController = new AbortController();
+            output["signal"] = abortController.signal;
+            setTimeout(() => abortController.abort(), timeout);
+          }
           return output;
         };
 
@@ -153,6 +171,7 @@ module.exports = (...args) => {
               ajax = true,
               option = {},
               download = false,
+              text = false,
             } = param;
 
             let {
@@ -200,7 +219,11 @@ module.exports = (...args) => {
                         if (response.redirected && response.url != "")
                           window.location = response.url;
                         else if (download) result.data = await response.blob();
-                        else result.data = await response.json();
+                        else if (text) result.data = await response.text();
+                        else {
+                          let resp = await response.json();
+                          result = { ...result, ...resp };
+                        }
                         success({
                           status: response.status,
                           statusText: response.statusText,
@@ -236,13 +259,13 @@ module.exports = (...args) => {
                 statusText: response.statusText,
               };
               if (response.ok) {
-                if (param.reroute && response.url != "") {
+                if (param.reroute && response.url != "")
                   window.location = response.url;
-                } else if (response.redirected && response.url != "") {
+                else if (response.redirected && response.url != "")
                   window.location = response.url;
-                } else if (download) {
-                  result.data = await response.blob();
-                } else {
+                else if (download) result.data = await response.blob();
+                else if (text) result.data = await response.text();
+                else {
                   let resp = await response.json();
                   result = { ...result, ...resp };
                 }
@@ -268,21 +291,23 @@ module.exports = (...args) => {
 
     /**
      * Call HTTP/HTTPS DOWNLOAD
-     * @alias module:gotfetch.download
-     * @param {Object} param - Data in object type.
-     * @param {Object} param.headers - HTTP headers example basic auth
-     * @param {Object} param.location - Local directory for save file
-     * @param {Object} param.source - The origin file name from http server
-     * @param {Object} param.target - The file name for save locally, if undefined will apply param.source
-     * @param {String} param.url - The URL for Web API or web server
+     * @alias module:smfetch.download
+     * @param {...Object} args - 1 parameters
+     * @param {Object} args[0] - param for call api server base on fecth api format
+     * @param {Object} args[0].headers - HTTP headers example basic auth
+     * @param {Object} args[0].location - Local directory for save file
+     * @param {Object} args[0].source - The origin file name from http server
+     * @param {String} args[0].url - The URL for Web API or web server
      * @returns {Object} - The result return with property (code, data, msg)
      */
     const download = (...args) => {
       return new Promise(async (resolve, reject) => {
         const { fs, path } = sys;
-        const { createWriteStream, existsSync, mkdirSync, unlinkSync } = sys;
-        const { pipeline, Readable } = require("stream");
-        const streamPipeline = promisify(pipeline);
+        const { createWriteStream, existsSync, mkdirSync, unlinkSync } = fs;
+
+        const stream = require("stream");
+        const { promisify } = require("util");
+        const pipeline = promisify(stream.pipeline);
         const [params] = args;
 
         const goterr = (error) => {
@@ -361,12 +386,12 @@ module.exports = (...args) => {
               if (fileSizeInBytes > 0)
                 resolve({
                   code: 0,
-                  data: null,
+                  data: { file: tagname },
                   msg: "",
                 });
             });
 
-          streamPipeline(response.body, fileWriterStream);
+          pipeline(response.body, fileWriterStream);
         } catch (error) {
           if (existsSync(tagname)) {
             unlinkSync(tagname);
@@ -378,7 +403,7 @@ module.exports = (...args) => {
 
     /**
      * Call HTTP/HTTPS UPLOAD
-     * @alias module:gotfetch.upload
+     * @alias module:smfetch.upload
      * @param {Object} param - Data in object type.
      * @param {Object} param.data - Data in json format
      * @param {Object} param.headers - HTTP headers
@@ -388,6 +413,8 @@ module.exports = (...args) => {
      */
     // const upload = (...args) => {
     //   return new Promise(async (resolve) => {
+    // const FormData = require("form-data");
+    // const jsonToFormData = require("@ajoelp/json-to-formdata");
     //     const [param] = args;
     //     const { file, data, ...other } = param;
     //     let output = handler.dataformat;

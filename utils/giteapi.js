@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025   Loh Wah Kiang
+ * Copyright (c) 2026   Loh Wah Kiang
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -16,15 +16,13 @@
 "use strict";
 /**
  * A module which handle gitea api integration
- * @module src_giteapi
+ * @module utils_giteapi
  */
 module.exports = async (...args) => {
   return new Promise(async (resolve, reject) => {
     const [params, obj] = args;
-    const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { atomic, utils, smfetch } = library;
-    const { datatype, errhandler, handler, objpick } = utils;
+    const { datatype, errhandler, handler, objpick, smfetch } = library.utils;
 
     try {
       let lib = {};

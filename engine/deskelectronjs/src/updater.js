@@ -27,7 +27,8 @@ module.exports = (...args) => {
     const [params, obj] = args;
     const [pathname, curdir] = params;
     const [library, sys, cosetting] = obj;
-    const { decryptor } = library.utils.io;
+    const { errhandler, handler, io, smfetch } = library.utils;
+    const { decryptor } = io;
     const { fs, path, toml, yaml } = sys;
     const { app } = require("electron");
     const logger = require("electron-log");
@@ -146,65 +147,6 @@ module.exports = (...args) => {
         });
       };
 
-      const download = async (...args) => {
-        return new Promise(async (resolve, reject) => {
-          let [param] = args;
-          try {
-            if (!param.url.endsWith("/")) param.url += "/";
-            let options = {
-              url: `${param.url}${param.path}`,
-              headers: {
-                ...addHeader.headers,
-                Accept:
-                  "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-                // "Accept-Encoding": "gzip, deflate, br",
-                "Accept-Language":
-                  "en-US,en;q=0.9,fr;q=0.8,ro;q=0.7,ru;q=0.6,la;q=0.5,pt;q=0.4,de;q=0.3",
-                "Cache-Control": "max-age=0",
-                Connection: "keep-alive",
-                "Upgrade-Insecure-Requests": "1",
-                "User-Agent":
-                  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
-              },
-            };
-
-            let tagname = `/tmp/${param.path}`;
-            let downloadStream = got.stream(options);
-            let fileWriterStream = createWriteStream(tagname);
-
-            fileWriterStream
-              .on("error", (error) => {
-                let stats = fs.statSync(tagname);
-                let fileSizeInBytes = stats.size;
-                if (fileSizeInBytes == 0)
-                  resolve(
-                    goterr({
-                      code: "ZEROSIZE",
-                      data: { file: tagname },
-                      message: "Zero file size",
-                    })
-                  );
-                else resolve({ code: 0, data: { file: tagname }, msg: "" });
-              })
-              .on("finish", () => {
-                let stats = fs.statSync(tagname);
-                let fileSizeInBytes = stats.size;
-                if (fileSizeInBytes > 0) {
-                  resolve({
-                    code: 0,
-                    data: { file: tagname },
-                    msg: "",
-                  });
-                }
-              });
-
-            pipeline(downloadStream, fileWriterStream);
-          } catch (error) {
-            resolve(goterr(error));
-          }
-        });
-      };
-
       const get_arch = () => {
         let rtn = "";
         switch (os.arch()) {
@@ -229,25 +171,24 @@ module.exports = (...args) => {
 
       const get_latestversion = async (...args) => {
         let [splitter] = args;
-        let output = { code: 0, msg: "", data: null };
+        let output = handler.dataformat;
         try {
-          let abortController = new AbortController();
           let options = {
+            async: false,
             method: "GET",
             ...addHeader,
             url: `${appupdater.url}${splitter}latest-linux.yml`,
-            signal: abortController.signal,
+            timeout: 10000,
+            text: true,
           };
 
-          setTimeout(() => {
-            abortController.abort();
-          }, 10000);
-
-          output.data = yaml.parse(await got(options).text());
-          return output;
+          output = await smfetch.request(options);
+          if (output.code == 0) output.data = yaml.parse(output.data);
         } catch (error) {
-          logger.error(["Check latest version error!", error.message]);
-          return goterr(error);
+          output = errhandler(error);
+          logger.error(["Check latest version error!", output.msg]);
+        } finally {
+          return output;
         }
       };
 
@@ -270,11 +211,13 @@ module.exports = (...args) => {
               logger.info(
                 `${productName} latest release version is ${dver}, the software currently version is ${version}. Will download and upgrade silently!`
               );
-              let { files, ...doptions } = rtn.data;
-              let fdownload = await download({
+
+              let fdownload = await smfetch.download({
                 url: appupdater.url,
-                ...doptions,
+                location: "/tmp",
+                source: rtn.data.path,
               });
+
               if (fdownload.code == 0) {
                 softwarepack = fdownload.data.file;
                 let csum = await checksum("sha512", softwarepack);
