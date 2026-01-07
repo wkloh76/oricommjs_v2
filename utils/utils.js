@@ -651,7 +651,7 @@ module.exports = (...args) => {
               errmsg = `Current onging step is:${parseInt(idx) + 1}/${
                 workflow.length
               }. `;
-              let { error, func, name, param, push } = {
+              let { error, func, name, param } = {
                 ...handler.wfwseries,
                 ...compval,
               };
@@ -668,44 +668,9 @@ module.exports = (...args) => {
                 let { code, data, msg } = queuertn;
                 if (code == 0) {
                   jptr.set(temp, `${name}/detail`, data);
-                  if (push[idx]) {
-                    push[idx].map((value, id) => {
-                      let dataval;
-                      if (data == null) dataval = data;
-                      else if (data[value]) dataval = data[value];
-                      else dataval = data;
-                      if (value.lastIndexOf(".") > -1) {
-                        let location = value.replaceAll(".", "/");
-                        let emptycheck = jptr.get(share, location);
-                        if (!emptycheck) jptr.set(share, location, dataval);
-                        else {
-                          let dtype = datatype(emptycheck);
-                          switch (dtype) {
-                            case "object":
-                              jptr.set(
-                                share,
-                                location,
-                                mergeDeep(emptycheck, dataval)
-                              );
-                              break;
-                            case "array":
-                              if (emptycheck.length == 0)
-                                jptr.set(share, location, dataval);
-                              else
-                                jptr.set(
-                                  share,
-                                  location,
-                                  emptycheck.concat(dataval)
-                                );
-                              break;
-                          }
-                        }
-                      } else jptr.set(temp, `${name}/${value}`, dataval);
-                    });
-                  }
                 } else {
                   if (error != "") {
-                    let fnerr = jptr.get(funcs, error.replaceAll(".", "/"));
+                    let fnerr = jptr.get(funcs, error);
                     let fnerrrtn = await sanbox(fnerr, [queuertn, errmsg]);
                     if (!fnerrrtn) {
                       if (queuertn.stack) queuertn.stack += errmsg;
@@ -715,8 +680,10 @@ module.exports = (...args) => {
                       terminate = true;
                     }
                   } else if (err.length > 0) {
+                    let errtemp = {};
+                    jptr.set(errtemp, `${name}/detail`, queuertn);
                     for (let [errkey, errfunc] of Object.entries(err)) {
-                      let { func, name, param, push } = {
+                      let { func, param } = {
                         ...handler.wfwseries,
                         ...errfunc,
                       };
@@ -726,7 +693,7 @@ module.exports = (...args) => {
                       if (fn) {
                         let [funcparams] = objreplace(
                           param,
-                          mergeDeep(temp, share)
+                          mergeDeep(temp, errtemp, share)
                         );
 
                         let fnerrrtn = await sanbox(fn, [
