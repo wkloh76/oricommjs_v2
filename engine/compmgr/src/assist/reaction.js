@@ -520,7 +520,6 @@ module.exports = (...args) => {
                 mjs,
                 params,
                 redirect,
-                wfactivated,
                 workflowjs,
               },
               status,
@@ -604,6 +603,24 @@ module.exports = (...args) => {
                 ["api", "trigger", "workflow"],
                 ["backend.json"]
               );
+              if (
+                Object.keys(injectionjs.variables["wfexchange"]).length == 0
+              ) {
+                dom = new JSDOM(
+                  fs.readFileSync(path.join(pathname, "data", "404.html"))
+                );
+                document = dom.window.document;
+                let paramerr = {
+                  errorcode: 404,
+                  title: "System Notification",
+                  msg: "Cannot found data suite to workflow design.The framework only support the workflow engine. Please follow workflow design to prepare data!",
+                };
+                for (let [el, content] of Object.entries(paramerr)) {
+                  let found = document.querySelector(el);
+                  if (found) found.innerHTML = content;
+                }
+              }
+
               if (injectionjs.variables.wfexchange.api) {
                 injectionjs.variables.apijson =
                   injectionjs.variables.wfexchange.api;

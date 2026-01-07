@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2026-01-07
+
+### Summary
+
+- Old data render from api and gui no longer to use. Frameowkr force fully implement workflow engine to entire backend and frontend design.
+
+### Added
+
+- Check data without workflow schema will direct show error page and mention the design now follow worklow. Completed on 2026-01-07
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+[1.1.7]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.7
+
 ## [1.1.6] - 2026-01-01
 
 ### Summary
