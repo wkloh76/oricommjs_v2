@@ -221,17 +221,20 @@ module.exports = (...args) => {
                   }
                 }
 
-                if (code != "") {
-                  output.code = -1;
-                  output.msg = code;
-                }
+                if (code != "") output.code = -1;
+
                 let result = rtnprocess[rtnprocess.length - 1];
                 let dtype = datatype(result);
                 if (dtype == "array") {
                   output.data = result[result.length - 1].data[step]["detail"];
                 } else if (dtype == "object") {
-                  let name = inputs.workflow[inputs.workflow.length - 1].name;
-                  output.data = result.data[name]["detail"];
+                  if (output.code == 0) {
+                    let name = inputs.workflow[inputs.workflow.length - 1].name;
+                    output.data = result.data[name]["detail"];
+                  } else {
+                    output.msg += result.msg;
+                    output.data = result;
+                  }
                 }
               } else {
                 output.code = -1;

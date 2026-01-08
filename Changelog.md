@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bug fix in serialize1 method at utils. Completed on 2026-01-07
+- Bug fix in error managing data return from `queuetask/takrun` method at workflow engine. Completed on 2026-01-08
 
 ### Security
 
