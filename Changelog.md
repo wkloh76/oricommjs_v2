@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- objfinds method in utils which support both "." and "/" for nested childs search with object/array data type. Completed on 2026-01-08
+
 ### Deprecated
 
 ### Removed

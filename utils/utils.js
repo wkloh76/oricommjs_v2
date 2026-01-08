@@ -1015,6 +1015,7 @@ module.exports = (...args) => {
 
     const objfinds = (...args) => {
       const [source, search, cur = ""] = args;
+      const fname = search.replaceAll(".", "/");
       const findAllWithPath = (objsrc, relPathStr, currentPath = "") => {
         // Normalize relative path: "/b/c" → ["b", "c"]
         const relPath = relPathStr.split("/").filter((part) => part !== "");
@@ -1066,7 +1067,7 @@ module.exports = (...args) => {
         return results;
       };
 
-      return findAllWithPath(source, search, cur);
+      return findAllWithPath(source, fname, cur);
     };
 
     lib = {
