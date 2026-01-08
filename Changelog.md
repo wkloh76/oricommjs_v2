@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - objfinds method in utils which support both "." and "/" for nested childs search with object/array data type. Completed on 2026-01-08
+- Apply serialize1 method to app.js instead serialize. Completed on 2026-01-08
 
 ### Deprecated
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug fix in serialize1 method at utils. Completed on 2026-01-07
 - Bug fix in error managing data return from `queuetask/takrun` method at workflow engine. Completed on 2026-01-08
+- Bug fix in serialize1 and objreplace at utils. Completed on 2026-01-08
 
 ### Security
 

@@ -398,13 +398,14 @@
       },
       mergedata: (...args) => {
         return new Promise(async (resolve, reject) => {
-          const [cosetting, tmp] = args;
+          let [cosetting, tmp] = args;
           let output = { code: 0, msg: "", data: null };
           try {
             output.data = { ...cosetting };
             for (let [, v] of Object.entries(tmp)) {
               output.data = { ...output.data, ...v };
             }
+            cosetting = output.data;
             resolve(output);
           } catch (error) {
             reject(errhandler(error));
@@ -490,6 +491,7 @@
         return;
       },
     };
+
     /**
      * Start loading main project
      * @param {...Object} args - 3 parameters
@@ -501,18 +503,14 @@
     const startup = (...args) => {
       return new Promise(async (resolve, reject) => {
         const [, obj] = args;
-        const [library, sys, cosetting] = obj;
-        const {
-          utils: {
-            errhandler,
-            handler: { dataformat, fmtseries, wfwseries },
-            serialize,
-          },
-        } = library;
-        let output = dataformat;
-        let input = fmtseries;
+        let [library, sys, cosetting] = obj;
+        const { errhandler, handler, serialize1 } = library.utils;
+
+        let output = handler.dataformat;
+        let input = handler.fmtseries;
 
         try {
+          input.trigger = {};
           input.func = startupfunc;
           input.err = [
             {
@@ -522,9 +520,10 @@
               push: [["engine", "lib.library.engine"]],
             },
           ];
+
           input.share = {
-            lib: { library },
-            setting: { cosetting },
+            lib: library,
+            setting: cosetting,
             message: {
               engine: "engine",
               atomic: "atomic",
@@ -532,57 +531,55 @@
             },
             core: { obj },
           };
+
           input.workflow = [
             {
               name: "load_engine",
               func: "load,call_message",
-              param: [[obj], [obj]],
-              pull: [["setting.cosetting.engine"], ["message.engine"]],
-              push: [["engine", "lib.library.engine"]],
+              param: [
+                ["{{$setting/engine}}", "{{$core/obj}}"],
+                ["{{$message/engine}}", "{{$core/obj}}"],
+              ],
+              save: [["lib/engine"]],
             },
             {
               name: "load_atomic",
               func: "nested_load,call_message",
-              param: [[obj], [obj]],
-              pull: [
+              param: [
                 [
-                  "setting.cosetting.atomic",
-                  "setting.cosetting.general.atomic",
+                  ["{{$setting/atomic}}", "{{$setting/general/atomic}}"],
+                  "{{$core/obj}}",
                 ],
-                ["message.atomic"],
+                ["{{$message/atomic}}", "{{$core/obj}}"],
               ],
             },
             {
               name: "load_components",
               func: "load_comp,mergedata",
-              param: [[obj]],
-              pull: [
-                ["setting.cosetting.components"],
-                ["setting.cosetting", "load_components.components"],
+              param: [
+                ["{{$setting/components}}", "{{$core/obj}}"],
+                ["{{$setting}}", "{{$load_components/detail}}"],
               ],
-              push: [["components"], ["cosetting", "setting.cosetting"]],
+              save: [[], ["setting"]],
             },
             {
               name: "work",
               func: "work",
-              param: [[obj]],
-              pull: [["setting.cosetting"]],
+              param: [["{{$setting}}", "{{$core/obj}}"]],
             },
             {
               name: "routejson",
               func: "routejson",
-              param: [[obj]],
-              pull: [["lib.library.components"]],
+              param: [["{{$lib/components}}", "{{$core/obj}}"]],
             },
             {
               name: "msg_components",
               func: "call_message",
-              param: [[obj]],
-              pull: [["message.components"]],
+              param: [["{{$message/components}}", "{{$core/obj}}"]],
             },
           ];
 
-          let rtn = await new serialize(input, obj);
+          let rtn = await new serialize1(input, obj);
           if (rtn.code != 0) throw rtn;
           resolve(output);
         } catch (error) {

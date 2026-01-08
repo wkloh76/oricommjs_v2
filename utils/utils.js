@@ -651,78 +651,90 @@ module.exports = (...args) => {
               errmsg = `Current onging step is:${parseInt(idx) + 1}/${
                 workflow.length
               }. `;
-              let { error, func, name, param } = {
+              let { error, func, name, param, save } = {
                 ...handler.wfwseries,
                 ...compval,
               };
-              let fn;
-              let [found] = objfinds(funcs, func);
-              if (found) fn = found.value;
-              if (fn) {
-                let [funcparams] = objreplace(
-                  param,
-                  mergeDeep(trigger, temp, share)
-                );
+              for (let [kfunc, vfunc] of Object.entries(func.split(","))) {
+                let fn;
+                let [found] = objfinds(funcs, vfunc);
+                if (found) fn = found.value;
+                if (fn) {
+                  let funcparams = objreplace(
+                    param[kfunc],
+                    mergeDeep(trigger, temp, share)
+                  );
 
-                let queuertn = await sanbox(fn, funcparams);
-                let { code, data, msg } = queuertn;
-                if (code == 0) {
-                  jptr.set(temp, `${name}/detail`, data);
-                } else {
-                  if (error != "") {
-                    let fnerr = jptr.get(funcs, error);
-                    let fnerrrtn = await sanbox(fnerr, [queuertn, errmsg]);
-                    if (!fnerrrtn) {
-                      if (queuertn.stack) queuertn.stack += errmsg;
-                      else if (queuertn.message) queuertn.message += errmsg;
-                      else if (queuertn.msg) queuertn.msg += errmsg;
-                      if (verbose == true) output = { ...queuertn, data: temp };
-                      terminate = true;
+                  let queuertn = await sanbox(fn, funcparams);
+                  let { code, data, msg } = queuertn;
+                  if (code == 0) {
+                    jptr.set(temp, `${name}/detail`, data);
+                    if (save?.[kfunc]) {
+                      save[kfunc].forEach((content) => {
+                        if (typeof content == "string" && content != "") {
+                          let root = content.replaceAll(".", "/");
+                          if (jptr.get(share, root))
+                            jptr.set(share, root, data);
+                        }
+                      });
                     }
-                  } else if (err.length > 0) {
-                    let errtemp = {};
-                    jptr.set(errtemp, `${name}/detail`, queuertn);
-                    for (let [errkey, errfunc] of Object.entries(err)) {
-                      let { func, param } = {
-                        ...handler.wfwseries,
-                        ...errfunc,
-                      };
+                  } else {
+                    if (error != "") {
+                      let fnerr = jptr.get(funcs, error);
+                      let fnerrrtn = await sanbox(fnerr, [queuertn, errmsg]);
+                      if (!fnerrrtn) {
+                        if (queuertn.stack) queuertn.stack += errmsg;
+                        else if (queuertn.message) queuertn.message += errmsg;
+                        else if (queuertn.msg) queuertn.msg += errmsg;
+                        if (verbose == true)
+                          output = { ...queuertn, data: temp };
+                        terminate = true;
+                      }
+                    } else if (err.length > 0) {
+                      let errtemp = {};
+                      jptr.set(errtemp, `${name}/detail`, queuertn);
+                      for (let [errkey, errfunc] of Object.entries(err)) {
+                        let { func, param } = {
+                          ...handler.wfwseries,
+                          ...errfunc,
+                        };
 
-                      let [found] = objfinds(funcs, func);
-                      if (found) fn = found.value;
-                      if (fn) {
-                        let [funcparams] = objreplace(
-                          param,
-                          mergeDeep(temp, errtemp, share)
-                        );
+                        let [found] = objfinds(funcs, func);
+                        if (found) fn = found.value;
+                        if (fn) {
+                          let [funcparams] = objreplace(
+                            param,
+                            mergeDeep(temp, errtemp, share)
+                          );
 
-                        let fnerrrtn = await sanbox(fn, [
-                          queuertn,
-                          errmsg,
-                          funcparams,
-                        ]);
-                        if (!fnerrrtn) {
-                          if (queuertn.stack) queuertn.stack += errmsg;
-                          else if (queuertn.message) queuertn.message += errmsg;
-                          else if (queuertn.msg) queuertn.msg += errmsg;
-                          if (verbose == true)
-                            output = { ...queuertn, data: temp };
-                          terminate = true;
+                          let fnerrrtn = await sanbox(fn, [
+                            queuertn,
+                            errmsg,
+                            funcparams,
+                          ]);
+                          if (!fnerrrtn) {
+                            if (queuertn.stack) queuertn.stack += errmsg;
+                            else if (queuertn.message)
+                              queuertn.message += errmsg;
+                            else if (queuertn.msg) queuertn.msg += errmsg;
+                            if (verbose == true)
+                              output = { ...queuertn, data: temp };
+                            terminate = true;
+                          }
                         }
                       }
+                      terminate = true;
                     }
-                    terminate = true;
+                    output.code = code;
+                    output.msg = msg;
                   }
-                  output.code = code;
-                  output.msg = msg;
+                } else {
+                  output.code = -3;
+                  output.msg = `Process stop at (${name}).${errmsg}. `;
+                  terminate = true;
                 }
-              } else {
-                output.code = -3;
-                output.msg = `Process stop at (${name}).${errmsg}. `;
-                terminate = true;
+                if (terminate == true) break;
               }
-              if (terminate == true) break;
-
               if (terminate == true) break;
             }
 
@@ -966,7 +978,7 @@ module.exports = (...args) => {
 
       // QWEN3-MAX
       const replaceStructuralPlaceholders = (...args) => {
-        const [value, replacement] = args;
+        let [value, replacement] = args;
         if (typeof value === "string") {
           // 检查是否整个字符串是一个占位符
           const match = value.match(/^\{\{\$([^}]+)\}\}$/);
