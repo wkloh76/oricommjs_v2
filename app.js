@@ -504,7 +504,7 @@
       return new Promise(async (resolve, reject) => {
         const [, obj] = args;
         let [library, sys, cosetting] = obj;
-        const { errhandler, handler, serialize1 } = library.utils;
+        const { errhandler, handler, serialize } = library.utils;
 
         let output = handler.dataformat;
         let input = handler.fmtseries;
@@ -579,7 +579,7 @@
             },
           ];
 
-          let rtn = await new serialize1(input, obj);
+          let rtn = await new serialize(input, obj);
           if (rtn.code != 0) throw rtn;
           resolve(output);
         } catch (error) {

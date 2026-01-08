@@ -19,8 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - objfinds method in utils which support both "." and "/" for nested childs search with object/array data type. Completed on 2026-01-08
 - Apply serialize1 method to app.js instead serialize. Completed on 2026-01-08
+- Overwrite serialize1 method to serialize method at utils. Completed on 2026-01-08
 
 ### Deprecated
+
+- Deprecated serialize1 method at utils. The afftectd modules includes workflow enigne and app.js. Completed on 2026-01-08
 
 ### Removed
 

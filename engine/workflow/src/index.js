@@ -137,7 +137,7 @@ module.exports = (...args) => {
           pick_arrayofobj,
           pick_arrayobj2list,
           mergeDeep,
-          serialize1,
+          serialize,
         } = library.utils;
         let output = handler.dataformat;
 
@@ -154,7 +154,7 @@ module.exports = (...args) => {
                 ...objserialize.trigger,
                 ...this.parameters,
               };
-              let rtn = await new serialize1(objserialize, [library], showdata);
+              let rtn = await new serialize(objserialize, [library], showdata);
               process.push(rtn);
               if (rtn.code != 0) break;
               let name =
@@ -200,7 +200,7 @@ module.exports = (...args) => {
                     ...inputs.trigger,
                     ...this.parameters,
                   };
-                  allexec.push(new serialize1(inputs, [library], showdata));
+                  allexec.push(new serialize(inputs, [library], showdata));
                 } else if (datatype(inputs) == "array")
                   allexec.push(parallel(inputs, share));
 
