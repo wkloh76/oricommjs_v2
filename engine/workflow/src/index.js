@@ -226,7 +226,15 @@ module.exports = (...args) => {
                 let result = rtnprocess[rtnprocess.length - 1];
                 let dtype = datatype(result);
                 if (dtype == "array") {
-                  output.data = result[result.length - 1].data[step]["detail"];
+                  if (output.code == 0) {
+                    output.data =
+                      result[result.length - 1].data[step]["detail"];
+                  } else {
+                    output.data = result;
+                    result.forEach((v) => {
+                      output.msg += v.msg + "\n";
+                    });
+                  }
                 } else if (dtype == "object") {
                   if (output.code == 0) {
                     let name = inputs.workflow[inputs.workflow.length - 1].name;
