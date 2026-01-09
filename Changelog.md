@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add upload method to utils/smfetch. Completed on 2026-01-09
+
 ### Changed
 
 ### Deprecated

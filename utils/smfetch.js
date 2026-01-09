@@ -404,58 +404,56 @@ module.exports = (...args) => {
     /**
      * Call HTTP/HTTPS UPLOAD
      * @alias module:smfetch.upload
-     * @param {Object} param - Data in object type.
-     * @param {Object} param.data - Data in json format
-     * @param {Object} param.headers - HTTP headers
-     * @param {Number} param.timeout - Abort the wating responding time from web server.
-     * @param {String} param.url - The URL for Web API or web server
+     * @param {...Object} args - 1 parameters
+     * @param {Object} args[0].data - Data in json format
+     * @param {Object} args[0].headers - HTTP headers
+     * @param {Number} args[0].timeout - Abort the wating responding time from web server.
+     * @param {String} args[0].url - The URL for Web API or web server
      * @returns {Object} - The result return with property (code, data, msg)
      */
-    // const upload = (...args) => {
-    //   return new Promise(async (resolve) => {
-    // const FormData = require("form-data");
-    // const jsonToFormData = require("@ajoelp/json-to-formdata");
-    //     const [param] = args;
-    //     const { file, data, ...other } = param;
-    //     let output = handler.dataformat;
-    //     try {
-    //       const abortController = new AbortController();
-    //       if (!file) throw new Error("Undefined file path and file name");
-    //       let formdata = new FormData();
-    //       formdata.append("smfetch_upload", fs.createReadStream(file));
+    const upload = async (...args) => {
+      const { errhandler, mergeDeep } = library.utils;
+      const { createReadStream } = sys.fs;
+      const [params] = args;
+      const { data, file, timeout, url: furl, ...other } = params;
+      let output = handler.dataformat;
+      try {
+        let FormData = new FormData();
+        if (!file) throw new Error("Undefined file path and file name");
+        let formdata = new FormData();
+        formdata.append("smfetch_upload", createReadStream(file));
 
-    //       if (data) jsonToFormData(data, {}, formdata);
-    //       let options = gotoption(Object.assign({ method: "POST" }, other));
+        if (data)
+          for (let [k, v] of Object.entries(data)) formdata.append(k, v);
 
-    //       if (options.headers) {
-    //         for (let keyname of Object.keys(options.headers)) {
-    //           let value = options.headers[keyname].toLowerCase();
-    //           if (value == "multipart/form-data")
-    //             delete options.headers[keyname];
-    //         }
-    //       }
-    //       if (Object.keys(options.headers).length == 0) delete options.headers;
+        let fdata = mergeDeep({ method: "POST" }, other);
 
-    //       options.body = formdata;
+        if (fdata.headers) {
+          for (let keyname of Object.keys(fdata.headers)) {
+            let value = fdata.headers[keyname].toLowerCase();
+            if (value == "multipart/form-data") delete fdata.headers[keyname];
+          }
+        }
+        if (Object.keys(fdata.headers).length == 0) delete fdata.headers;
+        fdata.body = formdata;
 
-    //       if (options["timeout"]) {
-    //         options["signal"] = abortController.signal;
-    //         setTimeout(() => {
-    //           abortController.abort();
-    //         }, options["timeout"]);
-    //       }
+        if (timeout) {
+          const abortController = new AbortController();
+          options["signal"] = abortController.signal;
+          setTimeout(() => abortController.abort(), timeout);
+        }
 
-    //       let rtn = await got(options);
-    //       output.data = rtn.body;
-    //     } catch (error) {
-    //       output = goterr(error);
-    //     } finally {
-    //       resolve(output);
-    //     }
-    //   });
-    // };
+        let rtn = await fetch(furl, fdata);
 
-    lib = { download, request };
+        output.data = rtn.body;
+      } catch (error) {
+        output = errhandler(error);
+      } finally {
+        return output;
+      }
+    };
+
+    lib = { download, request, upload };
   } catch (error) {
     lib = error;
   } finally {
