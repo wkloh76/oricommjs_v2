@@ -222,7 +222,7 @@ module.exports = (...args) => {
                         else if (text) result.data = await response.text();
                         else {
                           let resp = await response.json();
-                          result = { ...result, ...resp };
+                          if (resp) result.data = resp;
                         }
                         success({
                           status: response.status,
@@ -266,7 +266,7 @@ module.exports = (...args) => {
                 else if (download) result.data = await response.blob();
                 else if (text) result.data = await response.text();
                 else {
-                  let resp = await response.json();
+                  let { status, ...resp } = await response.json();
                   result = { ...result, ...resp };
                 }
               } else {

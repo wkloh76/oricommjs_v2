@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bug fix in queuetask/taskrun method at workflow engine which inproper handle error return. Completed on 2026-01-08
+- Bug fix in smfetch at utils. Completed on 2026-01-13
 
 ### Security
 
