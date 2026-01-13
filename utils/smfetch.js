@@ -220,10 +220,7 @@ module.exports = (...args) => {
                           window.location = response.url;
                         else if (download) result.data = await response.blob();
                         else if (text) result.data = await response.text();
-                        else {
-                          let resp = await response.json();
-                          if (resp) result.data = resp;
-                        }
+                        else result.data = await response.json();
                         success({
                           status: response.status,
                           statusText: response.statusText,
@@ -265,10 +262,7 @@ module.exports = (...args) => {
                   window.location = response.url;
                 else if (download) result.data = await response.blob();
                 else if (text) result.data = await response.text();
-                else {
-                  let { status, ...resp } = await response.json();
-                  result = { ...result, ...resp };
-                }
+                else result.data = await response.json();
               } else {
                 if (response.status == 301 && requester == "webfetch") {
                   let resp = await response.json();

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Standardize frontend and backend json return data in smfetch at utils. Completed on 2026-01-13
+
 ### Deprecated
 
 ### Removed
