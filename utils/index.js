@@ -29,7 +29,6 @@ module.exports = (...args) => {
       library.utils["handler"] = require("./handler")(params, obj);
       library.utils["smfetch"] = require("./smfetch")(params, obj);
 
-      library.utils["csse"] = await require("./csse")(params, obj);
       library.utils["CSE"] = await require("./cse")(params, obj);
       library.utils["SSE"] = await require("./sse")(params, obj);
       library.utils["giteapi"] = require("./giteapi")(params, obj);

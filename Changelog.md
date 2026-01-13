@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug fix in smfetch at utils. Completed on 2026-01-13
 - Bug fix download function in smfetch at utils. Completed on 2026-01-13
 - Bug fix in giteapi at utils. Completed on 2026-01-13
+- Bug fix in index.js at utils. Completed on 2026-01-13
 
 ### Security
 
