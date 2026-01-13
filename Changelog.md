@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add upload method to utils/smfetch. Completed on 2026-01-09
+- Split csse.js export module to `cse.js` and `sse.js` in utils. Full test complete. Completed on 2026-01-13
 
 ### Changed
 
@@ -21,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Removed
+
+- Remove csse.js from utils. Completed on 2026-01-13
 
 ### Fixed
 

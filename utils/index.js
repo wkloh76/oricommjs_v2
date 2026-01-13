@@ -30,6 +30,8 @@ module.exports = (...args) => {
       library.utils["smfetch"] = require("./smfetch")(params, obj);
 
       library.utils["csse"] = await require("./csse")(params, obj);
+      library.utils["CSE"] = await require("./cse")(params, obj);
+      library.utils["SSE"] = await require("./sse")(params, obj);
       library.utils["giteapi"] = require("./giteapi")(params, obj);
       library.utils["intercomm"] = require("./intercomm")(params, obj);
       library.utils["io"] = require("./io")(params, obj);
@@ -37,12 +39,13 @@ module.exports = (...args) => {
       library.utils["sqlitesession"] = require("./sqlitesession");
       library.utils["startupinit"] = require("./startupinit")(params, obj);
       library.utils["excluded"] = [
-        "csse",
+        "CSE",
         "giteapi",
         "intercomm",
         "io",
         "powershell",
         "sqlitesession",
+        "SSE",
         "startupinit",
         "excluded",
       ];
