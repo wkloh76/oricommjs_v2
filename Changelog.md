@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Standardize frontend and backend json return data in smfetch at utils. Completed on 2026-01-13
+- Change the import without async await at giteapi module. Completed on 2026-01-13
 
 ### Deprecated
 
@@ -25,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug fix in queuetask/taskrun method at workflow engine which inproper handle error return. Completed on 2026-01-08
 - Bug fix in smfetch at utils. Completed on 2026-01-13
+- Bug fix download function in smfetch at utils. Completed on 2026-01-13
+- Bug fix in giteapi at utils. Completed on 2026-01-13
 
 ### Security
 

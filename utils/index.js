@@ -29,7 +29,7 @@ module.exports = (...args) => {
       library.utils["handler"] = require("./handler")(params, obj);
       library.utils["smfetch"] = require("./smfetch")(params, obj);
 
-      library.utils["csse"] = require("./csse")(params, obj);
+      library.utils["csse"] = await require("./csse")(params, obj);
       library.utils["giteapi"] = require("./giteapi")(params, obj);
       library.utils["intercomm"] = require("./intercomm")(params, obj);
       library.utils["io"] = require("./io")(params, obj);
