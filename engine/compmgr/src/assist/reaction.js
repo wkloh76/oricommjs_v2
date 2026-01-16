@@ -15,18 +15,17 @@
  */
 "use strict";
 /**
- * Submodule handles http responses, which are preprocessed by jsdom to manipulate the data before presenting to the client
+ * Submodule handles http responses, which are preprocessed by happy-dom to manipulate the data before presenting to the client
  * @module web_reaction
  */
 module.exports = (...args) => {
   return new Promise(async (resolve, reject) => {
     const { minify } = require("html-minifier-terser");
-    const jsdom = require("jsdom");
-
+    const hpdom = await import("happy-dom");
     const [params, obj] = args;
-    const [pathname, curdir] = params;
+    const [pathname] = params;
     const [library, sys, cosetting] = obj;
-    const { assist, dir, utils } = library;
+    const { assist, utils } = library;
     const { getContentType, identify_htmltag, mimes, str_inject } = assist;
     const { getNestedObject, handler, jptr, sanbox } = utils;
     const { fs, logerr: logerror, path } = sys;
@@ -36,10 +35,10 @@ module.exports = (...args) => {
       let components = { defaulturl: "" };
 
       /**
-       * The main objective is convert css data in object type to jsdom format and append to parent
+       * The main objective is convert css data in object type to happy-dom format and append to parent
        * @alias module:web_reaction.import_css
        * @param {...Object} args - 3 parameters
-       * @param {Object} args[0] - doc is an object of jsdom window.document
+       * @param {Object} args[0] - doc is an object of happy-dom window.document
        * @param {Object} args[1] - data is an object which listing css link source
        * @param {Object} args[2] - params is an object which use to concat data object value
        */
@@ -71,10 +70,10 @@ module.exports = (...args) => {
       };
 
       /**
-       * The main objective is convert js data in object type to jsdom format and append to parent
+       * The main objective is convert js data in object type to happy-dom format and append to parent
        * @alias module:web_reaction.import_js
        * @param {...Object} args - 3 parameters
-       * @param {Object} args[0] - doc is an object of jsdom window.document
+       * @param {Object} args[0] - doc is an object of happy-dom window.document
        * @param {Object} args[1] - data is an object which listing js link source
        * @param {Object} args[2] - params is an object which use to concat data object value
        */
@@ -109,7 +108,7 @@ module.exports = (...args) => {
        * The main objective is concat string become complete url for ES Module
        * @alias module:web_reaction.import_mjs
        * @param {...Object} args - 3 parameters
-       * @param {Object} args[0] - doc is an object of jsdom window.document
+       * @param {Object} args[0] - doc is an object of happy-dom window.document
        * @param {Object} args[1] - data is an object which listing js link source
        * @param {Object} args[2] - params is an object which use to concat data object value
        */
@@ -137,10 +136,10 @@ module.exports = (...args) => {
       };
 
       /**
-       * The main objective is convert less.js data in object type to jsdom format and append to parent
+       * The main objective is convert less.js data in object type to happy-dom format and append to parent
        * @alias module:web_reaction.import_less
        * @param {...Object} args - 3 parameters
-       * @param {Object} args[0] - doc is an object of jsdom window.document
+       * @param {Object} args[0] - doc is an object of happy-dom window.document
        * @param {Object} args[1] - data is an object which listing less.js link source
        * @param {Object} args[2] - params is an object which use to concat data object value
        */
@@ -254,7 +253,7 @@ module.exports = (...args) => {
       const combine_layer = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
-          const { JSDOM } = jsdom;
+
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom, master_doc;
@@ -269,11 +268,12 @@ module.exports = (...args) => {
 
             let { message, stack } = layouts;
             if (!message && !stack) {
-              master_dom = new JSDOM(str_inject(layouts, params));
+              master_dom = new hpdom.Window();
+              master_dom.document.write(str_inject(layouts, params));
               master_doc = master_dom.window.document;
 
               for (let childlist of childlists) {
-                let child_doc = new JSDOM().window.document;
+                let child_doc = new hpdom.Window().window.document;
                 let body = child_doc.querySelector("body");
                 body.innerHTML = str_inject(childlist, params);
                 let body_node = body.childNodes[0];
@@ -304,8 +304,8 @@ module.exports = (...args) => {
                   }
                 }
               }
-
-              output.data = master_dom.serialize();
+              output.data =
+                master_dom.window.document.documentElement.outerHTML;
             } else {
               throw {
                 message: message,
@@ -330,7 +330,6 @@ module.exports = (...args) => {
       const single_layer = (...args) => {
         return new Promise(async (resolve, reject) => {
           const [layer, params] = args;
-          const { JSDOM } = jsdom;
           try {
             let output = { code: 0, msg: "", data: null };
             let master_dom;
@@ -339,8 +338,10 @@ module.exports = (...args) => {
 
             let { message, stack } = layouts;
             if (!message && !stack) {
-              master_dom = new JSDOM(str_inject(layouts, params));
-              output.data = master_dom.serialize();
+              master_dom = new hpdom.Window();
+              master_dom.document.write(str_inject(layouts, params));
+              output.data =
+                master_dom.window.document.documentElement.outerHTML;
             } else {
               throw {
                 message: message,
@@ -503,7 +504,6 @@ module.exports = (...args) => {
        */
       const processEnd = (...args) => {
         return new Promise(async (resolve, reject) => {
-          const { JSDOM } = jsdom;
           let [cnt, orires, errflag] = args;
           try {
             let {
@@ -543,8 +543,10 @@ module.exports = (...args) => {
               resolve(cnt.json(json, status));
             } else if (!islayer || !isview || !ishtml) {
               let dom, isvalid, layouts;
-              if (!ishtml) dom = new JSDOM(html);
-              else {
+              if (!ishtml) {
+                dom = new hpdom.Window();
+                dom.document.write(html);
+              } else {
                 if (!isview) {
                   if (path.extname(view) == ".html") isvalid = true;
                   else isvalid = identify_htmltag(view);
@@ -569,9 +571,11 @@ module.exports = (...args) => {
                   }
 
                   if (!layouts) {
-                    dom = new JSDOM(view);
+                    dom = new hpdom.Window();
+                    dom.document.write(view);
                   } else {
-                    dom = new JSDOM(layouts);
+                    dom = new hpdom.Window();
+                    dom.document.write(layouts);
                   }
                 } else {
                   throw {
@@ -606,7 +610,8 @@ module.exports = (...args) => {
               if (
                 Object.keys(injectionjs.variables["wfexchange"]).length == 0
               ) {
-                dom = new JSDOM(
+                dom = new hpdom.Window();
+                dom.document.write(
                   fs.readFileSync(path.join(pathname, "data", "404.html"))
                 );
                 document = dom.window.document;
@@ -660,7 +665,7 @@ module.exports = (...args) => {
               cnt.res.headers.set("Content-Type", "text/html");
               resolve(
                 cnt.html(
-                  await minify(dom.serialize(), {
+                  await minify(dom.window.document.documentElement.outerHTML, {
                     collapseWhitespace: true,
                   }),
                   status

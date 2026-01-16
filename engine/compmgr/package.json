@@ -2,8 +2,8 @@
   "name": "compmgr",
   "dependencies": {
     "html-minifier-terser": "7.2.0",
+    "happy-dom": "20.3.1",
     "js-beautify": "1.15.4",
-    "jsdom": "27.4.0 ",
     "less": "4.5.1"
   }
 }
