@@ -116,7 +116,7 @@ module.exports = (...args) => {
               objfuncs,
               ...objother,
             },
-            backend
+            backend,
           );
         } catch (error) {
           output = errhandler(error);
@@ -162,6 +162,9 @@ module.exports = (...args) => {
               cross = mergeDeep(cross, {
                 [objserialize.wfname]: rtn.data[name],
               });
+              process[process.length - 1].data = {
+                [objserialize.wfname]: rtn.data[name],
+              };
             }
             return process;
           };
@@ -363,7 +366,7 @@ module.exports = (...args) => {
         let clsname = arr2str(
           event.currentTarget.className.split(" "),
           ".",
-          " "
+          " ",
         );
         let tagName = event.currentTarget.tagName;
         let id = `#${event.currentTarget.id}`;

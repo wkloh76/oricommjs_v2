@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bug fix in workflow engine at queuetask/taskrun method when the tasks more than one workflows, the success data failure return from the last workflow last task. Completed on 2026-01-21
+
 ### Security
 
 [1.1.9]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.1.9
