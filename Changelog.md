@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Implement happy-dom to instead jsdom. Completed on 2026-01-16
+- Add check method to identtify events triger by "currentTarget" or "target" only in helper at workflow/queuetask. Completed on 2026-01-21
 
 ### Changed
 

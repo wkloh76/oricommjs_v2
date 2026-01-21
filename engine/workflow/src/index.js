@@ -361,15 +361,12 @@ module.exports = (...args) => {
         const [event, showdata = true] = params;
         const { wfengine, trigger, ...objfuncs } = obj;
         const { arr2str, arr_selected, objfinds, objreplace } = library.utils;
-
-        let attrs = event.currentTarget.attributes;
-        let clsname = arr2str(
-          event.currentTarget.className.split(" "),
-          ".",
-          " ",
-        );
-        let tagName = event.currentTarget.tagName;
-        let id = `#${event.currentTarget.id}`;
+        let etarget = "currentTarget";
+        if (!event.currentTarget) etarget = "target";
+        let attrs = event[etarget].attributes;
+        let clsname = arr2str(event[etarget].className.split(" "), ".", " ");
+        let tagName = event[etarget].tagName;
+        let id = `#${event[etarget].id}`;
         let func = attrs["func"].nodeValue;
         let qslist = [];
 
