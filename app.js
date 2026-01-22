@@ -132,12 +132,12 @@
           }
 
           cosetting.packagejson = JSON.parse(
-            fs.readFileSync(path.join(dir, "package.json"), "utf8")
+            fs.readFileSync(path.join(dir, "package.json"), "utf8"),
           );
 
           cosetting.logpath = path.join(
             cosetting.homedir,
-            `.${cosetting.packagejson.name}`
+            `.${cosetting.packagejson.name}`,
           );
 
           let exlude_engine = [];
@@ -151,7 +151,7 @@
           utils = {
             ...(await require(path.join(dir, "utils"))(
               [path.join(dir, "utils"), "utils"],
-              [kernel, sysmodule, cosetting]
+              [kernel, sysmodule, cosetting],
             )),
           };
 
@@ -280,7 +280,7 @@
         try {
           let stream = fs.createWriteStream(
             path.join(logpath, "error", "error.log"),
-            { flags: "a" }
+            { flags: "a" },
           );
           // 配置 Pino 日志
           let logerror = pino(
@@ -294,7 +294,7 @@
                 },
               },
             },
-            stream
+            stream,
           );
 
           output.data = { logerr: logerror };
@@ -416,7 +416,7 @@
         const [params, obj] = args;
         const [library, sys] = obj;
         console.log(
-          `Import ${params} done (${sys.dayjs().format("DD-MM-YYYY HH:mm:ss")})`
+          `Import ${params} done (${sys.dayjs().format("DD-MM-YYYY HH:mm:ss")})`,
         );
         return library.utils.handler.dataformat;
       },
@@ -483,12 +483,17 @@
         });
       },
       failure: (...args) => {
-        const [error] = args;
-        return;
-      },
-      failure1: (...args) => {
-        const [error] = args;
-        return;
+        const [error, errmsg, obj] = args;
+        const [library] = obj;
+        const { errhandler, handler } = library.utils;
+        let output = handler.dataformat;
+        try {
+          output.data = error;
+        } catch (error) {
+          output = errhandler(error);
+        } finally {
+          return output;
+        }
       },
     };
 
@@ -516,8 +521,7 @@
             {
               func: "failure",
               name: "load_failureengine",
-              pull: [["setting.cosetting.engine"]],
-              push: [["engine", "lib.library.engine"]],
+              param: [["{{$lib}}"]],
             },
           ];
 
@@ -606,7 +610,7 @@
         {
           type: "password",
           message: chalk.whiteBright.bgBlue(
-            "This is the first time setup!\nPlease provide your authorize password for some privileage setting:\n"
+            "This is the first time setup!\nPlease provide your authorize password for some privileage setting:\n",
           ),
           name: "ans",
           mask: chalk.yellow.bgBlue("*"),
@@ -622,7 +626,7 @@
         let encodepwd = kernel.utils.io.encryptor(sudopwd, coresetting.general);
         let tomlString = sysmodule.toml.stringify(
           { encryptpwd: encodepwd },
-          { newline: "\n" }
+          { newline: "\n" },
         );
         sysmodule.fs.writeFileSync(conftoml, tomlString);
         process.exit(1);
@@ -632,7 +636,7 @@
     let rtn = await startup(null, [kernel, sysmodule, coresetting]);
     if (rtn.code != 0) throw rtn;
     console.log(
-      `done app (${sysmodule.dayjs().format("DD-MM-YYYY HH:mm:ss")})`
+      `done app (${sysmodule.dayjs().format("DD-MM-YYYY HH:mm:ss")})`,
     );
   } catch (error) {
     console.log(error.stack);

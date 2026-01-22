@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Summary
 
+- Optimize and improve the workflow engine
+- Apply full stack of RESTFul API to all web and desktop engine
+
 ### Added
 
 - Implement happy-dom to instead jsdom. Completed on 2026-01-16
@@ -16,13 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Re-structure routejson data format in cengine.js at compmgr engine. Completed on 2026-01-22
+- Update startupfunc.failure process method in app.js to suite to new serserialize method at utils. Completed on 2026-01-22
+- Improve errhandler method at utils. Completed on 2026-01-22
+- Improve error handlering data structure in serserialize method at utils. Completed on 2026-01-22
+
 ### Deprecated
 
 ### Removed
 
+- Remove unsed code from preload.html at compmgr engine. Completed on 2026-01-22
+
 ### Fixed
 
 - Bug fix in workflow engine at queuetask/taskrun method when the tasks more than one workflows, the success data failure return from the last workflow last task. Completed on 2026-01-21
+- Bug fix in onrequest method at reaction.js at compmgr engine. Completed on 2026-01-22
 
 ### Security
 

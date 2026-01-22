@@ -84,7 +84,7 @@ module.exports = class {
           lib[val] = await this.import_module(
             [location, arr_modname, compname],
             obj,
-            [owncomp]
+            [owncomp],
           );
         }
       }
@@ -121,7 +121,7 @@ module.exports = class {
         let modules = await this.import_module(
           [location, arr_modname, compname],
           obj,
-          [owncomp]
+          [owncomp],
         );
 
         for (let [, val] of Object.entries(modules)) {
@@ -193,7 +193,7 @@ module.exports = class {
                 let { module, regulation } = await require(join(
                   modpath,
                   "controller",
-                  jsfile
+                  jsfile,
                 ), "utf8")([modpath, modname, compname], obj, [
                   owncomp,
                   structuredClone(reg),
@@ -214,7 +214,7 @@ module.exports = class {
                         rtn["worker"] = value;
                         rtn["abspath"] = modpath;
                         for (let [elname, [element]] of Object.entries(
-                          regulation
+                          regulation,
                         )) {
                           if (element) {
                             let arr = element.split(" ");
@@ -227,9 +227,8 @@ module.exports = class {
                           }
                         }
                         controller = val;
-                        rtn[
-                          "url"
-                        ] = `/${compname}/${modname}/${ctrlname}/${url}`;
+                        rtn["url"] =
+                          `/${compname}/${modname}/${ctrlname}/${url}`;
                         if (rtn["url"] && rtn["method"]) {
                           rtn["controller"] = controller;
                           lib[value][rtn["url"]] = rtn;
@@ -273,7 +272,7 @@ module.exports = class {
             module = require(join(modpath, "index.js"), "utf8")(
               [modpath, val, curdir],
               obj,
-              owncomp
+              owncomp,
             );
             arr_name.push(val);
             arr_process.push(module);
@@ -283,7 +282,7 @@ module.exports = class {
               module = require(join(modpath, "controller", jsfile), "utf8")(
                 [modpath, val, curdir],
                 obj,
-                owncomp
+                owncomp,
               );
               arr_name.push(val);
               arr_process.push(module);
@@ -401,26 +400,40 @@ module.exports = class {
   prepare_rules = (...args) => {
     return new Promise(async (resolve, reject) => {
       let [{ api, gui, rules }] = args;
-      const { errhandler } = this.library.utils;
+      const { errhandler, mergeDeep } = this.library.utils;
 
       try {
+        let routedoc = {
+          api: {},
+          gui: {},
+          rules: { ...rules.rule },
+        };
+
         for (let [key] of Object.entries(api)) {
           let [controller, idx] = this.pattern(api[key], rules);
           api[key]["controller"] = controller;
           api[key]["idx"] = idx;
+          let {
+            controller: ctrl,
+            from: fr,
+            url,
+            ...router
+          } = mergeDeep(api[key]);
+          routedoc.api[url] = router;
         }
 
         for (let [key] of Object.entries(gui)) {
           let [controller, idx] = this.pattern(gui[key], rules);
           gui[key]["controller"] = controller;
           gui[key]["idx"] = idx;
+          let {
+            controller: ctrl,
+            from: fr,
+            url,
+            ...router
+          } = mergeDeep(gui[key]);
+          routedoc.gui[url] = router;
         }
-
-        let routedoc = {
-          api: { ...api },
-          gui: { ...gui },
-          rules: { ...rules.rule },
-        };
 
         resolve(routedoc);
       } catch (error) {
@@ -518,23 +531,23 @@ module.exports = class {
           components[compname]["common"]["models"],
           await this.general(
             [join(prjsrc, "src", "common"), ["models"], compname],
-            [this.library, this.sys, setting]
-          )
+            [this.library, this.sys, setting],
+          ),
         );
 
         components[compname] = this.comb_obj(
           components[compname],
           await this.general(
             [join(prjsrc, "src"), ["startup"], compname],
-            [this.library, this.sys, setting]
-          )
+            [this.library, this.sys, setting],
+          ),
         );
 
         components[compname]["common"]["viewspath"] = join(
           prjsrc,
           "src",
           "common",
-          "views"
+          "views",
         );
 
         if (setting.general.engine.type !== "app") {
@@ -542,24 +555,24 @@ module.exports = class {
             components[compname],
             await this.rules(
               [join(prjsrc, "src"), ["rules"], compname],
-              [this.library, this.sys, setting]
-            )
+              [this.library, this.sys, setting],
+            ),
           );
 
           components[compname] = this.comb_obj(
             components[compname],
             await this.guiapi(
               [join(prjsrc, "src"), ["api", "gui"], compname],
-              [this.library, this.sys, setting]
-            )
+              [this.library, this.sys, setting],
+            ),
           );
         } else {
           components[compname] = this.comb_obj(
             components[compname],
             await this.general(
               [join(prjsrc, "src"), ["app"], compname],
-              [this.library, this.sys, setting]
-            )
+              [this.library, this.sys, setting],
+            ),
           );
         }
 
@@ -569,9 +582,8 @@ module.exports = class {
 
         if (!setting.ongoing[compname].internalurl)
           setting.ongoing[compname].internalurl = {};
-        setting.ongoing[compname].internalurl[
-          `${compname}`
-        ] = `/${compname}/public/assets`;
+        setting.ongoing[compname].internalurl[`${compname}`] =
+          `/${compname}/public/assets`;
 
         dataset[compname].defaulturl = setting.ongoing[compname].defaulturl;
         reaction["register"](dataset);
@@ -581,7 +593,7 @@ module.exports = class {
 
         if (Object.keys(components[compname]["startup"]).length > 0) {
           for (let [, module] of Object.entries(
-            components[compname]["startup"]
+            components[compname]["startup"],
           )) {
             if (!components.startup) components.startup = [];
             components.startup.push(module.startup);

@@ -53,7 +53,7 @@ module.exports = (...args) => {
                 let url = href;
                 if (key != "other") url = params[key] + href;
                 let attributes = JSON.parse(
-                  `{"rel":"stylesheet","type":"text/css","href":"${url}"}`
+                  `{"rel":"stylesheet","type":"text/css","href":"${url}"}`,
                 );
 
                 Object.keys(attributes).forEach((attr) => {
@@ -88,7 +88,7 @@ module.exports = (...args) => {
                 let url = href;
                 if (key != "other") url = params[key] + href;
                 let attributes = JSON.parse(
-                  `{"type":"text/javascript","src":"${url}"}`
+                  `{"type":"text/javascript","src":"${url}"}`,
                 );
 
                 Object.keys(attributes).forEach((attr) => {
@@ -154,7 +154,7 @@ module.exports = (...args) => {
                 let url = href;
                 if (key != "other") url = params[key] + href;
                 let attributes = JSON.parse(
-                  `{"rel":"stylesheet/less","type":"text/css","href":"${url}"}`
+                  `{"rel":"stylesheet/less","type":"text/css","href":"${url}"}`,
                 );
 
                 Object.keys(attributes).forEach((attr) => {
@@ -428,7 +428,7 @@ module.exports = (...args) => {
                 jptr.set(
                   output,
                   join(dir, bname),
-                  JSON.parse(readFileSync(join(_path, dir, file), "utf8"))
+                  JSON.parse(readFileSync(join(_path, dir, file), "utf8")),
                 );
               }
             });
@@ -559,7 +559,7 @@ module.exports = (...args) => {
                     if (!isview) layer.childs.external.push(view);
                     let { code, msg, data } = await combine_layer(
                       layer,
-                      params
+                      params,
                     );
                     if (code == 0) layouts = data;
                     else throw { msg: msg, data: data };
@@ -593,7 +593,7 @@ module.exports = (...args) => {
               }
               if (!errflag) {
                 let preload = await get_domhtml(
-                  path.join(pathname, "data", "preload.html")
+                  path.join(pathname, "data", "preload.html"),
                 );
                 document.querySelector("body").innerHTML += preload;
               }
@@ -605,14 +605,14 @@ module.exports = (...args) => {
               injectionjs.variables["wfexchange"] = await wfexchange(
                 orires.abspath,
                 ["api", "trigger", "workflow"],
-                ["backend.json"]
+                ["backend.json"],
               );
               if (
                 Object.keys(injectionjs.variables["wfexchange"]).length == 0
               ) {
                 dom = new hpdom.Window();
                 dom.document.write(
-                  fs.readFileSync(path.join(pathname, "data", "404.html"))
+                  fs.readFileSync(path.join(pathname, "data", "404.html")),
                 );
                 document = dom.window.document;
                 let paramerr = {
@@ -636,12 +636,12 @@ module.exports = (...args) => {
                 const abspath = cosetting.share.public[orires.compname];
                 injectionjs.variables["workflowjs"] = await wfjspath(
                   abspath,
-                  workflowjs
+                  workflowjs,
                 );
               }
               if (Object.keys(injectionjs.variables).length > 0)
                 script.innerHTML += `var injectionjs=${JSON.stringify(
-                  injectionjs.variables
+                  injectionjs.variables,
                 )}`;
 
               ["/library/utils.js", "/library/engine/workflow.js"].map(
@@ -652,7 +652,7 @@ module.exports = (...args) => {
                   document
                     .getElementsByTagName("head")[0]
                     .appendChild(libraries);
-                }
+                },
               );
 
               document.getElementsByTagName("head")[0].appendChild(script);
@@ -668,8 +668,8 @@ module.exports = (...args) => {
                   await minify(dom.window.document.documentElement.outerHTML, {
                     collapseWhitespace: true,
                   }),
-                  status
-                )
+                  status,
+                ),
               );
             } else {
               throw {
@@ -884,7 +884,7 @@ module.exports = (...args) => {
         let orireq = {
           body: parsebody || {},
           header: cnt.req.header,
-          params: cnt.req.params || {},
+          params: cnt.req.param() || {},
           path: cnt.req.path,
           query: cnt.req.query() || {},
           text: cnt.req.text,
@@ -922,7 +922,7 @@ module.exports = (...args) => {
             } else {
               fn = await guiapi_picker(
                 getNestedObject(api, baseUrl),
-                getNestedObject(gui, baseUrl)
+                getNestedObject(gui, baseUrl),
               );
             }
             if (baseUrl == `/${compkey}`) redirect = defaulturl;
@@ -1098,7 +1098,7 @@ module.exports = (...args) => {
           if (components.defaulturl == "") components.defaulturl = defaulturl;
           else
             console.log(
-              `The system rejects the new default url '${defaulturl}' because it is already assigned '${components.defaulturl}'`
+              `The system rejects the new default url '${defaulturl}' because it is already assigned '${components.defaulturl}'`,
             );
         }
       };

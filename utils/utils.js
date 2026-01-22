@@ -71,7 +71,7 @@ module.exports = (...args) => {
         // eslint-disable-next-line no-param-reassign, no-confusing-arrow
         obj = pathArr.reduce(
           (o, key) => (o && o[key] !== "undefined" ? o[key] : undefined),
-          obj
+          obj,
         );
       }
       return obj;
@@ -90,7 +90,8 @@ module.exports = (...args) => {
       let newObj = Object.assign({}, obj); // Make new object
       const updateKey = (key, newValue, obj) => {
         if (typeof obj !== "object") return; // Basecase
-        if (obj[key]) obj[key] = newValue; // Look for and edit property
+        if (obj[key])
+          obj[key] = newValue; // Look for and edit property
         else
           for (let prop in obj) {
             updateKey(key, newValue, obj[prop]); // Go deeper
@@ -456,7 +457,7 @@ module.exports = (...args) => {
                 if (fn) {
                   let funcparams = objreplace(
                     param[kfunc],
-                    mergeDeep(trigger, temp, share)
+                    mergeDeep(trigger, temp, share),
                   );
 
                   let queuertn = await sanbox(fn, funcparams);
@@ -498,7 +499,7 @@ module.exports = (...args) => {
                         if (fn) {
                           let [funcparams] = objreplace(
                             param,
-                            mergeDeep(temp, errtemp, share)
+                            mergeDeep(temp, errtemp, share),
                           );
 
                           let fnerrrtn = await sanbox(fn, [
@@ -514,13 +515,22 @@ module.exports = (...args) => {
                             if (verbose == true)
                               output = { ...queuertn, data: temp };
                             terminate = true;
+                          } else {
+                            output = { ...queuertn };
+                            output.data = [queuertn, fnerrrtn];
+                            output.msg = queuertn.msg || queuertn.message || "";
+                            if (output.msg != "")
+                              output.msg = `${output.msg}. ${fnerrrtn.msg || fnerrrtn.message || ""}`;
+                            if (fnerrrtn.stack)
+                              output.stack = `${output.stack}\n${fnerrrtn.stack}`;
                           }
                         }
                       }
                       terminate = true;
                     }
                     output.code = code;
-                    output.msg = msg;
+                    if (output.msg == "" && output.code != 0)
+                      output.msg = msg || queuertn.message;
                   }
                 } else {
                   output.code = -3;
@@ -555,6 +565,7 @@ module.exports = (...args) => {
         return {
           code: error.errno,
           errno: error.errno,
+          msg: error.msg ?? error.message,
           message: error.message,
           stack: error.stack,
           data: error,
@@ -563,6 +574,7 @@ module.exports = (...args) => {
         return {
           code: -1,
           errno: -1,
+          msg: error.msg ?? error.message,
           message: error.message,
           stack: error.stack,
           data: error,
@@ -761,7 +773,7 @@ module.exports = (...args) => {
       const inistr = "";
       const result = arr.reduce(
         (accumulator, cval) => accumulator + `${front}${cval}${back}`,
-        inistr
+        inistr,
       );
       return result.toString().trim();
     };
@@ -795,15 +807,15 @@ module.exports = (...args) => {
               if (typeof resolved === "object") {
                 throw new Error(
                   `Cannot embed object/array into string template: ${match}. ` +
-                    `Only scalar replacements allowed inside strings.`
+                    `Only scalar replacements allowed inside strings.`,
                 );
               }
               return String(resolved);
-            }
+            },
           );
         } else if (Array.isArray(value)) {
           return value.map((item) =>
-            replaceStructuralPlaceholders(item, replacement)
+            replaceStructuralPlaceholders(item, replacement),
           );
         } else if (value !== null && typeof value === "object") {
           const result = {};
@@ -864,7 +876,7 @@ module.exports = (...args) => {
             if (objsrc.hasOwnProperty(key)) {
               const nextPath = currentPath ? `${currentPath}.${key}` : key;
               results.push(
-                ...findAllWithPath(objsrc[key], relPathStr, nextPath)
+                ...findAllWithPath(objsrc[key], relPathStr, nextPath),
               );
             }
           }
