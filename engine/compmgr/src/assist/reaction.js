@@ -27,7 +27,7 @@ module.exports = (...args) => {
     const [library, sys, cosetting] = obj;
     const { assist, utils } = library;
     const { getContentType, identify_htmltag, mimes, str_inject } = assist;
-    const { getNestedObject, handler, jptr, sanbox } = utils;
+    const { getNestedObject, handler, jptr, mergeDeep, sanbox } = utils;
     const { fs, logerr: logerror, path } = sys;
     const { createReadStream, statSync } = fs;
     try {
@@ -413,7 +413,8 @@ module.exports = (...args) => {
       };
 
       const wfexchange = async (...args) => {
-        const [abspath, collect, excluded = []] = args;
+        const [res, collect, excluded = []] = args;
+        const { abspath, method, urlname, worker } = res;
         const { readdirSync, readFileSync } = fs;
         const { join, extname } = path;
         const _path = join(abspath, "json");
@@ -421,17 +422,41 @@ module.exports = (...args) => {
         for (let dir of collect) {
           let files = await sanbox(readdirSync, [join(_path, dir)]);
           if (!files.code && files.length > 0) {
-            files.map((file) => {
-              let bname = path.parse(file).name;
+            jptr.set(output, join(dir, urlname), {});
+            for (let file of files) {
               let ext = extname(file);
               if (ext == ".json" && !excluded.includes(file)) {
+                let buf = jptr.get(output, join(dir, urlname));
                 jptr.set(
                   output,
-                  join(dir, bname),
-                  JSON.parse(readFileSync(join(_path, dir, file), "utf8")),
+                  join(dir, urlname),
+                  mergeDeep(
+                    buf,
+                    JSON.parse(readFileSync(join(_path, dir, file), "utf8")),
+                  ),
                 );
+              } else {
+                let sfiles = await sanbox(readdirSync, [
+                  join(_path, dir, file),
+                ]);
+                sfiles.map((sfile) => {
+                  let ext = extname(sfile);
+                  if (ext == ".json" && !excluded.includes(sfile)) {
+                    let buf = jptr.get(output, join(dir, urlname));
+                    jptr.set(
+                      output,
+                      join(dir, urlname),
+                      mergeDeep(
+                        buf,
+                        JSON.parse(
+                          readFileSync(join(_path, dir, file, sfile), "utf8"),
+                        ),
+                      ),
+                    );
+                  }
+                });
               }
-            });
+            }
           }
         }
 
@@ -603,7 +628,12 @@ module.exports = (...args) => {
                 orires.compname
               }", mjs = ${JSON.stringify(import_mjs(mjs, params))};`;
               injectionjs.variables["wfexchange"] = await wfexchange(
-                orires.abspath,
+                {
+                  abspath: orires.abspath,
+                  method: orires.method,
+                  urlname: orires.urlpath.split("/")[4],
+                  worker: orires.worker,
+                },
                 ["api", "trigger", "workflow"],
                 ["backend.json"],
               );
@@ -1039,6 +1069,8 @@ module.exports = (...args) => {
           orires.abspath = fn.abspath;
           orires.compname = fn.compname;
           orires.worker = fn.worker;
+          orires.method = orireq.method;
+          orires.urlpath = orireq.path;
           return await processEnd(cnt, orires);
         } catch (error) {
           orires.locals = { render: handler.webview };

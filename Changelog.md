@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update startupfunc.failure process method in app.js to suite to new serserialize method at utils. Completed on 2026-01-22
 - Improve errhandler method at utils. Completed on 2026-01-22
 - Improve error handlering data structure in serserialize method at utils. Completed on 2026-01-22
+- Reaction.sj at compmgr engine which support load multi files from components "gui\json" side to combined relavant data and suite to wfexchange format. Completed on 2026-01-22
 
 ### Deprecated
 
