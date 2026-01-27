@@ -436,25 +436,27 @@ module.exports = (...args) => {
                   ),
                 );
               } else {
-                let sfiles = await sanbox(readdirSync, [
-                  join(_path, dir, file),
-                ]);
-                sfiles.map((sfile) => {
-                  let ext = extname(sfile);
-                  if (ext == ".json" && !excluded.includes(sfile)) {
-                    let buf = jptr.get(output, join(dir, urlname));
-                    jptr.set(
-                      output,
-                      join(dir, urlname),
-                      mergeDeep(
-                        buf,
-                        JSON.parse(
-                          readFileSync(join(_path, dir, file, sfile), "utf8"),
+                if (file == urlname) {
+                  let sfiles = await sanbox(readdirSync, [
+                    join(_path, dir, file),
+                  ]);
+                  sfiles.map((sfile) => {
+                    let ext = extname(sfile);
+                    if (ext == ".json" && !excluded.includes(sfile)) {
+                      let buf = jptr.get(output, join(dir, urlname));
+                      jptr.set(
+                        output,
+                        join(dir, urlname),
+                        mergeDeep(
+                          buf,
+                          JSON.parse(
+                            readFileSync(join(_path, dir, file, sfile), "utf8"),
+                          ),
                         ),
-                      ),
-                    );
-                  }
-                });
+                      );
+                    }
+                  });
+                }
               }
             }
           }
