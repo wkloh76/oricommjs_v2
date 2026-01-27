@@ -327,22 +327,27 @@ module.exports = (...args) => {
                       let func = getNestedObject(objfuncs, fn);
                       if (func) nodevalue.addEventListener(key, func);
                     } else if (datatype(fn) === "object") {
+                      if (!fn.options) fn.options = {};
                       if (fn.attr) {
                         for (let [attrkey, attrval] of Object.entries(fn.attr))
                           nodevalue.setAttribute(attrkey, attrval);
                       }
                       let func = jptr.get(objfuncs, fn.evt);
                       if (func)
-                        nodevalue.addEventListener(key, async (event) => {
-                          let { workflow: wfengine, ...otherwf } =
-                            this.htmlengine;
-                          await func(event);
-                          await this.helper([event, showdata], {
-                            ...otherwf,
-                            wfengine,
-                            trigger: param,
-                          });
-                        });
+                        nodevalue.addEventListener(
+                          key,
+                          async (event) => {
+                            let { workflow: wfengine, ...otherwf } =
+                              this.htmlengine;
+                            await func(event);
+                            await this.helper([event, showdata], {
+                              ...otherwf,
+                              wfengine,
+                              trigger: param,
+                            });
+                          },
+                          fn.options,
+                        );
                     }
                   }
                 }
