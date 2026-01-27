@@ -888,6 +888,35 @@ module.exports = (...args) => {
       return findAllWithPath(source, fname, cur);
     };
 
+    const advobjreplace = (...args) => {
+      const [source, data] = args;
+      const pattern = /{{\$(.*?)}}|<-\{(.*?)\}>/g;
+
+      if (typeof source === "string") {
+        return source.replace(pattern, (match, p1, p2) => {
+          // p1 is mode {{}}, p2 is mode  <-{}>
+          const key = p1 || p2;
+          if (key && Object.prototype.hasOwnProperty.call(data, key)) {
+            return data[key];
+          }
+          return match;
+        });
+      }
+
+      if (Array.isArray(source)) {
+        return source.map((item) => advobjreplace(item, data));
+      }
+
+      if (source !== null && typeof source === "object") {
+        const newObj = {};
+        for (const [key, value] of Object.entries(source)) {
+          newObj[key] = advobjreplace(value, data);
+        }
+        return newObj;
+      }
+      return source;
+    };
+
     lib = {
       arr2str,
       getNestedObject,
@@ -904,6 +933,7 @@ module.exports = (...args) => {
       omit,
       objpick,
       objreplace,
+      advobjreplace,
       objfinds,
       string2json,
       serialize,

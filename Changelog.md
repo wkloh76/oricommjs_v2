@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement happy-dom to instead jsdom. Completed on 2026-01-16
 - Add check method to identtify events triger by "currentTarget" or "target" only in helper at workflow/queuetask. Completed on 2026-01-21
 - Add addEventListener third parameter "options" at trigger json file which is allow the design frontend automatically removed when invoked. This change at workflow/queuetask/regevents. Completed on 2026-01-27
+- Add`advobjreplace` method to utils. Completed on 2026-01-27
 
 ### Changed
 
