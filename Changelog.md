@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug fix in workflow engine at queuetask/taskrun method when the tasks more than one workflows, the success data failure return from the last workflow last task. Completed on 2026-01-21
 - Bug fix in onrequest method at reaction.js at compmgr engine. Completed on 2026-01-22
 - Bug fix in wfexchange function at compmgr engine which never merge data by selected folder name. Completed on 2026-01-27
+- Bug fix in serialize function at utils.js which is improper handler error msg. Completed on 2026-02-02
 
 ### Security
 

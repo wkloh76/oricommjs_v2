@@ -519,8 +519,8 @@ module.exports = (...args) => {
                             output = { ...queuertn };
                             output.data = [queuertn, fnerrrtn];
                             output.msg = queuertn.msg || queuertn.message || "";
-                            if (output.msg != "")
-                              output.msg = `${output.msg}. ${fnerrrtn.msg || fnerrrtn.message || ""}`;
+                            if (output.msg == "")
+                              output.msg = `${fnerrrtn.msg || fnerrrtn.message || ""}`;
                             if (fnerrrtn.stack)
                               output.stack = `${output.stack}\n${fnerrrtn.stack}`;
                           }
