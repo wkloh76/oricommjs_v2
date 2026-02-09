@@ -3,8 +3,8 @@
   "dependencies": {
     "@hono/swagger-editor": "1.0.1",
     "@hono/swagger-ui": "0.5.3",
-    "@hono/zod-openapi": "1.2.0",
-    "hono": "4.11.7",
+    "@hono/zod-openapi": "1.2.1",
+    "hono": "4.11.9",
     "hono-sessions": "0.8.0"
   }
 }

@@ -1,11 +1,15 @@
 {
   "name": "deskelectronjs",
   "dependencies": {
-    "electron-builder-squirrel-windows": "26.4.0",
+    "electron-builder-squirrel-windows": "26.7.0",
     "electron-log": "5.4.3"
   },
   "devDependencies": {
-    "electron": "40.1.0",
-    "electron-builder": "26.4.0"
+    "@electron/packager": "19.0.2",
+    "@electron/rebuild": "4.0.3",
+    "electron": "40.2.1",
+    "electron-builder": "26.7.0",
+    "node-gyp": "12.2.0",
+    "prebuild-install": "7.1.3"
   }
 }
