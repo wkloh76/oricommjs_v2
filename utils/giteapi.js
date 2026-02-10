@@ -20,8 +20,9 @@
  */
 module.exports = (...args) => {
   const [params, obj] = args;
-  const [library, sys, cosetting] = obj;
-  const { datatype, errhandler, handler, objpick, smfetch } = library.utils;
+  const [library] = obj;
+  const { concatobj, datatype, errhandler, handler, objpick, smfetch } =
+    library.utils;
   let lib = {};
   try {
     const combine_header = (...args) => {
@@ -75,20 +76,31 @@ module.exports = (...args) => {
     lib.list_org_repos = async (...args) => {
       const [param] = args;
       let output = handler.dataformat;
+
       try {
-        let options = {
-          async: false,
-          method: "GET",
-          url: `${param.webapi}/api/v1/orgs${param.category}/repos`,
-          option: { headers: combine_header(param.auth, param.headers) },
-          timeout: 30000,
-        };
-        let rtn = await smfetch.request(options);
-        if (rtn && rtn.code == 0) {
-          if (rtn.data.data && rtn.data.code == 0) {
-            output.msg = rtn.data.msg;
-            output.data = rtn.data.data;
-          } else output = rtn.data;
+        let page = 1,
+          fload = true;
+        while (fload) {
+          let options = {
+            async: false,
+            method: "GET",
+            url: `${param.webapi}/api/v1/orgs${param.category}/repos?page=${page}`,
+            option: { headers: combine_header(param.auth, param.headers) },
+            timeout: 30000,
+          };
+          let rtn = await smfetch.request(options);
+          if (rtn && rtn.code == 0) {
+            if (rtn.data.data && rtn.data.code == 0) {
+              output.msg = rtn.data.msg;
+              output.data = rtn.data.data;
+            } else {
+              if (page == 1) output = [];
+              if (rtn.data.length > 0) {
+                output = concatobj(output, rtn.data);
+                page += 1;
+              } else fload = false;
+            }
+          }
         }
       } catch (error) {
         output = errhandler(error);
@@ -214,7 +226,7 @@ module.exports = (...args) => {
         if (data)
           repositories[cond.repokey][param.tagname] = objpick(
             data,
-            cond.picker
+            cond.picker,
           );
       } catch (error) {
       } finally {

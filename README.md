@@ -1,11 +1,11 @@
 # OriCommJS-V2
 
 ![Static Badge](https://img.shields.io/badge/License-Mulan_PSL_v2-_)
-![Static Badge](https://img.shields.io/badge/NodeJS-V24_.12_.0-_)
-![Static Badge](https://img.shields.io/badge/BunJS-V1_.3_.5-_)
-![Static Badge](https://img.shields.io/badge/ElectronJS-V39_.2_.7-_)
+![Static Badge](https://img.shields.io/badge/NodeJS-V24_.13_.0-_)
+![Static Badge](https://img.shields.io/badge/BunJS-V1_.3_.9-_)
+![Static Badge](https://img.shields.io/badge/ElectronJS-V40_.1_.2-_)
 ![Static Badge](https://img.shields.io/badge/OS-Ubuntu_24-_?style=flat)
-![Static Badge](https://img.shields.io/badge/OS-Windows_10-_?style=flat)
+![Static Badge](https://img.shields.io/badge/OS-Windows_11-_?style=flat)
 ![GitHub Release](https://img.shields.io/github/v/release/wkloh76/oricommjs_v2)
 
 The program is fork from oricommjs v1.1.9 and the objective is implement new concept design.
