@@ -11,9 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+-
+
 ### Changed
 
-- Improve the collection of repositories base on calling organisation gitea api in giteapi.js at utils. Completed on 2026-02-06
+- Improve the collection of repositories base on calling organisation gitea api in giteapi.js at utils. Completed on 2026-02-09
+- Upgrade modules package to latest version and change setting devDependencies at deskelectronjs for deployment purpose. Completed on 2026-02-11
 
 ### Deprecated
 
