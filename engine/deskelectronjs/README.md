@@ -12,7 +12,7 @@
 
    ```
     "devDependencies": {
-      "electron": "40.2.1",
+      "electron": "40.3.0",
       "electron-builder": "26.7.0"
     }
    ```
@@ -20,9 +20,9 @@
 3. electron/packager requierement Dependencies packages setting under devDependencies
    ```
     "devDependencies": {
-      "@electron/packager": "19.0.2",
+      "@electron/packager": "19.0.3",
       "@electron/rebuild": "4.0.3",
-      "electron": "40.2.1",
+      "electron": "40.3.0",
       "node-gyp": "12.2.0",
       "prebuild-install": "7.1.3"
     }
