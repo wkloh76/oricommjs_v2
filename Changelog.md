@@ -5,13 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.1] - 2026-02-11
+## [1.2.2] - 2026-02-12
 
 ### Summary
 
 ### Added
 
--
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- Bug fix in dekelectronjs engine which return wrong parameters data when get request from API/GUI in GET method. Completed on 2026-02-12
+
+### Security
+
+[1.2.2]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.2.2
+
+## [1.2.1] - 2026-02-11
+
+### Summary
+
+### Added
 
 ### Changed
 
@@ -26,6 +44,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 [1.2.1]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.2.1
+
+## [1.2.0] - 2026-02-09
+
+### Summary
+
+### Added
+
+### Changed
+
+- Improve the collection of repositories base on calling organisation gitea api in giteapi.js at utils. Completed on 2026-02-09
+- Upgrade modules package to latest version and change setting devDependencies at deskelectronjs for deployment purpose. Completed on 2026-02-11
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+[1.2.0]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.2.0
 
 ## [1.1.9] - 2026-01-16
 

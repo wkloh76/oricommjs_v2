@@ -139,7 +139,7 @@ module.exports = (...args) => {
             return params.query ?? {};
           };
           cnt.req.param = () => {
-            return params.query ?? {};
+            return {};
           };
           cnt.req.json = () => {
             return params.body;
@@ -267,7 +267,7 @@ module.exports = (...args) => {
               default:
                 if (typeof r_result == "string") {
                   let htmlstring = `data:text/html;charset=UTF-8,${encodeURIComponent(
-                    r_result
+                    r_result,
                   )}`;
                   win.webContents.loadURL(htmlstring, {
                     baseURLForDataURL: channel,
