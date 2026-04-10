@@ -623,77 +623,78 @@ module.exports = (...args) => {
                   path.join(pathname, "data", "preload.html"),
                 );
                 document.querySelector("body").innerHTML += preload;
-              }
-              let script = document.createElement("script");
-              script.type = "text/javascript";
-              script.innerHTML = `var wfschedule=null, glib = {}, htmlengine = {}, objfuncs = {}, library = {}, compname="${
-                orires.compname
-              }", mjs = ${JSON.stringify(import_mjs(mjs, params))};`;
-              injectionjs.variables["wfexchange"] = await wfexchange(
-                {
-                  abspath: orires.abspath,
-                  method: orires.method,
-                  urlname: orires.urlpath.split("/")[4],
-                  worker: orires.worker,
-                },
-                ["api", "trigger", "workflow"],
-                ["backend.json"],
-              );
-              if (
-                Object.keys(injectionjs.variables["wfexchange"]).length == 0
-              ) {
-                dom = new hpdom.Window();
-                dom.document.write(
-                  fs.readFileSync(path.join(pathname, "data", "404.html")),
+
+                let script = document.createElement("script");
+                script.type = "text/javascript";
+                script.innerHTML = `var wfschedule=null, glib = {}, htmlengine = {}, objfuncs = {}, library = {}, compname="${
+                  orires.compname
+                }", mjs = ${JSON.stringify(import_mjs(mjs, params))};`;
+                injectionjs.variables["wfexchange"] = await wfexchange(
+                  {
+                    abspath: orires.abspath,
+                    method: orires.method,
+                    urlname: orires.urlpath.split("/")[4],
+                    worker: orires.worker,
+                  },
+                  ["api", "trigger", "workflow"],
+                  ["backend.json"],
                 );
-                document = dom.window.document;
-                let paramerr = {
-                  errorcode: 404,
-                  title: "System Notification",
-                  msg: "Cannot found data suite to workflow design.The framework only support the workflow engine. Please follow workflow design to prepare data!",
-                };
-                for (let [el, content] of Object.entries(paramerr)) {
-                  let found = document.querySelector(el);
-                  if (found) found.innerHTML = content;
+                if (
+                  Object.keys(injectionjs.variables["wfexchange"]).length == 0
+                ) {
+                  dom = new hpdom.Window();
+                  dom.document.write(
+                    fs.readFileSync(path.join(pathname, "data", "404.html")),
+                  );
+                  document = dom.window.document;
+                  let paramerr = {
+                    errorcode: 404,
+                    title: "System Notification",
+                    msg: "Cannot found data suite to workflow design.The framework only support the workflow engine. Please follow workflow design to prepare data!",
+                  };
+                  for (let [el, content] of Object.entries(paramerr)) {
+                    let found = document.querySelector(el);
+                    if (found) found.innerHTML = content;
+                  }
                 }
-              }
 
-              if (injectionjs.variables.wfexchange.api) {
-                injectionjs.variables.apijson =
-                  injectionjs.variables.wfexchange.api;
-                delete injectionjs.variables.wfexchange.api;
-              }
+                if (injectionjs.variables.wfexchange.api) {
+                  injectionjs.variables.apijson =
+                    injectionjs.variables.wfexchange.api;
+                  delete injectionjs.variables.wfexchange.api;
+                }
 
-              if (Object.keys(workflowjs).length > 1) {
-                const abspath = cosetting.share.public[orires.compname];
-                injectionjs.variables["workflowjs"] = await wfjspath(
-                  abspath,
-                  workflowjs,
+                if (Object.keys(workflowjs).length > 1) {
+                  const abspath = cosetting.share.public[orires.compname];
+                  injectionjs.variables["workflowjs"] = await wfjspath(
+                    abspath,
+                    workflowjs,
+                  );
+                }
+                if (Object.keys(injectionjs.variables).length > 0)
+                  script.innerHTML += `var injectionjs=${JSON.stringify(
+                    injectionjs.variables,
+                  )}`;
+
+                ["/library/utils.js", "/library/engine/workflow.js"].map(
+                  (value) => {
+                    let libraries = document.createElement("script");
+                    libraries.type = "module"; // Crucial for ES module
+                    libraries.src = value; // For external module
+                    document
+                      .getElementsByTagName("head")[0]
+                      .appendChild(libraries);
+                  },
                 );
+
+                document.getElementsByTagName("head")[0].appendChild(script);
+                let rtnimport_css = import_css(document, css, params);
+                if (rtnimport_css) throw rtnimport_css;
+                let rtnimport_js = import_js(document, js, params);
+                if (rtnimport_js) throw rtnimport_js;
+                let rtnimport_less = import_less(document, less, params);
+                if (rtnimport_less) throw rtnimport_less;
               }
-              if (Object.keys(injectionjs.variables).length > 0)
-                script.innerHTML += `var injectionjs=${JSON.stringify(
-                  injectionjs.variables,
-                )}`;
-
-              ["/library/utils.js", "/library/engine/workflow.js"].map(
-                (value) => {
-                  let libraries = document.createElement("script");
-                  libraries.type = "module"; // Crucial for ES module
-                  libraries.src = value; // For external module
-                  document
-                    .getElementsByTagName("head")[0]
-                    .appendChild(libraries);
-                },
-              );
-
-              document.getElementsByTagName("head")[0].appendChild(script);
-              let rtnimport_css = import_css(document, css, params);
-              if (rtnimport_css) throw rtnimport_css;
-              let rtnimport_js = import_js(document, js, params);
-              if (rtnimport_js) throw rtnimport_js;
-              let rtnimport_less = import_less(document, less, params);
-              if (rtnimport_less) throw rtnimport_less;
               cnt.res.headers.set("Content-Type", "text/html");
               resolve(
                 cnt.html(
@@ -903,15 +904,11 @@ module.exports = (...args) => {
        */
       const onrequest = async (...args) => {
         let [cnt] = args;
-        // let { req: orireq } = cnt;
         const cnttype = {
           "application/json": "json",
         };
         let parsebody = {};
         let ctype = cnt.req.header("Content-Type");
-        if (cnt.req?.[cnttype[ctype]]) {
-          if (ctype) parsebody = await cnt.req.json();
-        }
 
         let orireq = {
           body: parsebody || {},
@@ -931,6 +928,16 @@ module.exports = (...args) => {
           cnt.req.raw.headers.get("Sec-Fetch-Mode") === "cors";
         let fn;
         try {
+          if (cnt.req?.[cnttype[ctype]]) {
+            if (ctype) {
+              try {
+                orireq.body = await cnt.req.json();
+              } catch (error) {
+                throw { code: 500, message: error.message };
+              }
+            }
+          }
+
           //Resolve web page caching across all browsers
           //https://stackoverflow.com/questions/49547/how-do-we-control-web-page-caching-across-all-browsers
           cnt.header("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
@@ -1110,7 +1117,7 @@ module.exports = (...args) => {
               msg: msg,
             };
           }
-          let errmsg = `"${orireq.method} ${orireq.originalUrl} HTTP/1.1" ${errcode} Error:`;
+          let errmsg = `"${orireq.method} ${orireq.path} HTTP/1.1" ${errcode} Error:`;
           if (typeof errmessage == "string") errmsg += errmessage;
           else errmsg += JSON.stringify(errmessage);
           logerr(errmsg);

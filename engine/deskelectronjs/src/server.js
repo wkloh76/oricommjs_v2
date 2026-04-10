@@ -144,7 +144,15 @@ module.exports = (...args) => {
 
               let parsebody = {};
               let ctype = req.header("Content-Type");
-              if (ctype) parsebody = await req[cnttype[ctype]]();
+              if (ctype) {
+                if (ctype) {
+                  try {
+                    parsebody = await req[cnttype[ctype]]();
+                  } catch (error) {
+                    parsebody = error;
+                  }
+                }
+              }
 
               logger.info(
                 {
@@ -158,12 +166,12 @@ module.exports = (...args) => {
                   body: JSON.stringify(parsebody),
                   params: JSON.stringify(req.param()),
                 },
-                "request completed"
+                "request completed",
               );
 
               return result;
             },
-            reaction["onrequest"]
+            reaction["onrequest"],
           );
 
           return;

@@ -2,7 +2,7 @@
   "name": "oricommjs_v2",
   "productName": "OriCommJS Framework",
   "homepage": "",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "CommonJS framework architecture design suite for all console, web and desktop applications",
   "repository": "",
   "main": "app.js",
@@ -16,11 +16,11 @@
     "dayjs": "1.11.19",
     "eventsource": "4.1.0",
     "ini": "6.0.0",
-    "inquirer": "13.2.2",
+    "inquirer": "13.4.1",
     "multer": "2.0.2",
     "pino": "10.3.1",
     "pino-roll": "4.0.0",
-    "yaml": "2.8.2"
+    "yaml": "2.8.3"
   },
   "devDependencies": {
     "@types/bun": "latest"

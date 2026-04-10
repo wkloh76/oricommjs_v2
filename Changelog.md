@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-04-10
+
+### Summary
+
+### Added
+
+### Changed
+
+- Updated the bodyParser decode method in the onrequest function within the compmgr engine at /assist/reaction.js. This change correctly handles 'unexpected JSON format' data, ensuring the error handler processes it properly. Completed on 2026-04-10.
+- Updated the bodyParser decode method in the onrequest function within the webbunjs engine at /assist/reaction.js. This change correctly handles 'unexpected JSON format' data, ensuring the error handler processes it properly. Completed on 2026-04-10.
+- Updated the bodyParser decode method in the onrequest function within the deskelectronjs engine at /assist/reaction.js. This change correctly handles 'unexpected JSON format' data, ensuring the error handler processes it properly. Completed on 2026-04-10.
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- Fixed an unhandled error in the compmgr engine at /assist/reaction.js in `onrequest` function to ensure the error page renders properly. Completed on 2026-04-10.
+- Fixed an error log in the compmgr engine at /assist/reaction.js in `onrequest` function to ensure the error page renders properly. Completed on 2026-04-10.
+
+### Security
+
+[1.2.3]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.2.3
+
 ## [1.2.2] - 2026-02-12
 
 ### Summary
