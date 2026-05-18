@@ -2,9 +2,9 @@
   "name": "deskelectronjs",
   "dependencies": {
     "electron-builder-squirrel-windows": "26.8.1",
-    "electron-log": "5.4.3"
+    "electron-log": "5.4.4"
   },
   "devDependencies": {
-    "electron": "41.2.0"
+    "electron": "42.1.0"
   }
 }

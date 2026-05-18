@@ -2,7 +2,7 @@
     "name": "sqlmanager",
     "dependencies": {
         "bcrypt": "6.0.0",
-        "csv-parser": "3.2.0",
+        "csv-parser": "3.2.1",
         "nodejs-polars": "0.24.1",
         "mariadb": "3.5.2",
         "sql-fmt": "2.1.0"

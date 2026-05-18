@@ -18,6 +18,9 @@ const { Module } = require("module");
 const vm = require("vm");
 const crypto = require("crypto");
 const util = require("util");
+const { Readable } = require("node:stream");
+const { pipeline } = require("node:stream/promises");
+const Busboy = require("busboy");
 
 /**
  * The submodule of utils
@@ -75,7 +78,7 @@ module.exports = (...args) => {
               if (fs.existsSync(join(modpath, "index.js"))) {
                 let module = require(join(modpath), "utf8")(
                   [modpath, val, curdir],
-                  optional
+                  optional,
                 );
                 arr_name.push(val);
                 arr_process.push(module);
@@ -117,7 +120,7 @@ module.exports = (...args) => {
               if (fs.existsSync(join(modpath, "index.js"))) {
                 let module = require(join(modpath), "utf8")(
                   [modpath, val, curdir],
-                  optional
+                  optional,
                 );
                 arr_name.push(val);
                 arr_process.push(module);
@@ -203,6 +206,170 @@ module.exports = (...args) => {
       }
     };
 
+    const errhandler = (...args) => {
+      let [error] = args;
+      if (error.errno)
+        return {
+          code: error.errno,
+          errno: error.errno,
+          msg: error.msg ?? error.message,
+          message: error.message,
+          stack: error.stack,
+          data: error,
+        };
+      else
+        return {
+          code: -1,
+          errno: -1,
+          msg: error.msg ?? error.message,
+          message: error.message,
+          stack: error.stack,
+          data: error,
+        };
+    };
+
+    const formdata_sbuffer = (...args) => {
+      return new Promise((resolve, reject) => {
+        const [params, obj] = args;
+        const { ctype, payload, rawreq } = params;
+
+        // Convert standard Web API ReadableStream to a traditional Node Readable stream
+        const nodeReadable = Readable.fromWeb(rawreq);
+        const busboy = Busboy({
+          headers: { "content-type": ctype },
+        });
+
+        let output = {
+          code: 0,
+          msg: "",
+          data: null,
+        };
+
+        // This array will hold our streaming buffer fragments
+        const fileChunks = [];
+        let fileResult = null;
+
+        busboy.on("file", (fieldname, fileStream, fileInfo) => {
+          const { encoding, filename: originalname, mimeType } = fileInfo;
+          // 2. Capture each incoming 64KB binary slice
+          fileStream.on("data", (chunk) => {
+            // 'chunk' is a raw Node.js Buffer segment
+            fileChunks.push(chunk);
+          });
+
+          // 3. Triggered when this specific file finishes flowing over the network
+          fileStream.on("end", () => {
+            // Assemble all array pieces into one complete continuous memory buffer
+            const finalBuffer = Buffer.concat(fileChunks);
+
+            fileResult = {
+              type: "buffer",
+              originalname,
+              mimeType,
+              encoding,
+              buffer: finalBuffer,
+              sizeInBytes: finalBuffer.length, // This gives you the exact file size
+            };
+          });
+        });
+        // Handle text fields to keep backpressure clear
+        busboy.on("field", (fieldname, val) => {});
+
+        busboy.on("error", (error) => resolve(errhandler(error)));
+
+        // 4. Safely resolve your Hono route promise once Busboy clears the network pipe
+        busboy.on("finish", () => {
+          if (!fileResult) {
+            resolve(
+              errhandler(
+                new Error("No file was found in the FormData payload"),
+              ),
+            );
+          }
+          output.data = fileResult;
+          resolve(output);
+        });
+
+        nodeReadable.pipe(busboy);
+      });
+    };
+
+    const formdata_sdisk = (...args) => {
+      return new Promise((resolve, reject) => {
+        const [params, obj] = args;
+        const { ctype, payload, rawreq } = params;
+        const { location, timestamp } = obj;
+        const { createWriteStream } = fs;
+
+        // Convert standard Web API ReadableStream to a traditional Node Readable stream
+        const nodeReadable = Readable.fromWeb(rawreq);
+        const busboy = Busboy({
+          headers: { "content-type": ctype },
+        });
+
+        let output = {
+          code: 0,
+          msg: "",
+          data: null,
+        };
+
+        busboy.on("file", (fieldname, fileStream, fileInfo) => {
+          const { encoding, filename: originalname, mimeType } = fileInfo;
+          const extension = path.extname(originalname) || ".bin";
+          let fname = path.parse(originalname).name;
+          if (timestamp) fname += "_" + sys.dayjs().valueOf();
+          const destination = path.join(location, `${fname}${extension}`);
+          const diskWritable = createWriteStream(destination);
+          fileStream.pipe(diskWritable);
+          diskWritable.on("finish", () => {
+            output.data = {
+              destination,
+              encoding,
+              mimeType,
+              originalname,
+              payload,
+              size: diskWritable.bytesWritten,
+            };
+            resolve(output);
+          });
+          diskWritable.on("error", (error) => resolve(errhandler(error)));
+        });
+        // Handle text fields to keep backpressure clear
+        busboy.on("field", (fieldname, val) => {});
+        busboy.on("error", (error) => resolve(errhandler(error)));
+        nodeReadable.pipe(busboy);
+      });
+    };
+
+    const rawbinary_sdisk = (...args) => {
+      return new Promise((resolve, reject) => {
+        const [params, obj] = args;
+        const { ctype, filename, payload, rawreq, size } = params;
+        const { location, timestamp } = obj;
+        const { createWriteStream } = fs;
+
+        // Convert standard Web API ReadableStream to a traditional Node Readable stream
+        const nodeReadable = Readable.fromWeb(rawreq);
+
+        const extension = path.extname(filename) || ".bin";
+        let fname = path.parse(filename).name;
+        if (timestamp) fname += "_" + sys.dayjs().valueOf();
+        const destination = path.join(location, `${fname}${extension}`);
+        const diskWritable = createWriteStream(destination);
+        nodeReadable.pipe(diskWritable);
+        diskWritable.on("finish", () =>
+          resolve({
+            destination,
+            mimeType: ctype,
+            originalname: filename,
+            payload,
+            size: diskWritable.bytesWritten,
+          }),
+        );
+        diskWritable.on("error", (error) => resolve(errhandler(error)));
+      });
+    };
+
     /**
      * File upload from we browser and kepp in memory or disk
      * @alias module:utils.diskstore
@@ -220,6 +387,7 @@ module.exports = (...args) => {
         setting,
         options = { save: undefined, timestamp: undefined },
       ] = args;
+      const { formdatastream, rawbinstream } = request;
       const { save = false, timestamp = false } = options;
       const { disk, location, stream } = setting;
       let output = {
@@ -229,42 +397,33 @@ module.exports = (...args) => {
       };
 
       try {
-        if (!request.files) {
-          let stack;
-          let sizeContent = request.headers["content-length"];
-          stack = multer.memoryStorage();
-
-          if (Number(sizeContent) / 1024 > stream) {
-          } else if (Number(sizeContent) / 1024 > disk || save) {
-            stack = multer.diskStorage({
-              destination: location,
-              limits: { fileSize: disk },
-              filename: function (req, file, cb) {
-                let fname = file.originalname;
-                if (timestamp) fname += "_" + sys.dayjs().valueOf();
-                cb(null, fname);
-              },
+        let result = {};
+        if (formdatastream) {
+          if (Number(formdatastream.size) / 10240 > disk || save) {
+            result = await formdata_sdisk(formdatastream, {
+              location,
+              timestamp,
+            });
+          } else {
+            result = await formdata_sbuffer(formdatastream, {
+              location,
+              timestamp,
             });
           }
-
-          const proceed = util.promisify(multer({ storage: stack }).any());
-          await proceed(request, {});
-        } else {
-          for (let file of request.files) {
-            file.buffer = Buffer.from(file.buffer);
-            await fs.writeFileSync(
-              path.join(location, file.originalname),
-              file.buffer
-            );
-          }
-        }
-        if (request.files) output.data = request.files;
-        else
+        } else if (rawbinstream) {
+          result = await rawbinary_sdisk(rawbinstream, {
+            location,
+            timestamp,
+          });
+        } else
           throw {
             message: "Upload process failure!",
             stack:
               "Error stack: Upload process failure from utils/utils.js webstorage function",
           };
+
+        if (result.code == 0) output.data = result.data;
+        else output = result;
       } catch (error) {
         output = errhandler(error);
       } finally {
@@ -281,7 +440,7 @@ module.exports = (...args) => {
       const cipher = crypto.createCipheriv(
         algorithm,
         Buffer.from(secretKey, "hex"),
-        Buffer.from(iv, "hex")
+        Buffer.from(iv, "hex"),
       );
       let encrypted = cipher.update(password, "utf8", "hex");
       encrypted += cipher.final("hex");
@@ -299,12 +458,12 @@ module.exports = (...args) => {
       const decipher = crypto.createDecipheriv(
         algorithm,
         Buffer.from(secretKey, "hex"),
-        decipherIv
+        decipherIv,
       );
       let decrypted = decipher.update(
         encryptedObject.encryptedData,
         "hex",
-        "utf8"
+        "utf8",
       );
       decrypted += decipher.final("utf8");
       return decrypted;

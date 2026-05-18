@@ -355,6 +355,34 @@ module.exports = (...args) => {
         });
       };
 
+      const uploadproc = (...args) => {
+        let [c] = args;
+        let ctype = c.req.header("Content-Type");
+
+        let output = {
+          ctype,
+          payload: "multipart/form-data",
+          rawreq: c.req.raw.body,
+          size: c.req.header("Content-Length"),
+        };
+        if (Object.values(mimes).includes(ctype)) {
+          output = {
+            rawbinstream: {
+              ...output,
+              filename:
+                c.req.header("x-filename") ||
+                c.req.query("filename") ||
+                c.req.header("X-Filename") ||
+                c.req.query("Filename"),
+            },
+          };
+          if (!output.rawbinstream.filename) output = {};
+        } else if (ctype.includes("multipart/form-data"))
+          output = { formdatastream: { ...output } };
+        else output = {};
+        return output;
+      };
+
       /**
        * Download file base on buffer or physical file
        * @alias module:reaction.downloadproc
@@ -919,6 +947,7 @@ module.exports = (...args) => {
           text: cnt.req.text,
           session: cnt.get("session").cache,
           method: cnt.req.method,
+          ...uploadproc(cnt),
         };
 
         let orires = {};

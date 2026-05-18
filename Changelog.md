@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-05-15
+
+### Summary
+
+### Added
+
+- The `diskstore` method in `utils/io.js` has been rewritten; it no longer supports the `multer` module. This design relies entirely on the `busboy` module. This change affects the `commgr` engine. Completed on 2026-05-18.
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+[1.2.4]: https://github.com/wkloh76/oricommjs_v2/releases/tag/1.2.4
+
 ## [1.2.3] - 2026-04-10
 
 ### Summary
