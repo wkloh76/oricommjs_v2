@@ -262,6 +262,7 @@ module.exports = (...args) => {
                   destination: null,
                   encoding,
                   mimeType,
+                  name: file,
                   originalname,
                   payload,
                   sizeInBytes: finalBuffer.length, // This gives you the exact file size
@@ -341,6 +342,7 @@ module.exports = (...args) => {
                   destination,
                   encoding,
                   mimeType,
+                  name: file,
                   originalname,
                   payload,
                   size: fileLength || diskWritable.bytesWritten,
@@ -430,7 +432,8 @@ module.exports = (...args) => {
               files: {
                 destination,
                 mimeType: incoming.headers["content-type"],
-                originalname: filename,
+                name: filename,
+                originalname: `${fname}.${ext}`,
                 payload,
                 size: diskWritable.bytesWritten,
               },

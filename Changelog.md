@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The `diskstore` method in `utils/io.js` has been rewritten; it no longer supports the `multer` module. This design relies entirely on the `busboy` module. This change affects the `commgr` engine. Completed on 2026-05-18.
 - Add export process for formdata fields data at `diskstore` method in `utils/io.js`. Completed on 2026-05-19
+- Add `name` to `files` array of object for data return at `formdata_sbuffer`,`formdata_sdisk`,`rawbinary_sdisk` in `utils/io.js`. Completed on 2026-05-19
 
 ### Changed
 
