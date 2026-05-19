@@ -358,7 +358,7 @@ module.exports = (...args) => {
       const uploadproc = (...args) => {
         let [c] = args;
         let ctype = c.req.header("Content-Type");
-
+        if (!ctype) return {};
         let output = {
           incoming: c.env.incoming,
           payload: "multipart/form-data",
