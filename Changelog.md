@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Implement `@fastify/busboy` instead the `busboy` module. This change affects the `commgr` engine and `utils`. Completed on 2026-05-19.
+
 ### Deprecated
 
 ### Removed

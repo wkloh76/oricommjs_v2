@@ -360,15 +360,16 @@ module.exports = (...args) => {
         let ctype = c.req.header("Content-Type");
 
         let output = {
-          ctype,
+          incoming: c.env.incoming,
           payload: "multipart/form-data",
           rawreq: c.req.raw.body,
-          size: c.req.header("Content-Length"),
         };
+
         if (Object.values(mimes).includes(ctype)) {
           output = {
             rawbinstream: {
               ...output,
+              extension: Object.keys(mimes).find((key) => mimes[key] === ctype),
               filename:
                 c.req.header("x-filename") ||
                 c.req.query("filename") ||
