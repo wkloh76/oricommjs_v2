@@ -12,10 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The `diskstore` method in `utils/io.js` has been rewritten; it no longer supports the `multer` module. This design relies entirely on the `busboy` module. This change affects the `commgr` engine. Completed on 2026-05-18.
+- Add export process for formdata fields data at `diskstore` method in `utils/io.js`. Completed on 2026-05-19
 
 ### Changed
 
-- Implement `@fastify/busboy` instead the `busboy` module. This change affects the `commgr` engine and `utils`. Completed on 2026-05-19.
+- Implement `@fastify/busboy` instead the `busboy` module. This change affects the `commgr` engine and `utils`. Completed on 2026-05-19
 
 ### Deprecated
 
@@ -23,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Bug fix content-type undefined occured in `uploadproc` function in `compmgr` engine cause entire RESTFull API client request rejected. Completed on 2026-05-19.
+- Bug fix content-type undefined occured in `uploadproc` function in `compmgr` engine cause entire RESTFull API client request rejected. Completed on 2026-05-19
 
 ### Security
 

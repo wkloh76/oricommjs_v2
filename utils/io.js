@@ -236,15 +236,11 @@ module.exports = (...args) => {
         const nodeReadable = Readable.fromWeb(rawreq);
         const busboy = Busboy({ headers: incoming.headers });
 
-        let output = {
-          code: 0,
-          msg: "",
-          data: null,
-        };
-
+        const activeWrites = [];
+        const fileResults = [];
+        const textFields = {}; // 1. Object to store your text data
         // This array will hold our streaming buffer fragments
         const fileChunks = [];
-        let fileResult = null;
 
         busboy.on(
           "file",
@@ -255,39 +251,56 @@ module.exports = (...args) => {
               fileChunks.push(chunk);
             });
 
-            // 2. Triggered when this specific file finishes flowing over the network
-            fileStream.on("end", () => {
-              // Assemble all array pieces into one complete continuous memory buffer
-              const finalBuffer = Buffer.concat(fileChunks);
+            const writePromise = new Promise((res, rej) => {
+              // 2. Triggered when this specific file finishes flowing over the network
+              fileStream.on("end", () => {
+                // Assemble all array pieces into one complete continuous memory buffer
+                const finalBuffer = Buffer.concat(fileChunks);
 
-              fileResult = {
-                buffer: finalBuffer,
-                destination: null,
-                encoding,
-                mimeType,
-                originalname,
-                payload,
-                sizeInBytes: finalBuffer.length, // This gives you the exact file size
-              };
+                fileResults.push({
+                  buffer: finalBuffer,
+                  destination: null,
+                  encoding,
+                  mimeType,
+                  originalname,
+                  payload,
+                  sizeInBytes: finalBuffer.length, // This gives you the exact file size
+                });
+              });
+              res();
             });
           },
         );
-        // Handle text fields to keep backpressure clear
-        busboy.on("field", (fieldname, val) => {});
+
+        // NEW: Listen for text fields
+        busboy.on("field", (name, value, info) => {
+          // Handles multiple values for the same key (like checkboxes)
+          if (textFields[name]) {
+            if (!Array.isArray(textFields[name])) {
+              textFields[name] = [textFields[name]];
+            }
+            textFields[name].push(value);
+          } else {
+            textFields[name] = value;
+          }
+        });
 
         busboy.on("error", (error) => resolve(errhandler(error)));
 
-        // 4. Safely resolve your Hono route promise once Busboy clears the network pipe
-        busboy.on("finish", () => {
-          if (!fileResult) {
-            resolve(
-              errhandler(
-                new Error("No file was found in the FormData payload"),
-              ),
-            );
+        busboy.on("finish", async () => {
+          try {
+            await Promise.all(activeWrites);
+            resolve({
+              code: 0,
+              data: {
+                fields: textFields,
+                files: fileResults,
+              },
+              msg: "",
+            });
+          } catch (err) {
+            reject(err);
           }
-          output.data = fileResult;
-          resolve(output);
         });
 
         nodeReadable.pipe(busboy);
@@ -304,6 +317,9 @@ module.exports = (...args) => {
         // Convert standard Web API ReadableStream to a traditional Node Readable stream
         const nodeReadable = Readable.fromWeb(rawreq);
         const busboy = Busboy({ headers: incoming.headers });
+        const activeWrites = [];
+        const fileResults = [];
+        const textFields = {}; // 1. Object to store your text data
 
         busboy.on(
           "file",
@@ -313,27 +329,62 @@ module.exports = (...args) => {
             if (timestamp) fname += "_" + sys.dayjs().valueOf();
             const destination = path.join(location, `${fname}${extension}`);
             const diskWritable = createWriteStream(destination);
-            fileStream.pipe(diskWritable);
-            diskWritable.on("finish", () => {
-              resolve({
-                code: 0,
-                data: {
+
+            let fileLength = 0;
+            fileStream.on("data", (data) => {
+              fileLength += data.length;
+            });
+
+            const writePromise = new Promise((res, rej) => {
+              diskWritable.on("finish", () => {
+                fileResults.push({
                   destination,
                   encoding,
                   mimeType,
                   originalname,
                   payload,
-                  size: diskWritable.bytesWritten,
-                },
-                msg: "",
+                  size: fileLength || diskWritable.bytesWritten,
+                });
+                res();
               });
+              diskWritable.on("error", (error) => rej(errhandler(error)));
             });
-            diskWritable.on("error", (error) => resolve(errhandler(error)));
+
+            activeWrites.push(writePromise);
+            fileStream.pipe(diskWritable);
           },
         );
-        // Handle text fields to keep backpressure clear
-        busboy.on("field", (fieldname, val) => {});
+        // NEW: Listen for text fields
+        busboy.on("field", (name, value, info) => {
+          // Handles multiple values for the same key (like checkboxes)
+          if (textFields[name]) {
+            if (!Array.isArray(textFields[name])) {
+              textFields[name] = [textFields[name]];
+            }
+            textFields[name].push(value);
+          } else {
+            textFields[name] = value;
+          }
+        });
+
         busboy.on("error", (error) => resolve(errhandler(error)));
+
+        busboy.on("finish", async () => {
+          try {
+            await Promise.all(activeWrites);
+            resolve({
+              code: 0,
+              data: {
+                fields: textFields,
+                files: fileResults,
+              },
+              msg: "",
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
+
         nodeReadable.pipe(busboy);
       });
     };
@@ -353,19 +404,40 @@ module.exports = (...args) => {
         const destination = path.join(location, `${fname}.${ext}`);
         const diskWritable = createWriteStream(destination);
         nodeReadable.pipe(diskWritable);
-        diskWritable.on("finish", () =>
+        diskWritable.on("finish", () => {
+          const fullUrl = new URL(
+            incoming.url,
+            `http://${incoming.headers.host || "localhost"}`,
+          );
+
+          // 3. Assemble the dynamic query pairs into a clean plain object
+          const textFields = {};
+          fullUrl.searchParams.forEach((value, key) => {
+            // If the field name has multiple values (e.g., repeated --url-query keys)
+            if (textFields[key]) {
+              if (!Array.isArray(textFields[key])) {
+                textFields[key] = [textFields[key]];
+              }
+              textFields[key].push(value);
+            } else {
+              textFields[key] = value;
+            }
+          });
           resolve({
             code: 0,
             data: {
-              destination,
-              mimeType: incoming.headers["content-type"],
-              originalname: filename,
-              payload,
-              size: diskWritable.bytesWritten,
+              fields: textFields,
+              files: {
+                destination,
+                mimeType: incoming.headers["content-type"],
+                originalname: filename,
+                payload,
+                size: diskWritable.bytesWritten,
+              },
             },
             msg: "",
-          }),
-        );
+          });
+        });
         diskWritable.on("error", (error) => resolve(errhandler(error)));
       });
     };
